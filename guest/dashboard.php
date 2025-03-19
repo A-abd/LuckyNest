@@ -6,7 +6,7 @@
 <a href="manage_profile.php">
     <button>Profile Management</button>
 </a>
-<a href="manage_services.php">
+<a href="services.php">
     <button>Services Management</button>
 </a>
 <a href="payment_statistics.php">

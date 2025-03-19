@@ -12,6 +12,12 @@
 <a href="user_management.php">
     <button>Manage Users</button>
 </a>
+<a href="meals.php">
+    <button>Meals</button>
+</a>
+<a href="laundry.php">
+    <button>Laundry</button>
+</a>
 <a href="../logout.php">
     <button>Log Out</button>
 </a>
