@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -40,13 +41,11 @@
             align-items: center;
         }
 
-
         .admin-profile {
             display: flex;
             align-items: center;
             cursor: pointer;
         }
-
 
         .admin-profile .name {
             margin-right: 25px;
@@ -57,6 +56,16 @@
             height: calc(100vh - 70px);
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
             overflow-y: auto;
+            top: 70px;
+            left: 0;
+            width: 250px;
+            background-color: white;
+            transition: transform 0.3s ease;
+            z-index: 999;
+        }
+
+        .sidebar-hidden {
+            transform: translateX(-100%);
         }
 
         .menu-category {
@@ -77,13 +86,19 @@
 
         .menu-item:hover {
             background-color: rgba(98, 0, 234, 0.1);
-            color: var(--primary);
         }
 
         .menu-item.active {
             background-color: rgba(98, 0, 234, 0.15);
-            color: var(--primary);
-            border-left: 4px solid var(--primary);
+            border-left: 4px solid #6200EA;
+        }
+
+        .menu-item a {
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            align-items: center;
+            width: 100%;
         }
 
         .submenu {
@@ -100,19 +115,24 @@
 
         .submenu-item {
             padding: 10px 20px;
-            color: var(--text-dark);
             text-decoration: none;
             display: block;
             font-size: 14px;
             cursor: pointer;
+            color: inherit;
+        }
+
+        .submenu a {
+            text-decoration: none;
+            color: inherit;
         }
 
         .submenu-item:hover {
-            color: var(--primary);
+            color: #6200EA;
         }
 
         .badge {
-            background-color: var(--danger);
+            background-color: #FF3E1D;
             color: white;
             border-radius: 10px;
             padding: 2px 8px;
@@ -129,10 +149,52 @@
         .quick-action-btn {
             background: none;
             border: none;
-            color: var(--text-light);
             font-size: 16px;
             cursor: pointer;
             position: relative;
+        }
+
+        .toggle-sidebar {
+            cursor: pointer;
+            font-size: 24px;
+            margin-right: 15px;
+            color: white;
+        }
+
+        .main-content {
+            margin-top: 70px;
+            padding: 20px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 70px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+            display: none;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        .menu-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .has-dropdown i.fa-chevron-down {
+            margin-left: auto;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -141,6 +203,7 @@
     <nav class="navbar">
         <div class="logo-container">
             <div class="toggle-sidebar" id="toggleSidebar">
+                <i class="fas fa-bars"></i>
             </div>
             <div class="logo">
                 <h1>LuckyNest</h1>
@@ -148,144 +211,181 @@
         </div>
     </nav>
 
-    <aside class="sidebar" id="sidebar">
+    <div class="overlay" id="overlay"></div>
+
+    <aside class="sidebar sidebar-hidden" id="sidebar">
         <ul class="sidebar-menu">
             <li class="menu-category">Main</li>
             <li class="menu-item active">
-                <a href="admin/dashboard.php">Dashboard</a>
+                <a href="admin/dashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
             </li>
 
             <li class="menu-category">User Management</li>
             <li class="menu-item has-dropdown" onclick="toggleSubmenu(this)">
-                <span>PG Guests</span>
+                <span><i class="fas fa-users"></i> PG Guests</span>
+                <i class="fas fa-chevron-down"></i>
             </li>
             <ul class="submenu">
                 <a href="TODO">
-                    <li class="submenu-item">All Guests</li>
+                    <li class="submenu-item"><i class="fas fa-list"></i> All Guests</li>
+                </a>
+                <a href="../admin/users.php">
+                    <li class="submenu-item"><i class="fas fa-id-card"></i> Guest Profiles</li>
                 </a>
                 <a href="TODO">
-                    <li class="submenu-item">Guest Profiles</li>
-                </a>
-                <a href="TODO">
-                    <li class="submenu-item">Emergency Contacts</li>
+                    <li class="submenu-item"><i class="fas fa-phone"></i> Emergency Contacts</li>
                 </a>
             </ul>
 
             <li class="menu-item">
-                <a href="TODO">Admin Users</a>
+                <a href="TODO"><i class="fas fa-user-shield"></i> Admin Users</a>
             </li>
 
             <li class="menu-category">Property Management</li>
             <li class="menu-item">
-                <a href="../admin/rooms.php">All Rooms</a>
+                <a href="../admin/rooms.php"><i class="fas fa-door-open"></i> All Rooms</a>
             </li>
             <li class="menu-item">
-                <a href="../admin/room_types.php">Room Types</a>
+                <a href="../admin/room_types.php"><i class="fas fa-bed"></i> Room Types</a>
             </li>
             <li class="menu-category">Operations</li>
             <li class="menu-item">
-                <a href="../admin/bookings.php">All Bookings</a>
+                <a href="../admin/bookings.php"><i class="fas fa-calendar-check"></i> All Bookings</a>
             </li>
 
             <li class="menu-item has-dropdown" onclick="toggleSubmenu(this)">
-                <span>Payments</span>
+                <span><i class="fas fa-money-bill-wave"></i> Payments</span>
+                <i class="fas fa-chevron-down"></i>
             </li>
             <ul class="submenu">
                 <a href="TODO">
-                    <li class="submenu-item">Invoices</li>
+                    <li class="submenu-item"><i class="fas fa-file-invoice"></i> Invoices</li>
                 </a>
                 <a href="TODO">
-                    <li class="submenu-item">Security Deposits</li>
+                    <li class="submenu-item"><i class="fas fa-piggy-bank"></i> Security Deposits</li>
                 </a>
                 <a href="TODO">
-                    <li class="submenu-item">Payment History</li>
+                    <li class="submenu-item"><i class="fas fa-history"></i> Payment History</li>
                 </a>
             </ul>
 
             <li class="menu-item has-dropdown" onclick="toggleSubmenu(this)">
-                <span>Food Services</span>
+                <span><i class="fas fa-utensils"></i> Food Services</span>
+                <i class="fas fa-chevron-down"></i>
             </li>
             <ul class="submenu">
                 <a href="TODO">
-                    <li class="submenu-item">Food Menu</li>
+                    <li class="submenu-item"><i class="fas fa-clipboard-list"></i> Food Menu</li>
                 </a>
                 <a href="TODO">
-                    <li class="submenu-item">Meal Plans</li>
+                    <li class="submenu-item"><i class="fas fa-carrot"></i> Meal Plans</li>
                 </a>
                 <a href="TODO">
-                    <li class="submenu-item">Special Requests</li>
+                    <li class="submenu-item"><i class="fas fa-concierge-bell"></i> Special Requests</li>
                 </a>
             </ul>
 
             <li class="menu-item has-dropdown" onclick="toggleSubmenu(this)">
-                <span>Other Services</span>
+                <span><i class="fas fa-cog"></i> Other Services</span>
+                <i class="fas fa-chevron-down"></i>
             </li>
             <ul class="submenu">
                 <a href="TODO">
-                    <li class="submenu-item">Laundry</li>
+                    <li class="submenu-item"><i class="fas fa-tshirt"></i> Laundry</li>
                 </a>
                 <a href="TODO">
-                    <li class="submenu-item">Housekeeping</li>
+                    <li class="submenu-item"><i class="fas fa-broom"></i> Housekeeping</li>
                 </a>
             </ul>
 
             <li class="menu-item">
-                <a href="TODO">Log Visitors</a>
+                <a href="TODO"><i class="fas fa-clipboard-user"></i> Log Visitors</a>
             </li>
 
             <li class="menu-category">Communication</li>
             <li class="menu-item">
-                <a href="TODO">Notifications</a>
+                <a href="TODO"><i class="fas fa-bell"></i> Notifications</a>
             </li>
             <li class="menu-item">
-                <a href="TODO">Announcements</a>
+                <a href="TODO"><i class="fas fa-bullhorn"></i> Announcements</a>
             </li>
 
             <li class="menu-category">Reports</li>
             <li class="menu-item has-dropdown" onclick="toggleSubmenu(this)">
-                <span>Reports & Analytics</span>
+                <span><i class="fas fa-chart-bar"></i> Reports & Analytics</span>
+                <i class="fas fa-chevron-down"></i>
             </li>
             <ul class="submenu">
                 <a href="TODO">
-                    <li class="submenu-item">Revenue & Expense Reports</li>
+                    <li class="submenu-item"><i class="fas fa-dollar-sign"></i> Revenue & Expense Reports</li>
                 </a>
                 <a href="TODO">
-                    <li class="submenu-item">Occupancy Reports</li>
+                    <li class="submenu-item"><i class="fas fa-percentage"></i> Occupancy Reports</li>
                 </a>
                 <a href="TODO">
-                    <li class="submenu-item">Food Consumption</li>
+                    <li class="submenu-item"><i class="fas fa-hamburger"></i> Food Consumption</li>
                 </a>
             </ul>
 
             <li class="menu-category">Settings</li>
             <li class="menu-item">
-                <a href="TODO">System Settings</a>
+                <a href="TODO"><i class="fas fa-sliders-h"></i> System Settings</a>
             </li>
             <li class="menu-item">
-                <a href="TODO">Account Settings</a>
+                <a href="TODO"><i class="fas fa-user-cog"></i> Account Settings</a>
             </li>
             <li class="menu-item">
-                <a href="logout.php">Logout</a>
+                <a href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </li>
         </ul>
     </aside>
+
+    <div id="mainContent" class="main-content expanded">
+        <!-- Your main content here -->
+    </div>
 
     <script>
         const toggleSidebar = document.getElementById('toggleSidebar');
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
+        const overlay = document.getElementById('overlay');
 
-        toggleSidebar.addEventListener('click', function () {
+        function toggleNav() {
             sidebar.classList.toggle('sidebar-hidden');
             mainContent.classList.toggle('expanded');
-        });
+            overlay.classList.toggle('active');
+            
+            if (!sidebar.classList.contains('sidebar-hidden')) {
+                disableMainContentInteraction();
+            } else {
+                enableMainContentInteraction();
+            }
+        }
+
+        function disableMainContentInteraction() {
+            const links = mainContent.querySelectorAll('a, button, input, select, textarea');
+            links.forEach(link => {
+                link.setAttribute('tabindex', '-1');
+                link.setAttribute('aria-hidden', 'true');
+            });
+        }
+
+        function enableMainContentInteraction() {
+            const links = mainContent.querySelectorAll('a, button, input, select, textarea');
+            links.forEach(link => {
+                link.removeAttribute('tabindex');
+                link.removeAttribute('aria-hidden');
+            });
+        }
+
+        toggleSidebar.addEventListener('click', toggleNav);
+        overlay.addEventListener('click', toggleNav);
 
         function toggleSubmenu(element) {
             const submenu = element.nextElementSibling;
             element.classList.toggle('open');
             submenu.classList.toggle('active');
 
-            // this closes other open submenus
             const allSubmenus = document.querySelectorAll('.submenu.active');
             const allDropdowns = document.querySelectorAll('.has-dropdown.open');
 
@@ -302,7 +402,6 @@
             });
         }
 
-        // close other submenus when you click outside of them
         document.addEventListener('click', function (event) {
             if (!event.target.closest('.has-dropdown') && !event.target.closest('.submenu')) {
                 const allSubmenus = document.querySelectorAll('.submenu.active');
@@ -319,26 +418,34 @@
         });
 
         const adminProfile = document.querySelector('.admin-profile');
-        adminProfile.addEventListener('click', function () {
-            alert('TODO maybe add something here');
-        });
+        if (adminProfile) {
+            adminProfile.addEventListener('click', function () {
+                alert('TODO maybe add something here');
+            });
+        }
 
         const notificationBtn = document.querySelector('.quick-action-btn:nth-child(1)');
-        notificationBtn.addEventListener('click', function () {
-            alert('Notifications would appear here');
-        });
+        if (notificationBtn) {
+            notificationBtn.addEventListener('click', function () {
+                alert('Notifications would appear here');
+            });
+        }
 
-        // Message actions (placeholder)
         const messageBtn = document.querySelector('.quick-action-btn:nth-child(2)');
-        messageBtn.addEventListener('click', function () {
-            alert('Messages would appear here');
-        });
+        if (messageBtn) {
+            messageBtn.addEventListener('click', function () {
+                alert('Messages would appear here');
+            });
+        }
 
-        // Settings actions (placeholder)
         const settingsBtn = document.querySelector('.quick-action-btn:nth-child(3)');
-        settingsBtn.addEventListener('click', function () {
-            alert('Quick settings would appear here');
-        });
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', function () {
+                alert('Quick settings would appear here');
+            });
+        }
+
+        sidebar.classList.add('sidebar-hidden');
     </script>
 </body>
 
