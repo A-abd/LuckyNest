@@ -75,42 +75,94 @@ try {
     die("Database error: " . $e->getMessage());
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    if (!isset($_POST["payment_type"]) || !isset($_POST["booking_id"]) || empty($_POST["booking_id"])) {
-        die("Payment type and booking ID are required.");
-    }
+try {
+    $stmt = $conn->prepare("SELECT mpl.meal_plan_user_link, mp.meal_plan_id, mp.name, mp.meal_plan_type
+                           FROM meal_plan_user_link mpl
+                           JOIN meal_plans mp ON mpl.meal_plan_id = mp.meal_plan_id
+                           WHERE mpl.user_id = :user_id
+                           AND mpl.is_paid = 0
+                           AND mpl.is_cancelled = 0");
+    $stmt->bindValue(':user_id', $guest_id, PDO::PARAM_INT);
+    $stmt->execute();
+    $mealPlans = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $bookingId = $_POST["booking_id"];
-    $paymentType = $_POST["payment_type"];
-    $description = $_POST["description"];
-    $checkInDate = $_POST["check_in_date"];
-    $checkOutDate = $_POST["check_out_date"];
-    $roomId = $_POST["room_id"];
-
-    try {
-        $stmt = $conn->prepare("SELECT rt.rate_monthly 
-                               FROM rooms r 
-                               JOIN room_types rt ON r.room_type_id = rt.room_type_id 
-                               WHERE r.room_id = :room_id");
-        $stmt->bindValue(':room_id', $roomId, PDO::PARAM_INT);
+    $mealPlanPrices = [];
+    foreach ($mealPlans as &$mealPlan) {
+        $stmt = $conn->prepare("SELECT SUM(m.price) as total_price
+                               FROM meal_plan_items_link mpil
+                               JOIN meals m ON mpil.meal_id = m.meal_id
+                               WHERE mpil.meal_plan_id = :meal_plan_id");
+        $stmt->bindValue(':meal_plan_id', $mealPlan['meal_plan_id'], PDO::PARAM_INT);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $roomrate = $result ? floatval($result['rate_monthly']) : 0;
-    } catch (PDOException $e) {
-        die("Database error: " . $e->getMessage());
+        $mealPlanPrices[$mealPlan['meal_plan_id']] = $result ? floatval($result['total_price']) : 0;
+        $mealPlan['price'] = $mealPlanPrices[$mealPlan['meal_plan_id']];
+    }
+} catch (PDOException $e) {
+    die("Database error fetching meal plans: " . $e->getMessage());
+}
+
+try {
+    $stmt = $conn->prepare("SELECT lsul.laundry_slot_user_link_id, ls.laundry_slot_id, ls.date, ls.start_time, ls.price
+                           FROM laundry_slot_user_link lsul
+                           JOIN laundry_slots ls ON lsul.laundry_slot_id = ls.laundry_slot_id
+                           WHERE lsul.user_id = :user_id
+                           AND lsul.is_paid = 0
+                           AND lsul.is_cancelled = 0");
+    $stmt->bindValue(':user_id', $guest_id, PDO::PARAM_INT);
+    $stmt->execute();
+    $laundrySlots = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die("Database error fetching laundry slots: " . $e->getMessage());
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (!isset($_POST["payment_type"]) || empty($_POST["payment_type"])) {
+        die("Payment type is required.");
     }
 
+    $paymentType = $_POST["payment_type"];
+    $description = $_POST["description"];
+
+    $referenceId = null;
     $amount = 0;
+
     if ($paymentType == 'rent') {
-        $date1 = new DateTime($checkInDate);
-        $date2 = new DateTime($checkOutDate);
-        $interval = $date1->diff($date2);
-        $days = $interval->days;
-        $amount = $roomrate;
-    } else if ($paymentType == 'food') {
-        $amount = 50;
-    } else if ($paymentType == 'laundry') {
-        $amount = 20;
+        if (!isset($_POST["booking_id"]) || empty($_POST["booking_id"])) {
+            die("Booking ID is required for rent payments.");
+        }
+
+        $referenceId = $_POST["booking_id"];
+        $checkInDate = $_POST["check_in_date"];
+        $checkOutDate = $_POST["check_out_date"];
+        $roomId = $_POST["room_id"];
+
+        try {
+            $stmt = $conn->prepare("SELECT rt.rate_monthly 
+                                   FROM rooms r 
+                                   JOIN room_types rt ON r.room_type_id = rt.room_type_id 
+                                   WHERE r.room_id = :room_id");
+            $stmt->bindValue(':room_id', $roomId, PDO::PARAM_INT);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $amount = $result ? floatval($result['rate_monthly']) : 0;
+        } catch (PDOException $e) {
+            die("Database error: " . $e->getMessage());
+        }
+    } elseif ($paymentType == 'meal_plan') {
+        if (!isset($_POST["meal_plan_id"]) || empty($_POST["meal_plan_id"])) {
+            die("Meal plan ID is required for meal plan payments.");
+        }
+
+        $referenceId = $_POST["meal_plan_id"];
+        $amount = $_POST["amount"];
+    } elseif ($paymentType == 'laundry') {
+        if (!isset($_POST["laundry_slot_id"]) || empty($_POST["laundry_slot_id"])) {
+            die("Laundry slot ID is required for laundry payments.");
+        }
+
+        $referenceId = $_POST["laundry_slot_id"];
+        $amount = $_POST["amount"];
     }
 
     try {
@@ -119,20 +171,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $checkoutSession = \Stripe\Checkout\Session::create([
             "payment_method_types" => ["card"],
             "line_items" => [
-                    [
-                        "price_data" => [
-                            "currency" => "gbp",
-                            "product_data" => [
-                                    "name" => $description,
-                                    "description" => $description,
-                                ],
-                            "unit_amount" => $amountRounded * 100,
+                [
+                    "price_data" => [
+                        "currency" => "gbp",
+                        "product_data" => [
+                            "name" => $description,
+                            "description" => $description,
                         ],
-                        "quantity" => 1,
-                    ]
-                ],
+                        "unit_amount" => $amountRounded * 100,
+                    ],
+                    "quantity" => 1,
+                ]
+            ],
             "mode" => "payment",
-            "success_url" => "http://localhost/LuckyNest/guest_dashboard/success.php?session_id={CHECKOUT_SESSION_ID}&booking_id=" . $bookingId . "&payment_type=" . $paymentType,
+            "success_url" => "http://localhost/LuckyNest/guest_dashboard/success.php?session_id={CHECKOUT_SESSION_ID}&reference_id=" . $referenceId . "&payment_type=" . $paymentType,
             "cancel_url" => "http://localhost/LuckyNest/guest_dashboard/payments_page.php",
         ]);
 
@@ -155,55 +207,119 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <script>
         // roomRates has to be defined here because it depends on php data
         const roomRates = <?php echo json_encode($roomRates); ?>;
+        const mealPlanPrices = <?php echo json_encode($mealPlanPrices); ?>;
+        const laundryPrices = <?php echo json_encode(array_column($laundrySlots, 'price', 'laundry_slot_id')); ?>;
     </script>
-    <!--do not remove the double slash, scripts.js does not load when there is only a single slash-->
-    <script src="..//assets/scripts.js"></script>
+    <script src="../assets/scripts.js"></script>
 </head>
 
 <body>
     <h2>Make a Payment</h2>
 
-    <?php if (empty($bookings)): ?>
-        <p>No unpaid bookings found for this guest.</p>
-    <?php else: ?>
-        <form action="" method="POST">
-            <label for="booking_selection">Select Booking:</label>
-            <select id="booking_selection" name="booking_id" onchange="updateBookingDetails()" required>
-                <option value="">-- Select a booking --</option>
-                <?php foreach ($bookings as $booking): ?>
-                    <option value="<?php echo $booking['booking_id']; ?>" data-room-id="<?php echo $booking['room_id']; ?>"
-                        data-check-in="<?php echo $booking['check_in_date']; ?>"
-                        data-check-out="<?php echo $booking['check_out_date']; ?>">
-                        Booking #<?php echo $booking['booking_id']; ?>
-                        (<?php echo $booking['check_in_date']; ?> to <?php echo $booking['check_out_date']; ?>)
-                    </option>
-                <?php endforeach; ?>
-            </select><br>
+    <div>
+        <button onclick="showPaymentForm('rent')">Pay for Accommodation</button>
+        <button onclick="showPaymentForm('meal_plan')">Pay for Meal Plans</button>
+        <button onclick="showPaymentForm('laundry')">Pay for Laundry</button>
+    </div>
 
-            <label for="description">Description:</label>
-            <input type="text" name="description" required><br>
+    <div id="rent_form">
+        <h3>Pay for Accommodation</h3>
+        <?php if (empty($bookings)): ?>
+            <p>No unpaid bookings found for this guest.</p>
+        <?php else: ?>
+            <form action="" method="POST">
+                <label for="booking_selection">Select Booking:</label>
+                <select id="booking_selection" name="booking_id" onchange="updateBookingDetails()" required>
+                    <option value="">-- Select a booking --</option>
+                    <?php foreach ($bookings as $booking): ?>
+                        <option value="<?php echo $booking['booking_id']; ?>" data-room-id="<?php echo $booking['room_id']; ?>"
+                            data-check-in="<?php echo $booking['check_in_date']; ?>"
+                            data-check-out="<?php echo $booking['check_out_date']; ?>">
+                            Booking #<?php echo $booking['booking_id']; ?>
+                            (<?php echo $booking['check_in_date']; ?> to <?php echo $booking['check_out_date']; ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select><br>
 
-            <label for="payment_type">Payment Type:</label>
-            <select id="payment_type" name="payment_type" onchange="calculateAmount()" required>
-                <option value="rent">Rent</option>
-                <option value="food">Food</option>
-                <option value="laundry">Laundry</option>
-            </select><br>
+                <label for="description">Description:</label>
+                <input type="text" name="description" value="Accommodation Payment" required><br>
 
-            <label for="amount">Amount (£):</label>
-            <input type="number" id="amount" name="amount" readonly><br>
+                <label for="amount">Amount (£):</label>
+                <input type="number" id="amount" name="amount" readonly><br>
 
-            <input type="hidden" id="check_in_date" name="check_in_date">
-            <input type="hidden" id="check_out_date" name="check_out_date">
-            <input type="hidden" id="user_id" name="user_id" value="<?php echo $guest_id; ?>">
-            <input type="hidden" id="room_id" name="room_id">
-            <input type="hidden" id="payment_type_hidden" name="payment_type">
+                <input type="hidden" id="check_in_date" name="check_in_date">
+                <input type="hidden" id="check_out_date" name="check_out_date">
+                <input type="hidden" id="user_id" name="user_id" value="<?php echo $guest_id; ?>">
+                <input type="hidden" id="room_id" name="room_id">
+                <input type="hidden" id="payment_type_hidden" name="payment_type" value="rent">
 
-            <button type="submit">Pay with Stripe</button>
-        </form>
-    <?php endif; ?>
+                <button type="submit">Pay with Stripe</button>
+            </form>
+        <?php endif; ?>
+    </div>
+
+    <div id="meal_plan_form" style="display: none;">
+        <h3>Pay for Meal Plans</h3>
+        <?php if (empty($mealPlans)): ?>
+            <p>No unpaid meal plans found for this guest.</p>
+        <?php else: ?>
+            <form action="" method="POST">
+                <label for="meal_plan_selection">Select Meal Plan:</label>
+                <select id="meal_plan_selection" name="meal_plan_id" onchange="calculateAmount()" required>
+                    <option value="">-- Select a meal plan --</option>
+                    <?php foreach ($mealPlans as $mealPlan): ?>
+                        <option value="<?php echo $mealPlan['meal_plan_id']; ?>" data-price="<?php echo $mealPlan['price']; ?>">
+                            <?php echo $mealPlan['name']; ?> (<?php echo $mealPlan['meal_plan_type']; ?>) -
+                            £<?php echo number_format($mealPlan['price'], 2); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select><br>
+
+                <label for="description">Description:</label>
+                <input type="text" name="description" value="Meal Plan Payment" required><br>
+
+                <label for="amount">Amount (£):</label>
+                <input type="number" id="amount" name="amount" readonly><br>
+
+                <input type="hidden" id="payment_type_hidden" name="payment_type" value="meal_plan">
+                <input type="hidden" id="user_id" name="user_id" value="<?php echo $guest_id; ?>">
+
+                <button type="submit">Pay with Stripe</button>
+            </form>
+        <?php endif; ?>
+    </div>
+
+    <div id="laundry_form" style="display: none;">
+        <h3>Pay for Laundry</h3>
+        <?php if (empty($laundrySlots)): ?>
+            <p>No unpaid laundry slots found for this guest.</p>
+        <?php else: ?>
+            <form action="" method="POST">
+                <label for="laundry_selection">Select Laundry Slot:</label>
+                <select id="laundry_selection" name="laundry_slot_id" onchange="calculateAmount()" required>
+                    <option value="">-- Select a laundry slot --</option>
+                    <?php foreach ($laundrySlots as $slot): ?>
+                        <option value="<?php echo $slot['laundry_slot_id']; ?>" data-price="<?php echo $slot['price']; ?>">
+                            <?php echo date('F j, Y', strtotime($slot['date'])); ?> at <?php echo $slot['start_time']; ?> -
+                            £<?php echo number_format($slot['price'], 2); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select><br>
+
+                <label for="description">Description:</label>
+                <input type="text" name="description" value="Laundry Service Payment" required><br>
+
+                <label for="amount">Amount (£):</label>
+                <input type="number" id="amount" name="amount" readonly><br>
+
+                <input type="hidden" id="payment_type_hidden" name="payment_type" value="laundry">
+                <input type="hidden" id="user_id" name="user_id" value="<?php echo $guest_id; ?>">
+
+                <button type="submit">Pay with Stripe</button>
+            </form>
+        <?php endif; ?>
+    </div>
     <a href="dashboard.php" class="button">Back to Dashboard</a>
-
 </body>
 
 </html>
