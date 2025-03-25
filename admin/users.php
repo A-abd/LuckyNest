@@ -87,105 +87,124 @@ $conn = null;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap" />
     <link rel="stylesheet" href="../assets/styles.css">
     <script src="../assets/scripts.js"></script>
     <title>Manage Users</title>
 </head>
 
 <body>
+    <div class="blur-layer-2"></div>
     <div class="manage-default">
-        <h1>Manage Users</h1>
-        <?php if ($feedback): ?>
-            <p style="color: green;" class="feedback-message"><?php echo $feedback; ?></p>
-        <?php endif; ?>
+        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
 
-        <h3>User List</h3>
-        <table border="1">
-            <thead class="table-columns">
-                <tr>
-                    <th>ID</th>
-                    <th>Forename</th>
-                    <th>Surname</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Emergency Contact</th>
-                    <th>Address</th>
-                    <th>Role</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($userData as $user): ?>
-                    <tr>
-                        <td><?php echo $user['user_id']; ?></td>
-                        <td><?php echo $user['forename']; ?></td>
-                        <td><?php echo $user['surname']; ?></td>
-                        <td><?php echo $user['email']; ?></td>
-                        <td><?php echo $user['phone']; ?></td>
-                        <td><?php echo $user['emergency_contact']; ?></td>
-                        <td><?php echo $user['address']; ?></td>
-                        <td><?php echo ucfirst($user['role']); ?></td>
-                        <td>
-                            <button onclick="toggleEditForm(<?php echo $user['user_id']; ?>)"
-                                class="update-button">Edit</button>
-                            <!-- Edit Form -->
-                            <div id="edit-form-<?php echo $user['user_id']; ?>" class="edit-form">
-                                <form method="POST" action="users.php" style="display:inline;">
-                                    <input type="hidden" name="action" value="edit">
-                                    <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
-                                    <label for="forename_<?php echo $user['user_id']; ?>">Forename:</label>
-                                    <input type="text" id="forename_<?php echo $user['user_id']; ?>" name="forename"
-                                        value="<?php echo $user['forename']; ?>" required>
-                                    <label for="surname_<?php echo $user['user_id']; ?>">Surname:</label>
-                                    <input type="text" id="surname_<?php echo $user['user_id']; ?>" name="surname"
-                                        value="<?php echo $user['surname']; ?>" required>
-                                    <label for="email_<?php echo $user['user_id']; ?>">Email:</label>
-                                    <input type="email" id="email_<?php echo $user['user_id']; ?>" name="email"
-                                        value="<?php echo $user['email']; ?>" required>
-                                    <label for="phone_<?php echo $user['user_id']; ?>">Phone:</label>
-                                    <input type="text" id="phone_<?php echo $user['user_id']; ?>" name="phone"
-                                        value="<?php echo $user['phone']; ?>" required>
-                                    <label for="emergency_contact_<?php echo $user['user_id']; ?>">Emergency
-                                        Contact:</label>
-                                    <input type="text" id="emergency_contact_<?php echo $user['user_id']; ?>"
-                                        name="emergency_contact" value="<?php echo $user['emergency_contact']; ?>" required>
-                                    <label for="address_<?php echo $user['user_id']; ?>">Address:</label>
-                                    <input type="text" id="address_<?php echo $user['user_id']; ?>" name="address"
-                                        value="<?php echo $user['address']; ?>" required>
-                                    <label for="role_<?php echo $user['user_id']; ?>">Role:</label>
-                                    <select id="role_<?php echo $user['user_id']; ?>" name="role" required>
-                                        <option value="guest" <?php echo $user['role'] === 'guest' ? 'selected' : ''; ?>>Guest
-                                        </option>
-                                        <option value="admin" <?php echo $user['role'] === 'admin' ? 'selected' : ''; ?>>Admin
-                                        </option>
-                                        <option value="owner" <?php echo $user['role'] === 'owner' ? 'selected' : ''; ?>>Owner
-                                        </option>
-                                    </select>
-                                    <button type="submit" class="update-button">Update</button>
-                                </form>
+        <div class="center-container">
+            <h2 class="manage-profile">Manage Users</h2>
+            <?php if ($feedback): ?>
+                <div class="feedback-message" id="feedback_message"><?php echo $feedback; ?></div>
+            <?php endif; ?>
 
-                                <!-- Delete Form -->
-                                <form method="POST" action="users.php" style="display:inline;">
-                                    <input type="hidden" name="action" value="delete">
-                                    <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
-                                    <button type="submit" class="update-button"
-                                        onclick="return confirm('Are you sure?')">Delete</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+            <h3>User List</h3>
+            <div class="manage-guests-wrapper">
+                <table class="manage-guest-table" border="1">
+                    <thead class="table-columns">
+                        <tr>
+                            <th>ID</th>
+                            <th>Forename</th>
+                            <th>Surname</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Emergency Contact</th>
+                            <th>Address</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($userData as $user): ?>
+                            <tr>
+                                <td><?php echo $user['user_id']; ?></td>
+                                <td><?php echo $user['forename']; ?></td>
+                                <td><?php echo $user['surname']; ?></td>
+                                <td><?php echo $user['email']; ?></td>
+                                <td><?php echo $user['phone']; ?></td>
+                                <td><?php echo $user['emergency_contact']; ?></td>
+                                <td><?php echo $user['address']; ?></td>
+                                <td><?php echo ucfirst($user['role']); ?></td>
+                                <td>
+                                    <button onclick="toggleEditForm(<?php echo $user['user_id']; ?>)"
+                                        class="update-button">Edit</button>
 
-        <?php
-        $url = 'users.php';
-        echo generatePagination($page, $totalPages, $url);
-        ?>
+                                    <!-- Edit Form -->
+                                    <div id="edit-form-<?php echo $user['user_id']; ?>" class="rooms-edit-form">
+                                        <button type="button" class="close-button"
+                                            onclick="toggleEditForm(<?php echo $user['user_id']; ?>)">✕</button>
+                                        <h2 class = "edit-title">Edit User</h2>
+                                        <form method="POST" action="users.php">
+                                            <input type="hidden" name="action" value="edit">
+                                            <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
+                                            <label for="forename_<?php echo $user['user_id']; ?>">Forename:</label>
+                                            <input type="text" id="forename_<?php echo $user['user_id']; ?>" name="forename"
+                                                value="<?php echo $user['forename']; ?>" required>
+                                            <label for="surname_<?php echo $user['user_id']; ?>">Surname:</label>
+                                            <input type="text" id="surname_<?php echo $user['user_id']; ?>" name="surname"
+                                                value="<?php echo $user['surname']; ?>" required>
+                                            <label for="email_<?php echo $user['user_id']; ?>">Email:</label>
+                                            <input type="email" id="email_<?php echo $user['user_id']; ?>" name="email"
+                                                value="<?php echo $user['email']; ?>" required>
+                                            <label for="phone_<?php echo $user['user_id']; ?>">Phone:</label>
+                                            <input type="text" id="phone_<?php echo $user['user_id']; ?>" name="phone"
+                                                value="<?php echo $user['phone']; ?>" required>
+                                            <label for="emergency_contact_<?php echo $user['user_id']; ?>">Emergency
+                                                Contact:</label>
+                                            <input type="text" id="emergency_contact_<?php echo $user['user_id']; ?>"
+                                                name="emergency_contact" value="<?php echo $user['emergency_contact']; ?>"
+                                                required>
+                                            <label for="address_<?php echo $user['user_id']; ?>">Address:</label>
+                                            <input type="text" id="address_<?php echo $user['user_id']; ?>" name="address"
+                                                value="<?php echo $user['address']; ?>" required>
+                                            <label for="role_<?php echo $user['user_id']; ?>">Role:</label>
+                                            <select id="role_<?php echo $user['user_id']; ?>" name="role" required>
+                                                <option value="guest" <?php echo $user['role'] === 'guest' ? 'selected' : ''; ?>>Guest
+                                                </option>
+                                                <option value="admin" <?php echo $user['role'] === 'admin' ? 'selected' : ''; ?>>Admin
+                                                </option>
+                                                <option value="owner" <?php echo $user['role'] === 'owner' ? 'selected' : ''; ?>>Owner
+                                                </option>
+                                            </select>
+                                            <div class="rooms-button-group">
+                                                <button type="submit" class="update-button">Update</button>
+                                                
+                                            </div>
+                                        </form>
+                                        <form method="POST" action="users.php" style="margin-top: 10px;">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
+                                            <button type="submit" class="update-button"
+                                                onclick="return confirm('Are you sure you want to delete this user?')">Delete User</button>
+                                        </form>
 
-        <br>
-        <a href="dashboard.php" class="button">Back to Dashboard</a>
-    </div>
+                                        <!-- Delete Form -->
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php
+            $url = 'users.php';
+            echo generatePagination($page, $totalPages, $url);
+            ?>
+            <br>
+            <div class="back-button-container">
+                <a href="dashboard.php" class="button">Back to Dashboard</a>
+            </div>
+        </div>
+        <div id="form-overlay"></div>
 </body>
 
 </html>
