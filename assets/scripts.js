@@ -299,3 +299,86 @@ const CONFIG = {
     showPaymentForm: PaymentModule.showPaymentForm,
     calculateAmount: PaymentModule.calculateAmount
   };
+
+  // CSS Funtionality
+  function toggleAddForm() {
+    const addForm = document.getElementById('add-form');
+    const overlay = document.getElementById('form-overlay');
+
+    if (addForm.style.display === 'none' || addForm.style.display === '') {
+        overlay.style.display = 'block';
+        addForm.style.display = 'block';
+        setTimeout(() => {
+            overlay.classList.add('active');
+            addForm.classList.add('active');
+        }, 10);
+    } else {
+        overlay.classList.remove('active');
+        addForm.classList.remove('active');
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            addForm.style.display = 'none';
+        }, 300);
+    }
+}
+
+function toggleEditForm(id) {
+    const editForm = document.getElementById(`edit-form-${id}`);
+    const overlay = document.getElementById('form-overlay');
+
+    if (editForm.style.display === 'none' || editForm.style.display === '') {
+        overlay.style.display = 'block';
+        editForm.style.display = 'block';
+        setTimeout(() => {
+            overlay.classList.add('active');
+            editForm.classList.add('active');
+        }, 10);
+    } else {
+        overlay.classList.remove('active');
+        editForm.classList.remove('active');
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            editForm.style.display = 'none';
+        }, 300);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    if (!document.getElementById('form-overlay')) {
+        const overlay = document.createElement('div');
+        overlay.id = 'form-overlay';
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) {
+                const activeForms = document.querySelectorAll('#add-form.active, .rooms-edit-form.active');
+                activeForms.forEach(form => {
+                    form.classList.remove('active');
+                    setTimeout(() => {
+                        form.style.display = 'none';
+                    }, 300);
+                });
+                overlay.classList.remove('active');
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                }, 300);
+            }
+        });
+    }
+
+    hideAllEditForms();
+    hideAddForm();
+});
+
+function hideAllEditForms() {
+    const editForms = document.querySelectorAll('.rooms-edit-form');
+    editForms.forEach(form => {
+        form.style.display = 'none';
+    });
+}
+
+function hideAddForm() {
+    const addForm = document.getElementById('add-form');
+    if (addForm) {
+        addForm.style.display = 'none';
+    }
+}

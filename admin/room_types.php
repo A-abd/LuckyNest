@@ -86,89 +86,115 @@ $conn = null;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap" />
     <link rel="stylesheet" href="../assets/styles.css">
     <script src="../assets/scripts.js"></script>
     <title>Manage Room Types</title>
 </head>
 
 <body>
+    <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1>Manage Room Types</h1>
-        <?php if ($feedback): ?>
-            <p style="color: green;"><?php echo $feedback; ?></p>
-        <?php endif; ?>
+        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
+        <div class="rooms-types-container">
+            <h1>Manage Room Types</h1>
+            <?php if ($feedback): ?>
+                <div class="rooms-feedback" id="feedback_message"><?php echo $feedback; ?></div>
+            <?php endif; ?>
 
-        <button onclick="toggleAddForm()" class="update-button">Add Room Type</button>
+            <!-- Add Room Type Button -->
+            <div class="button-center"><button onclick="toggleAddForm()" class="update-add-button">Add Room
+                    Type</button></div>
 
-        <div id="add-form">
-            <h2>Add New Room Type</h2>
-            <form method="POST" action="room_types.php">
-                <input type="hidden" name="action" value="add">
-                <label for="room_type_name">Room Type Name:</label>
-                <input type="text" id="room_type_name" name="room_type_name" required>
-                <label for="rate_monthly">Monthly Rate:</label>
-                <input type="number" step="0.01" id="rate_monthly" name="rate_monthly" required>
-                <button type="submit" class="update-button">Add Room Type</button>
-            </form>
-        </div>
 
-        <h2>Room Type List</h2>
-        <table border="1">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Room Type Name</th>
-                    <th>Monthly Rate</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($roomTypeData as $roomType): ?>
+            <!-- Add Room Type Form -->
+            <div id="add-form">
+                <button type="button" class="close-button" onclick="toggleAddForm()">✕</button>
+                <h2>Add New Room Type</h2>
+                <form method="POST" action="room_types.php">
+                    <input type="hidden" name="action" value="add">
+                    <label for="room_type_name">Room Type Name:</label>
+                    <input type="text" id="room_type_name" name="room_type_name" required>
+                    <label for="rate_monthly">Monthly Rate:</label>
+                    <input type="number" step="0.01" id="rate_monthly" name="rate_monthly" required>
+                    <button type="submit" class="update-button">Add Room Type</button>
+                </form>
+            </div>
+
+            <!-- Room Type List -->
+            <h2>Room Type List</h2>
+            <table border="1">
+                <thead>
                     <tr>
-                        <td><?php echo $roomType['room_type_id']; ?></td>
-                        <td><?php echo $roomType['room_type_name']; ?></td>
-                        <td><?php echo $roomType['rate_monthly']; ?></td>
-                        <td>
-                            <button onclick="toggleEditForm(<?php echo $roomType['room_type_id']; ?>)"
-                                class="update-button">Edit</button>
-                            <div id="edit-form-<?php echo $roomType['room_type_id']; ?>" class="edit-form">
-                                <form method="POST" action="room_types.php" style="display:inline;">
-                                    <input type="hidden" name="action" value="edit">
-                                    <input type="hidden" name="room_type_id"
-                                        value="<?php echo $roomType['room_type_id']; ?>">
-                                    <label for="room_type_name_<?php echo $roomType['room_type_id']; ?>">Room Type
-                                        Name:</label>
-                                    <input type="text" id="room_type_name_<?php echo $roomType['room_type_id']; ?>"
-                                        name="room_type_name" value="<?php echo $roomType['room_type_name']; ?>" required>
-                                    <label for="rate_monthly_<?php echo $roomType['room_type_id']; ?>">Monthly Rate:</label>
-                                    <input type="number" step="0.01"
-                                        id="rate_monthly_<?php echo $roomType['room_type_id']; ?>" name="rate_monthly"
-                                        value="<?php echo $roomType['rate_monthly']; ?>" required>
-                                    <button type="submit" class="update-button">Update</button>
-                                </form>
-
-                                <form method="POST" action="room_types.php" style="display:inline;">
-                                    <input type="hidden" name="action" value="delete">
-                                    <input type="hidden" name="room_type_id"
-                                        value="<?php echo $roomType['room_type_id']; ?>">
-                                    <button type="submit" class="update-button"
-                                        onclick="return confirm('Are you sure?')">Delete</button>
-                                </form>
-                            </div>
-                        </td>
+                        <th>ID</th>
+                        <th>Room Type Name</th>
+                        <th>Monthly Rate</th>
+                        <th>Actions</th>
                     </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php foreach ($roomTypeData as $roomType): ?>
+                        <tr>
+                            <td><?php echo $roomType['room_type_id']; ?></td>
+                            <td><?php echo $roomType['room_type_name']; ?></td>
+                            <td><?php echo $roomType['rate_monthly']; ?></td>
+                            <td>
+                                <button onclick="toggleEditForm(<?php echo $roomType['room_type_id']; ?>)"
+                                    class="update-button">Edit</button>
+                                <!-- Edit Form -->
+                                <div id="edit-form-<?php echo $roomType['room_type_id']; ?>" class="rooms-type-edit-form">
+                                    <button type="button" class="close-button"
+                                        onclick="toggleEditForm(<?php echo $roomType['room_type_id']; ?>)">✕</button>
+                                    <form method="POST" action="room_types.php" style="display:inline;">
+                                        <h2>Edit Room</h2>
+                                        <input type="hidden" name="action" value="edit">
+                                        <input type="hidden" name="room_type_id"
+                                            value="<?php echo $roomType['room_type_id']; ?>">
+                                        <label for="room_type_name_<?php echo $roomType['room_type_id']; ?>">Room Type
+                                            Name:</label>
+                                        <input type="text" id="room_type_name_<?php echo $roomType['room_type_id']; ?>"
+                                            name="room_type_name" value="<?php echo $roomType['room_type_name']; ?>"
+                                            required>
+                                        <label for="rate_monthly_<?php echo $roomType['room_type_id']; ?>">Monthly
+                                            Rate:</label>
+                                        <input type="number" step="0.01"
+                                            id="rate_monthly_<?php echo $roomType['room_type_id']; ?>" name="rate_monthly"
+                                            value="<?php echo $roomType['rate_monthly']; ?>" required>
+                                        <div class="rooms-button-group">
+                                            <button type="submit" class="update-button">Update</button>
+                                            <button type="button" class="update-button"
+                                                onclick="document.getElementById('delete-form-<?php echo $roomType['room_type_id']; ?>').submit(); return false;">Delete</button>
+                                        </div>
+                                    </form>
 
-        <?php
-        $url = 'room_types.php';
-        echo generatePagination($page, $totalPages, $url);
-        ?>
+                                    <form id="delete-form-<?php echo $roomType['room_type_id']; ?>" method="POST"
+                                        action="room_types.php" style="display:none;">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="room_type_id"
+                                            value="<?php echo $roomType['room_type_id']; ?>">
+                                    </form>
 
-        <br>
-        <a href="dashboard.php" class="button">Back to Dashboard</a>
-    </div>
+
+
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <?php
+            $url = 'room_types.php';
+            echo generatePagination($page, $totalPages, $url);
+            ?>
+            <br>
+            <div class="back-button-container">
+                <a href="dashboard.php" class="button">Back to Dashboard</a>
+            </div>
+        </div>
+        <div id="form-overlay"></div>
 </body>
 
 </html>

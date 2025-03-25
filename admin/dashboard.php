@@ -9,7 +9,7 @@
 <a href="room_types.php">
     <button>Manage Room Types</button>
 </a>
-<a href="user_management.php">
+<a href="users.php">
     <button>Manage Users</button>
 </a>
 <a href="meals.php">

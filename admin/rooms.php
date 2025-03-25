@@ -137,21 +137,32 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap" />
     <link rel="stylesheet" href="../assets/styles.css">
     <script src="../assets/scripts.js"></script>
-    <title>Manage Rooms</title> 
+    <title>Manage Rooms</title>
 </head>
 
 <body>
-    <div class="manage-default">
-        <h1>Manage Rooms</h1>
+    <div class="blur-layer"></div>
+    <a href="dashboard.php" class="title">LuckyNest</a>
+    
+    <div class="rooms-container">
+        <h1 class="rooms-title">Manage Rooms</h1>
+        
         <?php if ($feedback): ?>
-            <p style="color: green;"><?php echo $feedback; ?></p>
+            <div class="rooms-feedback" id="feedback_message"><?php echo $feedback; ?></div>
         <?php endif; ?>
 
-        <button onclick="toggleAddForm()" class="update-button">Add Room</button>
+        <div class="button-center">
+            <button onclick="toggleAddForm()" class="update-add-button">Add Room</button>
+        </div>
 
-        <div id="add-form">
+        <div id="add-form" class="add-room-form">
+            <button type="button" class="close-button" onclick="toggleAddForm()">✕</button>
             <h2>Add New Room</h2>
             <form method="POST" action="rooms.php">
                 <input type="hidden" name="action" value="add">
@@ -170,100 +181,125 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
                     <option value="Available">Available</option>
                     <option value="Occupied">Occupied</option>
                 </select>
-                <label for="room_is_available">
-                    <input type="checkbox" id="room_is_available" name="room_is_available"> Available
-                </label>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="room_is_available" name="room_is_available"> 
+                    <label for="room_is_available">Available</label>
+                </div>
                 <label>Amenities:</label>
                 <?php foreach ($amenityOptions as $amenity): ?>
-                    <label>
-                        <input type="checkbox" name="amenities[]" value="<?php echo $amenity['amenity_id']; ?>">
-                        <?php echo $amenity['amenity_name']; ?>
-                    </label>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="amenity_<?php echo $amenity['amenity_id']; ?>" 
+                               name="amenities[]" 
+                               value="<?php echo $amenity['amenity_id']; ?>">
+                        <label for="amenity_<?php echo $amenity['amenity_id']; ?>">
+                            <?php echo $amenity['amenity_name']; ?>
+                        </label>
+                    </div>
                 <?php endforeach; ?>
                 <button type="submit" class="update-button">Add Room</button>
             </form>
         </div>
 
-        <h2>Room List</h2>
-        <table border="1">
-            <thead>
-                <tr>
-                    <th>Room ID</th>
-                    <th>Room Number</th>
-                    <th>Room Type</th>
-                    <th>Status</th>
-                    <th>Amenities</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($roomData as $room): ?>
-                    <?php
-                    $stmt = $conn->prepare("SELECT a.amenity_name 
-                                          FROM room_amenities ra 
-                                          JOIN amenities a ON ra.amenity_id = a.amenity_id 
-                                          WHERE ra.room_id = :roomId");
-                    $stmt->bindValue(':roomId', $room['room_id'], PDO::PARAM_INT);
-                    $stmt->execute();
-                    $roomAmenities = $stmt->fetchAll(PDO::FETCH_COLUMN);
-                    ?>
+        <h2 class="rooms-title">Room List</h2>
+        <div class="rooms-table-container">
+            <table class="rooms-table">
+                <thead>
                     <tr>
-                        <td><?php echo $room['room_id']; ?></td>
-                        <td><?php echo $room['room_number']; ?></td>
-                        <td><?php echo $room['room_type_name']; ?></td>
-                        <td><?php echo $room['status']; ?></td>
-                        <td><?php echo implode(', ', $roomAmenities); ?></td>
-                        <td>
-                            <button onclick="toggleEditForm(<?php echo $room['room_id']; ?>)" class="update-button">Edit</button>
-                            <div id="edit-form-<?php echo $room['room_id']; ?>" class="edit-form">
-                                <form method="POST" action="rooms.php" style="display:inline;">
-                                    <input type="hidden" name="action" value="edit">
-                                    <input type="hidden" name="room_id" value="<?php echo $room['room_id']; ?>">
-                                    <label for="room_number_<?php echo $room['room_id']; ?>">Room Number:</label>
-                                    <input type="text" id="room_number_<?php echo $room['room_id']; ?>" name="room_number" value="<?php echo $room['room_number']; ?>" required>
-                                    <label for="room_type_id_<?php echo $room['room_id']; ?>">Room Type:</label>
-                                    <select id="room_type_id_<?php echo $room['room_id']; ?>" name="room_type_id" required>
-                                        <?php foreach ($roomTypeOptions as $roomType): ?>
-                                            <option value="<?php echo $roomType['room_type_id']; ?>" 
-                                                <?php echo $roomType['room_type_name'] === $room['room_type_name'] ? 'selected' : ''; ?>>
-                                                <?php echo $roomType['room_type_name']; ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <label for="status_<?php echo $room['room_id']; ?>">Status:</label>
-                                    <select id="status_<?php echo $room['room_id']; ?>" name="status" required>
-                                        <option value="Available" <?php echo $room['status'] === 'Available' ? 'selected' : ''; ?>>Available</option>
-                                        <option value="Occupied" <?php echo $room['status'] === 'Occupied' ? 'selected' : ''; ?>>Occupied</option>
-                                    </select>
-
-                                    <?php foreach ($amenityOptions as $amenity): ?>
-                                        <label>
-                                            <input type="checkbox" name="amenities[]" value="<?php echo $amenity['amenity_id']; ?>"
-                                                <?php echo in_array($amenity['amenity_id'], $roomAmenities) ? 'checked' : ''; ?>>
-                                            <?php echo $amenity['amenity_name']; ?>
-                                        </label>
-                                    <?php endforeach; ?>
-                                    <button type="submit" class="update-button">Update</button>
-                                </form>
-
-                                <form method="POST" action="rooms.php" style="display:inline;">
-                                    <input type="hidden" name="action" value="delete">
-                                    <input type="hidden" name="room_id" value="<?php echo $room['room_id']; ?>">
-                                    <button type="submit" class="update-button" onclick="return confirm('Are you sure?')">Delete</button>
-                                </form>
-                            </div>
-                        </td>
+                        <th>Room ID</th>
+                        <th>Room Number</th>
+                        <th>Room Type</th>
+                        <th>Status</th>
+                        <th>Amenities</th>
+                        <th>Actions</th>
                     </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php foreach ($roomData as $room): ?>
+                        <?php
+                        $stmt = $conn->prepare("SELECT a.amenity_name 
+                                              FROM room_amenities ra 
+                                              JOIN amenities a ON ra.amenity_id = a.amenity_id 
+                                              WHERE ra.room_id = :roomId");
+                        $stmt->bindValue(':roomId', $room['room_id'], PDO::PARAM_INT);
+                        $stmt->execute();
+                        $roomAmenities = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                        ?>
+                        <tr>
+                            <td><?php echo $room['room_id']; ?></td>
+                            <td><?php echo $room['room_number']; ?></td>
+                            <td><?php echo $room['room_type_name']; ?></td>
+                            <td><?php echo $room['status']; ?></td>
+                            <td><?php echo implode(', ', $roomAmenities); ?></td>
+                            <td>
+                                <button onclick="toggleEditForm(<?php echo $room['room_id']; ?>)" class="update-button">Edit</button>
+                                <div id="edit-form-<?php echo $room['room_id']; ?>" class="rooms-edit-form">
+                                    <button type="button" class="close-button" onclick="toggleEditForm(<?php echo $room['room_id']; ?>)">✕</button>
+                                    <form method="POST" action="rooms.php">
+                                        <h2>Edit Room</h2>
+                                        <input type="hidden" name="action" value="edit">
+                                        <input type="hidden" name="room_id" value="<?php echo $room['room_id']; ?>">
+                                        <label for="room_number_<?php echo $room['room_id']; ?>">Room Number:</label>
+                                        <input type="text" id="room_number_<?php echo $room['room_id']; ?>" name="room_number" value="<?php echo $room['room_number']; ?>" required>
+                                        <label for="room_type_id_<?php echo $room['room_id']; ?>">Room Type:</label>
+                                        <select id="room_type_id_<?php echo $room['room_id']; ?>" name="room_type_id" required>
+                                            <?php foreach ($roomTypeOptions as $roomType): ?>
+                                                <option value="<?php echo $roomType['room_type_id']; ?>" 
+                                                    <?php echo $roomType['room_type_name'] === $room['room_type_name'] ? 'selected' : ''; ?>>
+                                                    <?php echo $roomType['room_type_name']; ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <label for="status_<?php echo $room['room_id']; ?>">Status:</label>
+                                        <select id="status_<?php echo $room['room_id']; ?>" name="status" required>
+                                            <option value="Available" <?php echo $room['status'] === 'Available' ? 'selected' : ''; ?>>Available</option>
+                                            <option value="Occupied" <?php echo $room['status'] === 'Occupied' ? 'selected' : ''; ?>>Occupied</option>
+                                        </select>
+                                        <label for="room_is_available_<?php echo $room['room_id']; ?>">
+                                            <input type="checkbox" id="room_is_available_<?php echo $room['room_id']; ?>" 
+                                                name="room_is_available" <?php echo $room['room_is_available'] ? 'checked' : ''; ?>> Available
+                                        </label>
+                                        
+                                        <label>Amenities:</label>
+                                        <?php foreach ($amenityOptions as $amenity): ?>
+                                            <div class="checkbox-container">
+                                                <input type="checkbox" 
+                                                       id="amenity_<?php echo $room['room_id'] . '_' . $amenity['amenity_id']; ?>" 
+                                                       name="amenities[]" 
+                                                       value="<?php echo $amenity['amenity_id']; ?>"
+                                                       <?php echo in_array($amenity['amenity_name'], $roomAmenities) ? 'checked' : ''; ?>>
+                                                <label for="amenity_<?php echo $room['room_id'] . '_' . $amenity['amenity_id']; ?>">
+                                                    <?php echo $amenity['amenity_name']; ?>
+                                                </label>
+                                            </div>
+                                        <?php endforeach; ?>
+                                        
+                                        <div class="rooms-button-group">
+                                            <button type="submit" class="update-button">Update</button>
+                                            <button type="button" class="update-button" onclick="document.getElementById('delete-form-<?php echo $room['room_id']; ?>').submit(); return false;">Delete</button>
+                                        </div>
+                                    </form>
+                                    
+                                    <form id="delete-form-<?php echo $room['room_id']; ?>" method="POST" action="rooms.php" style="display:none;">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="room_id" value="<?php echo $room['room_id']; ?>">
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>  
         <?php
         $url = 'rooms.php';
         echo generatePagination($page, $totalPages, $url);
         ?>
-        <br>
-        <a href="dashboard.php" class="button">Back to Dashboard</a>
+        <div class="back-button-container">
+            <a href="dashboard.php" class="button">Back to Dashboard</a>
+        </div>
     </div>
+
+    <div id="form-overlay"></div>
 </body>
 
 </html>

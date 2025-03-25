@@ -82,54 +82,106 @@ $conn = null;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Profile</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap" />
+    <link rel="stylesheet" href="../assets/styles.css">
+    <script src="../assets/scripts.js"></script>
 </head>
 
 <body>
+    <div class="blur-layer"></div>
     <div class="manage-default">
-        <h1>Manage Profile</h1>
-        <?php if ($feedback): ?>
-            <p style="color: green;"><?php echo $feedback; ?></p>
-        <?php endif; ?>
+        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
+        <div class="centering">
+            <h2 class="manage-profile">Manage Profile</h2>
+            <?php if ($feedback): ?>
+    <div class="feedback-message" id="feedback_message"><?php echo $feedback; ?></div>
+<?php endif; ?>
 
-        <h2>Update Profile</h2>
-        <form method="POST" action="manage_profile.php">
-            <input type="hidden" name="action" value="update_profile">
-            <label for="forename">Forename:</label>
-            <input type="text" id="forename" name="forename"
-                value="<?php echo htmlspecialchars($userData['forename']); ?>" required>
-            <label for="surname">Surname:</label>
-            <input type="text" id="surname" name="surname" value="<?php echo htmlspecialchars($userData['surname']); ?>"
-                required>
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($userData['email']); ?>"
-                required>
-            <label for="phone">Phone:</label>
-            <input type="text" id="phone" name="phone" value="<?php echo htmlspecialchars($userData['phone']); ?>"
-                required>
-            <label for="emergency_contact">Emergency Contact:</label>
-            <input type="text" id="emergency_contact" name="emergency_contact"
-                value="<?php echo htmlspecialchars($userData['emergency_contact']); ?>" required>
-            <label for="address">Address:</label>
-            <input type="text" id="address" name="address" value="<?php echo htmlspecialchars($userData['address']); ?>"
-                required>
-            <button type="submit" class="update-button">Update Profile</button>
-        </form>
+            <div class="update-wrapper">
+                <div class="update-profile-wrapper">
+                    <h2>Update Profile</h2>
+                    <form method="POST" action="manage_profile.php">
+                        <div class="input-space">
+                            <input type="hidden" name="action" value="update_profile">
+                        </div>
 
-        <h2>Update Password</h2>
-        <form method="POST" action="manage_profile.php">
-            <input type="hidden" name="action" value="update_password">
-            <label for="current_password">Current Password:</label>
-            <input type="password" id="current_password" name="current_password" required>
-            <label for="new_password">New Password:</label>
-            <input type="password" id="new_password" name="new_password" required>
-            <label for="confirm_password">Confirm New Password:</label>
-            <input type="password" id="confirm_password" name="confirm_password" required>
-            <button type="submit" class="update-button">Update Password</button>
-        </form>
+                        <label for="forename">Forename:</label>
+                        <div class="input-space">
+                            <input type="text" id="forename" name="forename"
+                                value="<?php echo htmlspecialchars($userData['forename']); ?>" required>
+                        </div>
 
-        <br>
-        <a href="dashboard.php" class="button">Back to Dashboard</a>
+                        <label for="surname">Surname:</label>
+                        <div class="input-space">
+                            <input type="text" id="surname" name="surname"
+                                value="<?php echo htmlspecialchars($userData['surname']); ?>" required>
+                        </div>
+
+                        <label for="email">Email:</label>
+                        <div class="input-space">
+                            <input type="email" id="email" name="email"
+                                value="<?php echo htmlspecialchars($userData['email']); ?>" required>
+                        </div>
+
+                        <label for="phone">Phone:</label>
+                        <div class="input-space">
+                            <input type="text" id="phone" name="phone"
+                                value="<?php echo htmlspecialchars($userData['phone']); ?>" required>
+                        </div>
+
+                        <label for="emergency_contact">Emergency Contact:</label>
+                        <div class="input-space">
+                            <input type="text" id="emergency_contact" name="emergency_contact"
+                                value="<?php echo htmlspecialchars($userData['emergency_contact']); ?>" required>
+                        </div>
+
+                        <label for="address">Address:</label>
+                        <div class="input-space">
+                            <input type="text" id="address" name="address"
+                                value="<?php echo htmlspecialchars($userData['address']); ?>" required>
+                        </div>
+
+                        <button type="submit" class="update-button">Update Profile</button>
+                    </form>
+                </div>
+
+                <div class="update-password-wrapper">
+                    <div class="update-password-title">
+                        <h2>Update Password</h2>
+                    </div>
+                    <form method="POST" action="manage_profile.php">
+                        <div class="input-space">
+                            <input type="hidden" name="action" value="update_password">
+                        </div>
+
+                        <div class="form-gap">
+                            <label for="current_password">Current Password:</label>
+                            <div class="input-space">
+                                <input type="password" id="current_password" name="current_password" required>
+                            </div>
+
+                            <label for="new_password">New Password:</label>
+                            <div class="input-space">
+                                <input type="password" id="new_password" name="new_password" required>
+                            </div>
+
+                            <label for="confirm_password">Confirm New Password:</label>
+                            <div class="input-space">
+                                <input type="password" id="confirm_password" name="confirm_password" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="update-button">Update Password</button>
+                    </form>
+
+                </div>
+            </div>
+            <br>
+            <div class="button-center"><a href="dashboard.php" class="button">&larr; Back to Dashboard</a></div>
+        </div>
     </div>
 </body>
 
