@@ -97,6 +97,7 @@ $conn = null;
 </head>
 
 <body>
+    <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-2"></div>
     <div class="manage-default">
         <h1><a class="title" href="../index.php">LuckyNest</a></h1>
@@ -135,14 +136,14 @@ $conn = null;
                                 <td><?php echo $user['address']; ?></td>
                                 <td><?php echo ucfirst($user['role']); ?></td>
                                 <td>
-                                    <button onclick="toggleEditForm(<?php echo $user['user_id']; ?>)"
+                                    <button onclick="LuckyNest.toggleEditUsersForm(<?php echo $user['user_id']; ?>)"
                                         class="update-button">Edit</button>
 
                                     <!-- Edit Form -->
-                                    <div id="edit-form-<?php echo $user['user_id']; ?>" class="rooms-edit-form">
+                                    <div id="edit-users-form-<?php echo $user['user_id']; ?>" class="rooms-edit-form">
                                         <button type="button" class="close-button"
-                                            onclick="toggleEditForm(<?php echo $user['user_id']; ?>)">✕</button>
-                                        <h2 class = "edit-title">Edit User</h2>
+                                            onclick="LuckyNest.toggleEditUsersForm(<?php echo $user['user_id']; ?>)">✕</button>
+                                        <h2 class="edit-title">Edit User</h2>
                                         <form method="POST" action="users.php">
                                             <input type="hidden" name="action" value="edit">
                                             <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
@@ -177,17 +178,18 @@ $conn = null;
                                             </select>
                                             <div class="rooms-button-group">
                                                 <button type="submit" class="update-button">Update</button>
-                                                
+
                                             </div>
                                         </form>
+
+                                        <!-- Delete Form -->
                                         <form method="POST" action="users.php" style="margin-top: 10px;">
                                             <input type="hidden" name="action" value="delete">
                                             <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
                                             <button type="submit" class="update-button"
-                                                onclick="return confirm('Are you sure you want to delete this user?')">Delete User</button>
+                                                onclick="return confirm('Are you sure you want to delete this user?')">Delete
+                                                User</button>
                                         </form>
-
-                                        <!-- Delete Form -->
                                     </div>
                                 </td>
                             </tr>

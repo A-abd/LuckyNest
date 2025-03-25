@@ -96,6 +96,7 @@ $conn = null;
 </head>
 
 <body>
+    <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
         <h1><a class="title" href="../index.php">LuckyNest</a></h1>
@@ -106,13 +107,13 @@ $conn = null;
             <?php endif; ?>
 
             <!-- Add Room Type Button -->
-            <div class="button-center"><button onclick="toggleAddForm()" class="update-add-button">Add Room
-                    Type</button></div>
-
+            <div class="button-center">
+                <button onclick="LuckyNest.toggleAddRoomTypeForm()" class="update-add-button">Add Room Type</button>
+            </div>
 
             <!-- Add Room Type Form -->
-            <div id="add-form">
-                <button type="button" class="close-button" onclick="toggleAddForm()">✕</button>
+            <div id="add-room-type-form" class="add-form">
+                <button type="button" class="close-button" onclick="LuckyNest.toggleAddRoomTypeForm()">✕</button>
                 <h2>Add New Room Type</h2>
                 <form method="POST" action="room_types.php">
                     <input type="hidden" name="action" value="add">
@@ -142,12 +143,13 @@ $conn = null;
                             <td><?php echo $roomType['room_type_name']; ?></td>
                             <td><?php echo $roomType['rate_monthly']; ?></td>
                             <td>
-                                <button onclick="toggleEditForm(<?php echo $roomType['room_type_id']; ?>)"
+                                <button onclick="LuckyNest.toggleEditRoomTypeForm(<?php echo $roomType['room_type_id']; ?>)"
                                     class="update-button">Edit</button>
                                 <!-- Edit Form -->
-                                <div id="edit-form-<?php echo $roomType['room_type_id']; ?>" class="rooms-type-edit-form">
+                                <div id="edit-room-type-form-<?php echo $roomType['room_type_id']; ?>"
+                                    class="rooms-type-edit-form">
                                     <button type="button" class="close-button"
-                                        onclick="toggleEditForm(<?php echo $roomType['room_type_id']; ?>)">✕</button>
+                                        onclick="LuckyNest.toggleEditRoomTypeForm(<?php echo $roomType['room_type_id']; ?>)">✕</button>
                                     <form method="POST" action="room_types.php" style="display:inline;">
                                         <h2>Edit Room</h2>
                                         <input type="hidden" name="action" value="edit">

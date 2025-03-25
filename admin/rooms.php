@@ -147,8 +147,9 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
 </head>
 
 <body>
+    <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer"></div>
-    <a href="dashboard.php" class="title">LuckyNest</a>
+    <h1><a href="dashboard.php" class="title">LuckyNest</a></h1>
     
     <div class="rooms-container">
         <h1 class="rooms-title">Manage Rooms</h1>
@@ -157,12 +158,14 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
             <div class="rooms-feedback" id="feedback_message"><?php echo $feedback; ?></div>
         <?php endif; ?>
 
+        <!-- Add Room Button -->
         <div class="button-center">
-            <button onclick="toggleAddForm()" class="update-add-button">Add Room</button>
+            <button onclick="LuckyNest.toggleAddRoomForm()" class="update-add-button">Add Room</button>
         </div>
 
-        <div id="add-form" class="add-room-form">
-            <button type="button" class="close-button" onclick="toggleAddForm()">✕</button>
+        <!-- Add Room Form -->
+        <div id="add-room-form" class="add-form">
+            <button type="button" class="close-button" onclick="LuckyNest.toggleAddRoomForm()">✕</button>
             <h2>Add New Room</h2>
             <form method="POST" action="rooms.php">
                 <input type="hidden" name="action" value="add">
@@ -231,9 +234,9 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
                             <td><?php echo $room['status']; ?></td>
                             <td><?php echo implode(', ', $roomAmenities); ?></td>
                             <td>
-                                <button onclick="toggleEditForm(<?php echo $room['room_id']; ?>)" class="update-button">Edit</button>
-                                <div id="edit-form-<?php echo $room['room_id']; ?>" class="rooms-edit-form">
-                                    <button type="button" class="close-button" onclick="toggleEditForm(<?php echo $room['room_id']; ?>)">✕</button>
+                                <button onclick="LuckyNest.toggleEditRoomForm(<?php echo $room['room_id']; ?>)" class="update-button">Edit</button>
+                                <div id="edit-room-form-<?php echo $room['room_id']; ?>" class="rooms-edit-form">
+                                    <button type="button" class="close-button" onclick="LuckyNest.toggleEditRoomForm(<?php echo $room['room_id']; ?>)">✕</button>
                                     <form method="POST" action="rooms.php">
                                         <h2>Edit Room</h2>
                                         <input type="hidden" name="action" value="edit">
