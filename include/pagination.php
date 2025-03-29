@@ -12,3 +12,5 @@ function generatePagination($currentPage, $totalPages, $url)
     $pagination .= '</div>';
     return $pagination;
 }
+
+?>
