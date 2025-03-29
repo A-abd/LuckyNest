@@ -1,5 +1,3 @@
-console.log("scripts loading"); // DEBUG
-
 // global
 const CONFIG = {
   selectors: {
@@ -58,34 +56,6 @@ const Utils = {
   }
 };
 
-const UsersModule = {
-  toggleEditUsersForm(id) {
-    Utils.toggleElement(`edit-users-form-${id}`);
-  },
-}
-
-// Rooms
-const RoomsModule = {
-  toggleAddRoomForm() {
-    Utils.toggleElement('add-room-form');
-  },
-
-  toggleEditRoomForm(id) {
-    Utils.toggleElement(`edit-room-form-${id}`);
-  },
-}
-
-// Room Types
-const RoomTypesModule = {
-  toggleAddRoomTypeForm() {
-    Utils.toggleElement('add-room-type-form');
-  },
-
-  toggleEditRoomTypeForm(id) {
-    Utils.toggleElement(`edit-room-type-form-${id}`);
-  },
-}
-
 // Meals
 const MealModule = {
   init() {
@@ -103,22 +73,6 @@ const MealModule = {
       });
       this.calculateTotal();
     }
-  },
-
-  toggleAddMealForm() {
-    Utils.toggleElement('add-meal-form');
-  },
-
-  toggleEditMealForm(id) {
-    Utils.toggleElement(`edit-meal-form-${id}`);
-  },
-
-  toggleAddMealPlanForm() {
-    Utils.toggleElement('add-meal-plan-form');
-  },
-
-  toggleEditMealPlanForm(id) {
-    Utils.toggleElement(`edit-meal-plan-form-${id}`);
   },
 
   showMealPlanDetails(planId) {
@@ -170,10 +124,6 @@ const LaundryModule = {
     });
   },
 
-  toggleEditLaundryForm(id) {
-    Utils.toggleElement(`edit-laundry-form-${id}`);
-  },
-
   toggleDeleteLaundryForm(slotId) {
     const deleteOptions = document.getElementById(`delete-options-${slotId}`);
     if (deleteOptions) {
@@ -200,14 +150,6 @@ const BookingModule = {
     } catch (err) {
       console.error('Error initializing booking calendar:', err);
     }
-  },
-
-  toggleAddBookingForm() {
-    Utils.toggleElement('add-booking-form');
-  },
-
-  toggleEditBookingForm(id) {
-    Utils.toggleElement(`edit-booking-form-${id}`);
   },
 
   initDatePicker(dateInput, bookedDates) {
@@ -347,22 +289,11 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 window.LuckyNest = {
-  toggleEditUsersForm: UsersModule.toggleEditUsersForm,
-  toggleAddRoomForm: RoomsModule.toggleAddRoomForm,
-  toggleEditRoomForm: RoomsModule.toggleEditRoomForm,
-  toggleAddRoomTypeForm: RoomTypesModule.toggleAddRoomTypeForm,
-  toggleEditRoomTypeForm: RoomTypesModule.toggleEditRoomTypeForm,
-  toggleAddMealForm: MealModule.toggleAddMealForm,
-  toggleEditMealForm: MealModule.toggleEditMealForm,
-  toggleAddMealPlanForm: MealModule.toggleAddMealPlanForm,
-  toggleEditMealPlanForm: MealModule.toggleEditMealPlanForm,
-  toggleEditLaundryForm: LaundryModule.toggleEditLaundryForm,
+  toggleForm: Utils.toggleElement,
   toggleDeleteLaundryForm: LaundryModule.toggleDeleteLaundryForm,
-  toggleAddBookingForm: BookingModule.toggleAddBookingForm,
-  toggleEditBookingForm: BookingModule.toggleEditBookingForm,
   updateBookingDetails: PaymentModule.updateBookingDetails,
   showPaymentForm: PaymentModule.showPaymentForm,
-  calculateAmount: PaymentModule.calculateAmount
+  calculateAmount: PaymentModule.calculateAmount.apply
 };
 /*
 // CSS Funtionality
