@@ -136,13 +136,13 @@ $conn = null;
                                 <td><?php echo $user['address']; ?></td>
                                 <td><?php echo ucfirst($user['role']); ?></td>
                                 <td>
-                                    <button onclick="LuckyNest.toggleEditUsersForm(<?php echo $user['user_id']; ?>)"
+                                    <button onclick="LuckyNest.toggleForm('edit-form-<?php echo $user['user_id']; ?>')"
                                         class="update-button">Edit</button>
 
                                     <!-- Edit Form -->
-                                    <div id="edit-users-form-<?php echo $user['user_id']; ?>" class="rooms-edit-form">
+                                    <div id="edit-form-<?php echo $user['user_id']; ?>" class="rooms-edit-form">
                                         <button type="button" class="close-button"
-                                            onclick="LuckyNest.toggleEditUsersForm(<?php echo $user['user_id']; ?>)">✕</button>
+                                            onclick="LuckyNest.toggleForm('edit-form-<?php echo $user['user_id']; ?>')">✕</button>
                                         <h2 class="edit-title">Edit User</h2>
                                         <form method="POST" action="users.php">
                                             <input type="hidden" name="action" value="edit">

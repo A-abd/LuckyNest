@@ -160,12 +160,12 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
 
         <!-- Add Room Button -->
         <div class="button-center">
-            <button onclick="LuckyNest.toggleAddRoomForm()" class="update-add-button">Add Room</button>
+            <button onclick="LuckyNest.toggleForm('add-form')" class="update-add-button">Add Room</button>
         </div>
 
         <!-- Add Room Form -->
-        <div id="add-room-form" class="add-form">
-            <button type="button" class="close-button" onclick="LuckyNest.toggleAddRoomForm()">✕</button>
+        <div id="add-form" class="add-form">
+            <button type="button" class="close-button" onclick="LuckyNest.toggleForm('add-form')">✕</button>
             <h2>Add New Room</h2>
             <form method="POST" action="rooms.php">
                 <input type="hidden" name="action" value="add">
@@ -234,9 +234,9 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
                             <td><?php echo $room['status']; ?></td>
                             <td><?php echo implode(', ', $roomAmenities); ?></td>
                             <td>
-                                <button onclick="LuckyNest.toggleEditRoomForm(<?php echo $room['room_id']; ?>)" class="update-button">Edit</button>
+                                <button onclick="LuckyNest.toggleForm('edit-room-form-<?php echo $room['room_id']; ?>')" class="update-button">Edit</button>
                                 <div id="edit-room-form-<?php echo $room['room_id']; ?>" class="rooms-edit-form">
-                                    <button type="button" class="close-button" onclick="LuckyNest.toggleEditRoomForm(<?php echo $room['room_id']; ?>)">✕</button>
+                                    <button type="button" class="close-button" onclick="LuckyNest.toggleForm('edit-room-form-<?php echo $room['room_id']; ?>')">✕</button>
                                     <form method="POST" action="rooms.php">
                                         <h2>Edit Room</h2>
                                         <input type="hidden" name="action" value="edit">
