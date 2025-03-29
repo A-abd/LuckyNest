@@ -23,6 +23,7 @@ class ComposerStaticInit40aa654f2e66c20881ae0572fe987a10
             'Symfony\\Polyfill\\Mbstring\\' => 26,
             'Symfony\\Polyfill\\Ctype\\' => 23,
             'Stripe\\' => 7,
+            'Sonata\\GoogleAuthenticator\\' => 27,
         ),
         'P' => 
         array (
@@ -32,6 +33,7 @@ class ComposerStaticInit40aa654f2e66c20881ae0572fe987a10
         'G' => 
         array (
             'GrahamCampbell\\ResultType\\' => 26,
+            'Google\\Authenticator\\' => 21,
         ),
         'D' => 
         array (
@@ -60,6 +62,10 @@ class ComposerStaticInit40aa654f2e66c20881ae0572fe987a10
         array (
             0 => __DIR__ . '/..' . '/stripe/stripe-php/lib',
         ),
+        'Sonata\\GoogleAuthenticator\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/sonata-project/google-authenticator/src',
+        ),
         'PhpOption\\' => 
         array (
             0 => __DIR__ . '/..' . '/phpoption/phpoption/src/PhpOption',
@@ -71,6 +77,10 @@ class ComposerStaticInit40aa654f2e66c20881ae0572fe987a10
         'GrahamCampbell\\ResultType\\' => 
         array (
             0 => __DIR__ . '/..' . '/graham-campbell/result-type/src',
+        ),
+        'Google\\Authenticator\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/sonata-project/google-authenticator/src',
         ),
         'Dotenv\\' => 
         array (
