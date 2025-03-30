@@ -214,12 +214,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 
 <body>
+    <?php include '../include/guest_navbar.php'; ?>
     <h2>Make a Payment</h2>
 
     <div>
-        <button onclick="showPaymentForm('rent')">Pay for Accommodation</button>
-        <button onclick="showPaymentForm('meal_plan')">Pay for Meal Plans</button>
-        <button onclick="showPaymentForm('laundry')">Pay for Laundry</button>
+        <button onclick="LuckyNest.showPaymentForm('rent')">Pay for Accommodation</button>
+        <button onclick="LuckyNest.showPaymentForm('meal_plan')">Pay for Meal Plans</button>
+        <button onclick="LuckyNest.showPaymentForm('laundry')">Pay for Laundry</button>
     </div>
 
     <div id="rent_form">
@@ -229,7 +230,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php else: ?>
             <form action="" method="POST">
                 <label for="booking_selection">Select Booking:</label>
-                <select id="booking_selection" name="booking_id" onchange="updateBookingDetails()" required>
+                <select id="booking_selection" name="booking_id" onchange="LuckyNest.updateBookingDetails()" required>
                     <option value="">-- Select a booking --</option>
                     <?php foreach ($bookings as $booking): ?>
                         <option value="<?php echo $booking['booking_id']; ?>" data-room-id="<?php echo $booking['room_id']; ?>"
@@ -265,7 +266,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php else: ?>
             <form action="" method="POST">
                 <label for="meal_plan_selection">Select Meal Plan:</label>
-                <select id="meal_plan_selection" name="meal_plan_id" onchange="calculateAmount()" required>
+                <select id="meal_plan_selection" name="meal_plan_id" onchange="LuckyNest.calculateAmount()" required>
                     <option value="">-- Select a meal plan --</option>
                     <?php foreach ($mealPlans as $mealPlan): ?>
                         <option value="<?php echo $mealPlan['meal_plan_id']; ?>" data-price="<?php echo $mealPlan['price']; ?>">
@@ -296,7 +297,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php else: ?>
             <form action="" method="POST">
                 <label for="laundry_selection">Select Laundry Slot:</label>
-                <select id="laundry_selection" name="laundry_slot_id" onchange="calculateAmount()" required>
+                <select id="laundry_selection" name="laundry_slot_id" onchange="LuckyNest.calculateAmount()" required>
                     <option value="">-- Select a laundry slot --</option>
                     <?php foreach ($laundrySlots as $slot): ?>
                         <option value="<?php echo $slot['laundry_slot_id']; ?>" data-price="<?php echo $slot['price']; ?>">
@@ -319,7 +320,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </form>
         <?php endif; ?>
     </div>
-    <a href="dashboard.php" class="button">Back to Dashboard</a>
+
 </body>
 
 </html>
