@@ -93,10 +93,15 @@ if (isset($_GET['feedback'])) {
     $feedback = $_GET['feedback'];
 }
 
-$query = "SELECT * FROM meals LIMIT $recordsPerPage OFFSET $offset";
-$result = $conn->query($query);
-while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-    $mealId = $row['meal_id'];
+$query = "SELECT * FROM meals ORDER BY meal_id LIMIT :limit OFFSET :offset";
+$stmt = $conn->prepare($query);
+$stmt->bindValue(':limit', $recordsPerPage, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
+$mealData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+foreach ($mealData as $key => $meal) {
+    $mealId = $meal['meal_id'];
     $tagQuery = $conn->prepare("
         SELECT mdt.meal_dietary_tag_id, mdt.name 
         FROM meal_dietary_tags mdt 
@@ -104,8 +109,7 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
         WHERE mdtl.meal_id = ?
     ");
     $tagQuery->execute([$mealId]);
-    $row['dietary_tags'] = $tagQuery->fetchAll(PDO::FETCH_ASSOC);
-    $mealData[] = $row;
+    $mealData[$key]['dietary_tags'] = $tagQuery->fetchAll(PDO::FETCH_ASSOC);
 }
 
 $totalRecordsQuery = $conn->query("SELECT COUNT(*) AS total FROM meals");
