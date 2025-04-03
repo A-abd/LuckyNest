@@ -1,4 +1,5 @@
 FIRSTLY CREATE YOUR OWN ".env" FILE IN THE WEBROOT
+e.g. "C:\xampp\htdocs\LuckyNest\.env" here .env is my .env file
 
 How to setup payments_page.php:
      1. Copy paste the following and replace the 'rk_test_...' part with your own Stripe API keys:
