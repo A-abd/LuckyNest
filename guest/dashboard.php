@@ -273,7 +273,6 @@ try {
                 </div>
             <?php else: ?>
                 <p>You have no active bookings.</p>
-                <a href="book_room.php" class="button">Book a Room</a>
             <?php endif; ?>
 
             <h2>My Meal Plans</h2>
