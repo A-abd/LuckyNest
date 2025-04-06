@@ -18,29 +18,97 @@ $recordsPerPage = 10;
 $page = isset($_GET["page"]) ? (int) $_GET["page"] : 1;
 $offset = ($page - 1) * $recordsPerPage;
 
+function updateMealPlanPrice($conn, $planId)
+{
+    $priceQuery = "
+        SELECT SUM(m.price) as total_price
+        FROM meal_plan_items_link mpl
+        JOIN meals m ON mpl.meal_id = m.meal_id
+        WHERE mpl.meal_plan_id = ?
+    ";
+    $stmt = $conn->prepare($priceQuery);
+    $stmt->execute([$planId]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    $totalPrice = $result['total_price'] ?? 0;
+
+    // Apply discount based on plan duration
+    $planQuery = "SELECT meal_plan_type FROM meal_plans WHERE meal_plan_id = ?";
+    $stmt = $conn->prepare($planQuery);
+    $stmt->execute([$planId]);
+    $plan = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    $discount = 0;
+    if ($plan['meal_plan_type'] == 'Weekly') {
+        $discount = 0.1;
+    } elseif ($plan['meal_plan_type'] == 'Monthly') {
+        $discount = 0.2;
+    }
+
+    $finalPrice = $totalPrice * (1 - $discount);
+
+    // Update the meal plan price
+    $updateQuery = "UPDATE meal_plans SET price = ? WHERE meal_plan_id = ?";
+    $stmt = $conn->prepare($updateQuery);
+    $stmt->execute([$finalPrice, $planId]);
+
+    return $finalPrice;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action']) && $_POST['action'] === 'meal_assignment') {
         $planId = $_POST['plan_id'];
-        $mealId = $_POST['meal_id'];
         $dayNumber = $_POST['day_number'];
 
-        $stmt = $conn->prepare("INSERT INTO meal_plan_items_link (meal_plan_id, meal_id, day_number) VALUES (?, ?, ?)");
-        $stmt->execute([$planId, $mealId, $dayNumber]);
+        // Process all selected meals
+        $mealsToAssign = [];
+        if (!empty($_POST['breakfast_meal_id'])) {
+            $mealsToAssign[] = ['meal_id' => $_POST['breakfast_meal_id'], 'meal_type' => 'Breakfast'];
+        }
+        if (!empty($_POST['lunch_meal_id'])) {
+            $mealsToAssign[] = ['meal_id' => $_POST['lunch_meal_id'], 'meal_type' => 'Lunch'];
+        }
+        if (!empty($_POST['dinner_meal_id'])) {
+            $mealsToAssign[] = ['meal_id' => $_POST['dinner_meal_id'], 'meal_type' => 'Dinner'];
+        }
 
-        if ($stmt) {
-            $feedback = 'Meal assigned to plan successfully!';
-            header("Location: meal_assignment.php?feedback=" . urlencode($feedback));
-            exit();
+        if (!empty($mealsToAssign)) {
+            $successCount = 0;
+            foreach ($mealsToAssign as $meal) {
+                $stmt = $conn->prepare("INSERT INTO meal_plan_items_link (meal_plan_id, meal_id, day_number) VALUES (?, ?, ?)");
+                $stmt->execute([$planId, $meal['meal_id'], $dayNumber]);
+                if ($stmt) {
+                    $successCount++;
+                }
+            }
+
+            if ($successCount > 0) {
+                updateMealPlanPrice($conn, $planId);
+
+                $feedback = 'Successfully assigned ' . $successCount . ' meal(s) to plan!';
+                header("Location: meal_assignment.php?feedback=" . urlencode($feedback));
+                exit();
+            } else {
+                $feedback = 'Error assigning meals to plan.';
+            }
         } else {
-            $feedback = 'Error assigning meal to plan.';
+            $feedback = 'Please select at least one meal to assign.';
         }
     } elseif (isset($_POST['action']) && $_POST['action'] === 'delete_assignment') {
         $assignmentId = $_POST['assignment_id'];
+
+        $planQuery = "SELECT meal_plan_id FROM meal_plan_items_link WHERE meal_plan_item_link_id = ?";
+        $stmt = $conn->prepare($planQuery);
+        $stmt->execute([$assignmentId]);
+        $plan = $stmt->fetch(PDO::FETCH_ASSOC);
+        $planId = $plan['meal_plan_id'];
 
         $stmt = $conn->prepare("DELETE FROM meal_plan_items_link WHERE meal_plan_item_link_id = ?");
         $stmt->execute([$assignmentId]);
 
         if ($stmt) {
+            updateMealPlanPrice($conn, $planId);
+
             $feedback = 'Assignment deleted successfully!';
             header("Location: meal_assignment.php?feedback=" . urlencode($feedback));
             exit();
@@ -68,7 +136,7 @@ while ($row = $mealPlanResult->fetch(PDO::FETCH_ASSOC)) {
 
 $assignmentsQuery = "
     SELECT mpl.meal_plan_item_link_id, mpl.meal_plan_id, mpl.meal_id, mpl.day_number,
-           m.name AS meal_name, m.meal_type, mp.name AS plan_name
+           m.name AS meal_name, m.meal_type, mp.name AS plan_name, mp.price AS plan_price
     FROM meal_plan_items_link mpl
     JOIN meals m ON mpl.meal_id = m.meal_id
     JOIN meal_plans mp ON mpl.meal_plan_id = mp.meal_plan_id
@@ -88,6 +156,7 @@ $conn = null;
 
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -99,6 +168,7 @@ $conn = null;
     <script src="../assets/scripts.js"></script>
     <title>Assign Meals to Meal Plans</title>
 </head>
+
 <body>
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
@@ -106,21 +176,26 @@ $conn = null;
         <h1><a class="title" href="../index.php">LuckyNest</a></h1>
         <div class="rooms-types-container">
             <h1>Assign Meals to Meal Plans</h1>
-            
+
+            <?php if (!empty($feedback)): ?>
+                <div class="feedback"><?php echo htmlspecialchars($feedback); ?></div>
+            <?php endif; ?>
+
             <!-- Meal Plan Type Filter -->
             <div class="button-center">
                 <form method="GET" action="meal_assignment.php">
                     <select name="meal_plan_type" onchange="this.form.submit()">
                         <option value="">All Meal Plan Types</option>
-                        <option value="Daily" <?php echo ($selectedPlanType == 'Daily' ? 'selected' : ''); ?>>Daily Plans</option>
-                        <option value="Weekly" <?php echo ($selectedPlanType == 'Weekly' ? 'selected' : ''); ?>>Weekly Plans</option>
-                        <option value="Monthly" <?php echo ($selectedPlanType == 'Monthly' ? 'selected' : ''); ?>>Monthly Plans</option>
+                        <option value="Daily" <?php echo (isset($_GET['meal_plan_type']) && $_GET['meal_plan_type'] == 'Daily' ? 'selected' : ''); ?>>Daily Plans</option>
+                        <option value="Weekly" <?php echo (isset($_GET['meal_plan_type']) && $_GET['meal_plan_type'] == 'Weekly' ? 'selected' : ''); ?>>Weekly Plans</option>
+                        <option value="Monthly" <?php echo (isset($_GET['meal_plan_type']) && $_GET['meal_plan_type'] == 'Monthly' ? 'selected' : ''); ?>>Monthly Plans</option>
                     </select>
                 </form>
             </div>
 
             <div class="button-center">
-                <button onclick="LuckyNest.toggleForm('add-form')" class="update-add-button">Assign Meal to Plan</button>
+                <button onclick="LuckyNest.toggleForm('add-form')" class="update-add-button">Assign Meal to
+                    Plan</button>
             </div>
 
             <div id="add-form" class="add-form">
@@ -128,86 +203,69 @@ $conn = null;
                 <h2>Assign New Meal to Plan</h2>
                 <form method="POST" action="meal_assignment.php">
                     <input type="hidden" name="action" value="meal_assignment">
-                    
+
                     <label for="plan_id">Meal Plan:</label>
                     <select id="plan_id" name="plan_id" required>
                         <?php foreach ($mealPlanData as $plan): ?>
-                            <option value="<?php echo $plan['meal_plan_id']; ?>"><?php echo $plan['name'] . ' (' . $plan['meal_plan_type'] . ')'; ?></option>
+                            <option value="<?php echo $plan['meal_plan_id']; ?>">
+                                <?php echo $plan['name'] . ' (' . $plan['meal_plan_type'] . ') - $' . number_format($plan['price'], 2); ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
-                    
+
                     <label>Breakfast:</label>
                     <select name="breakfast_meal_id">
                         <option value="">Select Breakfast</option>
                         <?php foreach ($mealData as $meal): ?>
                             <?php if ($meal['meal_type'] == 'Breakfast' || $meal['meal_type'] == 'Any'): ?>
-                                <option value="<?php echo $meal['meal_id']; ?>"><?php echo $meal['name']; ?></option>
+                                <option value="<?php echo $meal['meal_id']; ?>">
+                                    <?php echo $meal['name'] . ' ($' . number_format($meal['price'], 2) . ')'; ?>
+                                </option>
                             <?php endif; ?>
                         <?php endforeach; ?>
                     </select>
-                    
+
                     <label>Lunch:</label>
                     <select name="lunch_meal_id">
                         <option value="">Select Lunch</option>
                         <?php foreach ($mealData as $meal): ?>
                             <?php if ($meal['meal_type'] == 'Lunch' || $meal['meal_type'] == 'Any'): ?>
-                                <option value="<?php echo $meal['meal_id']; ?>"><?php echo $meal['name']; ?></option>
+                                <option value="<?php echo $meal['meal_id']; ?>">
+                                    <?php echo $meal['name'] . ' ($' . number_format($meal['price'], 2) . ')'; ?>
+                                </option>
                             <?php endif; ?>
                         <?php endforeach; ?>
                     </select>
-                    
+
                     <label>Dinner:</label>
                     <select name="dinner_meal_id">
                         <option value="">Select Dinner</option>
                         <?php foreach ($mealData as $meal): ?>
                             <?php if ($meal['meal_type'] == 'Dinner' || $meal['meal_type'] == 'Any'): ?>
-                                <option value="<?php echo $meal['meal_id']; ?>"><?php echo $meal['name']; ?></option>
+                                <option value="<?php echo $meal['meal_id']; ?>">
+                                    <?php echo $meal['name'] . ' ($' . number_format($meal['price'], 2) . ')'; ?>
+                                </option>
                             <?php endif; ?>
                         <?php endforeach; ?>
                     </select>
-                    
+
                     <label for="day_number">Day Number:</label>
                     <input type="number" id="day_number" name="day_number" min="1" required>
-                    
-                    <button type="submit" class="update-button">Assign Meal</button>
-                </form>
-            </div>
 
-            <!-- Edit Assignment Form -->
-            <div id="edit-assignment-form" class="add-form" style="display:none;">
-                <button type="button" class="close-button" onclick="LuckyNest.toggleForm('edit-assignment-form')">✕</button>
-                <h2>Edit Meal Assignment</h2>
-                <form method="POST" action="meal_assignment.php">
-                    <input type="hidden" name="action" value="edit_assignment">
-                    <input type="hidden" name="assignment_id" id="edit-assignment-id">
-                    
-                    <label>Meal Type:</label>
-                    <select name="meal_type" id="edit-meal-type">
-                        <option value="Breakfast">Breakfast</option>
-                        <option value="Lunch">Lunch</option>
-                        <option value="Dinner">Dinner</option>
-                    </select>
-                    
-                    <label>New Meal:</label>
-                    <select name="new_meal_id" id="edit-meal-select">
-                        <?php foreach ($mealData as $meal): ?>
-                            <option value="<?php echo $meal['meal_id']; ?>"><?php echo $meal['name'] . ' (' . $meal['meal_type'] . ')'; ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    
-                    <button type="submit" class="update-button">Update Assignment</button>
+                    <button type="submit" class="update-button">Assign Meal(s)</button>
                 </form>
             </div>
 
             <!-- Meal Plan Tables -->
             <?php foreach ($mealPlanData as $plan): ?>
-                <?php 
-                $planAssignments = array_filter($assignmentsData, function($assignment) use ($plan) {
+                <?php
+                $planAssignments = array_filter($assignmentsData, function ($assignment) use ($plan) {
                     return $assignment['meal_plan_id'] == $plan['meal_plan_id'];
                 });
                 ?>
                 <div class="meal-plan-section">
-                    <h2><?php echo $plan['name'] . ' (' . $plan['meal_plan_type'] . ')'; ?></h2>
+                    <h2><?php echo $plan['name'] . ' (' . $plan['meal_plan_type'] . ') - $' . number_format($plan['price'], 2); ?>
+                    </h2>
                     <?php if (!empty($planAssignments)): ?>
                         <table border="1">
                             <thead>
@@ -227,13 +285,47 @@ $conn = null;
                                         <td><?php echo $assignment['meal_type']; ?></td>
                                         <td><?php echo $assignment['day_number']; ?></td>
                                         <td>
-                                            <button onclick="LuckyNest.editAssignment(
-                                                '<?php echo $assignment['meal_plan_item_link_id']; ?>',
-                                                '<?php echo $assignment['meal_type']; ?>'
-                                            )" class="update-button">Edit</button>
+                                            <button
+                                                onclick="LuckyNest.toggleForm('edit-form-<?php echo $assignment['meal_plan_item_link_id']; ?>')"
+                                                class="update-button">Edit</button>
+
+                                            <!-- Edit Form -->
+                                            <div id='edit-form-<?php echo $assignment['meal_plan_item_link_id']; ?>'
+                                                class="edit-form">
+                                                <button type="button" class="close-button"
+                                                    onclick="LuckyNest.toggleForm('edit-form-<?php echo $assignment['meal_plan_item_link_id']; ?>')">✕</button>
+                                                <h2>Edit Meal Assignment</h2>
+                                                <form method="POST" action="meal_assignment.php">
+                                                    <input type="hidden" name="action" value="edit_assignment">
+                                                    <input type="hidden" name="assignment_id"
+                                                        value="<?php echo $assignment['meal_plan_item_link_id']; ?>">
+
+                                                    <label>Meal Type:</label>
+                                                    <select name="meal_type">
+                                                        <option value="Breakfast" <?php echo ($assignment['meal_type'] == 'Breakfast' ? 'selected' : ''); ?>>Breakfast</option>
+                                                        <option value="Lunch" <?php echo ($assignment['meal_type'] == 'Lunch' ? 'selected' : ''); ?>>Lunch</option>
+                                                        <option value="Dinner" <?php echo ($assignment['meal_type'] == 'Dinner' ? 'selected' : ''); ?>>Dinner</option>
+                                                    </select>
+
+                                                    <label>New Meal:</label>
+                                                    <select name="new_meal_id">
+                                                        <?php foreach ($mealData as $meal): ?>
+                                                            <?php if ($meal['meal_type'] == $assignment['meal_type'] || $meal['meal_type'] == 'Any'): ?>
+                                                                <option value="<?php echo $meal['meal_id']; ?>" <?php echo ($meal['meal_id'] == $assignment['meal_id'] ? 'selected' : ''); ?>>
+                                                                    <?php echo $meal['name'] . ' ($' . number_format($meal['price'], 2) . ')'; ?>
+                                                                </option>
+                                                            <?php endif; ?>
+                                                        <?php endforeach; ?>
+                                                    </select>
+
+                                                    <button type="submit" class="update-button">Update Assignment</button>
+                                                </form>
+                                            </div>
+
                                             <form method="POST" action="meal_assignment.php" style="display:inline;">
                                                 <input type="hidden" name="action" value="delete_assignment">
-                                                <input type="hidden" name="assignment_id" value="<?php echo $assignment['meal_plan_item_link_id']; ?>">
+                                                <input type="hidden" name="assignment_id"
+                                                    value="<?php echo $assignment['meal_plan_item_link_id']; ?>">
                                                 <button type="submit" class="update-button">Delete</button>
                                             </form>
                                         </td>
@@ -254,35 +346,6 @@ $conn = null;
         </div>
         <div id="form-overlay"></div>
     </div>
-
-    <script>
-    if (!window.LuckyNest) {
-        window.LuckyNest = {};
-    }
-
-    LuckyNest.editAssignment = function(assignmentId, mealType) {
-        document.getElementById('edit-assignment-id').value = assignmentId;
-        
-        var mealTypeSelect = document.getElementById('edit-meal-type');
-        for (var i = 0; i < mealTypeSelect.options.length; i++) {
-            if (mealTypeSelect.options[i].value === mealType) {
-                mealTypeSelect.selectedIndex = i;
-                break;
-            }
-        }
-
-        var mealSelect = document.getElementById('edit-meal-select');
-        for (var i = 0; i < mealSelect.options.length; i++) {
-            var optionText = mealSelect.options[i].text.toLowerCase();
-            if (optionText.includes(mealType.toLowerCase()) || optionText.includes('any')) {
-                mealSelect.options[i].style.display = '';
-            } else {
-                mealSelect.options[i].style.display = 'none';
-            }
-        }
-
-        LuckyNest.toggleForm('edit-assignment-form');
-    };
-    </script>
 </body>
+
 </html>
