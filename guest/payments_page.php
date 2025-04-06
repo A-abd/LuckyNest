@@ -166,7 +166,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     try {
-        // Convert amount to float to ensure it's a number before rounding
         $amount = floatval($amount);
         $amountRounded = round($amount, 2);
 
