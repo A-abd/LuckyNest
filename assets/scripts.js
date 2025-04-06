@@ -11,7 +11,7 @@ const CONFIG = {
 
 // core
 const Utils = {
-  toggleElement(formName) {
+  toggleForm(formName) {
     const form = document.getElementById(formName);
     const overlay = document.getElementById('form-overlay');
 
@@ -28,7 +28,7 @@ const Utils = {
     if (isCurrentlyHidden) {
       overlay.style.display = 'block';
       form.style.display = 'block';
-      
+
       setTimeout(() => {
         overlay.classList.add('active');
         form.classList.add('active');
@@ -36,7 +36,7 @@ const Utils = {
     } else {
       overlay.classList.remove('active');
       form.classList.remove('active');
-      
+
       setTimeout(() => {
         overlay.style.display = 'none';
         form.style.display = 'none';
@@ -202,6 +202,16 @@ const PaymentModule = {
       bookingSelect.selectedIndex = 1;
       this.updateBookingDetails();
     }
+
+    const mealPlanSelect = document.getElementById('meal_plan_selection');
+    if (mealPlanSelect) {
+      mealPlanSelect.addEventListener('change', () => this.calculateAmount());
+    }
+
+    const laundrySelect = document.getElementById('laundry_selection');
+    if (laundrySelect) {
+      laundrySelect.addEventListener('change', () => this.calculateAmount());
+    }
   },
 
   updateBookingDetails() {
@@ -210,42 +220,62 @@ const PaymentModule = {
 
     if (select.value === "") {
       ['amount', 'check_in_date', 'check_out_date', 'room_id'].forEach(id => {
-        document.getElementById(id).value = "";
+        const element = document.getElementById(id);
+        if (element) element.value = "";
       });
       return;
     }
 
     const option = select.options[select.selectedIndex];
 
-    document.getElementById('room_id').value = option.dataset.roomId;
-    document.getElementById('check_in_date').value = option.dataset.checkInDate;
-    document.getElementById('check_out_date').value = option.dataset.checkOutDate;
+    const roomIdEl = document.getElementById('room_id');
+    const checkInEl = document.getElementById('check_in_date');
+    const checkOutEl = document.getElementById('check_out_date');
+
+    if (roomIdEl) roomIdEl.value = option.dataset.roomId;
+    if (checkInEl) checkInEl.value = option.dataset.checkIn;
+    if (checkOutEl) checkOutEl.value = option.dataset.checkOut;
 
     this.calculateAmount();
   },
 
   showPaymentForm(type) {
     ['rent_form', 'meal_plan_form', 'laundry_form'].forEach(formId => {
-      document.getElementById(formId).style.display = 'none';
+      const formElement = document.getElementById(formId);
+      if (formElement) formElement.style.display = 'none';
     });
 
-    document.getElementById(`${type}_form`).style.display = 'block';
-    document.getElementById('payment_type_hidden').value = type;
+    const selectedForm = document.getElementById(`${type}_form`);
+    if (selectedForm) selectedForm.style.display = 'block';
+
+    const paymentTypeInputs = document.querySelectorAll('input[id="payment_type_hidden"]');
+    paymentTypeInputs.forEach(input => {
+      input.value = type;
+    });
+
+    setTimeout(() => this.calculateAmount(), 0);
   },
 
   calculateAmount() {
-    const paymentTypeInput = document.querySelector('input[name="payment_type"]');
-    if (!paymentTypeInput) return;
+    const visibleForm = ['rent_form', 'meal_plan_form', 'laundry_form'].find(id => {
+      const form = document.getElementById(id);
+      return form && form.style.display !== 'none';
+    });
 
-    const paymentType = paymentTypeInput.value;
-    const amountField = document.getElementById('amount');
+    if (!visibleForm) return;
+
+    const formType = visibleForm.replace('_form', '');
+
+    const amountField = document.querySelector(`#${visibleForm} input[name="amount"]`);
     if (!amountField) return;
 
-    switch (paymentType) {
+    let amount = 0;
+
+    switch (formType) {
       case 'rent':
-        const roomId = document.getElementById('room_id').value;
+        const roomId = document.getElementById('room_id')?.value;
         if (roomId && this.roomRates[roomId]) {
-          amountField.value = this.roomRates[roomId].toFixed(2);
+          amount = parseFloat(this.roomRates[roomId]);
         }
         break;
 
@@ -253,7 +283,15 @@ const PaymentModule = {
         const mealPlanSelect = document.getElementById('meal_plan_selection');
         if (mealPlanSelect && mealPlanSelect.value) {
           const mealPlanId = mealPlanSelect.value;
-          amountField.value = this.mealPlanPrices[mealPlanId].toFixed(2);
+
+          const selectedOption = mealPlanSelect.options[mealPlanSelect.selectedIndex];
+          const priceAttr = selectedOption?.dataset?.price;
+
+          if (priceAttr) {
+            amount = parseFloat(priceAttr);
+          } else if (this.mealPlanPrices[mealPlanId]) {
+            amount = parseFloat(this.mealPlanPrices[mealPlanId]);
+          }
         }
         break;
 
@@ -261,9 +299,201 @@ const PaymentModule = {
         const laundrySelect = document.getElementById('laundry_selection');
         if (laundrySelect && laundrySelect.value) {
           const laundrySlotId = laundrySelect.value;
-          amountField.value = this.laundryPrices[laundrySlotId].toFixed(2);
+
+          const selectedOption = laundrySelect.options[laundrySelect.selectedIndex];
+          const priceAttr = selectedOption?.dataset?.price;
+
+          if (priceAttr) {
+            amount = parseFloat(priceAttr);
+          } else if (this.laundryPrices[laundrySlotId]) {
+            amount = parseFloat(this.laundryPrices[laundrySlotId]);
+          }
         }
         break;
+    }
+
+    amountField.value = isNaN(amount) ? "0.00" : amount.toFixed(2);
+  }
+};
+
+// Rating
+const RatingModule = {
+  init() {
+    // Any initialization code for ratings
+  },
+
+  showRoomRatingForm(bookingId) {
+    document.getElementById('ratingBookingId').value = bookingId;
+    Utils.toggleForm('roomRatingForm');
+  },
+
+  showMealRatingForm(mealPlanId) {
+    document.getElementById('ratingMealPlanId').value = mealPlanId;
+    Utils.toggleForm('mealRatingForm');
+  },
+
+  hideRatingForm() {
+    document.getElementById('roomRatingForm').style.display = 'none';
+    document.getElementById('mealRatingForm').style.display = 'none';
+    document.getElementById('form-overlay').style.display = 'none';
+  }
+};
+
+// Navigation
+const NavModule = {
+  init() {
+    this.initSidebar();
+    document.addEventListener('click', this.handleDocumentClick);
+  },
+
+  initSidebar() {
+    const toggleSidebar = document.getElementById('toggleSidebar');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    if (toggleSidebar && sidebar) {
+      toggleSidebar.addEventListener('click', this.toggleNav);
+
+      if (overlay) {
+        overlay.addEventListener('click', this.toggleNav);
+      }
+
+      if (!sidebar.classList.contains('sidebar-hidden')) {
+        sidebar.classList.add('sidebar-hidden');
+      }
+    }
+
+    const notificationBtn = document.querySelector('.quick-action-btn:nth-child(1)');
+    if (notificationBtn) {
+      notificationBtn.addEventListener('click', function () {
+        alert('Notifications would appear here');
+      });
+    }
+
+    const settingsBtn = document.querySelector('.quick-action-btn:nth-child(3)');
+    if (settingsBtn) {
+      settingsBtn.addEventListener('click', function () {
+        alert('Quick settings would appear here');
+      });
+    }
+  },
+
+  toggleNav() {
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+    const overlay = document.getElementById('overlay');
+
+    if (sidebar) {
+      sidebar.classList.toggle('sidebar-hidden');
+
+      if (mainContent) {
+        mainContent.classList.toggle('expanded');
+      }
+
+      if (overlay) {
+        overlay.classList.toggle('active');
+      }
+
+      if (!sidebar.classList.contains('sidebar-hidden') && mainContent) {
+        NavModule.disableMainContentInteraction();
+      } else if (mainContent) {
+        NavModule.enableMainContentInteraction();
+      }
+    }
+  },
+
+  disableMainContentInteraction() {
+    const mainContent = document.getElementById('mainContent');
+    if (!mainContent) return;
+
+    const links = mainContent.querySelectorAll('a, button, input, select, textarea');
+    links.forEach(link => {
+      link.setAttribute('tabindex', '-1');
+      link.setAttribute('aria-hidden', 'true');
+    });
+  },
+
+  enableMainContentInteraction() {
+    const mainContent = document.getElementById('mainContent');
+    if (!mainContent) return;
+
+    const links = mainContent.querySelectorAll('a, button, input, select, textarea');
+    links.forEach(link => {
+      link.removeAttribute('tabindex');
+      link.removeAttribute('aria-hidden');
+    });
+  },
+
+  toggleSubmenu(element) {
+    if (!element) return;
+
+    const submenu = element.nextElementSibling;
+    if (!submenu) return;
+
+    element.classList.toggle('open');
+    submenu.classList.toggle('active');
+
+    const allSubmenus = document.querySelectorAll('.submenu.active');
+    const allDropdowns = document.querySelectorAll('.has-dropdown.open');
+
+    allSubmenus.forEach(menu => {
+      if (menu !== submenu) {
+        menu.classList.remove('active');
+      }
+    });
+
+    allDropdowns.forEach(dropdown => {
+      if (dropdown !== element) {
+        dropdown.classList.remove('open');
+      }
+    });
+  },
+
+  handleDocumentClick(event) {
+    if (!event.target.closest('.has-dropdown') && !event.target.closest('.submenu')) {
+      const allSubmenus = document.querySelectorAll('.submenu.active');
+      const allDropdowns = document.querySelectorAll('.has-dropdown.open');
+
+      allSubmenus.forEach(menu => {
+        menu.classList.remove('active');
+      });
+
+      allDropdowns.forEach(dropdown => {
+        dropdown.classList.remove('open');
+      });
+    }
+  }
+};
+
+// Financial
+const FinancialModule = {
+  init() {
+    // Any initialization for financial module
+  },
+
+  initFinancialCards() {
+    // Automatically show the first financial card
+    const firstCardHeader = document.querySelector('.financial-card-header');
+    if (firstCardHeader) {
+      const cardId = firstCardHeader.getAttribute('onclick');
+      if (cardId) {
+        // Extract card ID from the onclick attribute
+        const match = cardId.match(/['"](.*?)['"]/);
+        if (match && match[1]) {
+          this.toggleFinancialCard(match[1]);
+        }
+      }
+    }
+  },
+
+  toggleFinancialCard(cardId) {
+    const cardBody = document.getElementById(cardId);
+    if (cardBody) {
+      if (cardBody.classList.contains('active')) {
+        cardBody.classList.remove('active');
+      } else {
+        cardBody.classList.add('active');
+      }
     }
   }
 };
@@ -278,6 +508,9 @@ document.addEventListener('DOMContentLoaded', function () {
   MealModule.init();
   LaundryModule.init();
   BookingModule.init();
+  RatingModule.init();
+  NavModule.init();
+  FinancialModule.init();
 
   PaymentModule.init({
     roomRates: window.roomRates || {},
@@ -288,94 +521,22 @@ document.addEventListener('DOMContentLoaded', function () {
   console.log("LuckyNest initialized successfully");
 });
 
+if (typeof LuckyNest === 'undefined') {
+  window.LuckyNest = {};
+}
+
 window.LuckyNest = {
-  toggleForm: Utils.toggleElement,
+  toggleForm: Utils.toggleForm,
   toggleDeleteLaundryForm: LaundryModule.toggleDeleteLaundryForm,
   updateBookingDetails: PaymentModule.updateBookingDetails,
   showPaymentForm: PaymentModule.showPaymentForm,
-  calculateAmount: PaymentModule.calculateAmount.apply
+  calculateAmount: PaymentModule.calculateAmount,
+  showRoomRatingForm: RatingModule.showRoomRatingForm,
+  showMealRatingForm: RatingModule.showMealRatingForm,
+  hideRatingForm: RatingModule.hideRatingForm,
+  toggleNav: NavModule.toggleNav,
+  toggleSubmenu: NavModule.toggleSubmenu,
+  initSidebar: NavModule.initSidebar,
+  toggleFinancialCard: FinancialModule.toggleFinancialCard,
+  initFinancialCards: FinancialModule.initFinancialCards
 };
-/*
-// CSS Funtionality
-function toggleAddForm() {
-  const addForm = document.getElementById('add-form');
-  const overlay = document.getElementById('form-overlay');
-
-  if (addForm.style.display === 'none' || addForm.style.display === '') {
-    overlay.style.display = 'block';
-    addForm.style.display = 'block';
-    setTimeout(() => {
-      overlay.classList.add('active');
-      addForm.classList.add('active');
-    }, 10);
-  } else {
-    overlay.classList.remove('active');
-    addForm.classList.remove('active');
-    setTimeout(() => {
-      overlay.style.display = 'none';
-      addForm.style.display = 'none';
-    }, 300);
-  }
-}
-
-function toggleEditForm(id) {
-  const editForm = document.getElementById(`edit-form-${id}`);
-  const overlay = document.getElementById('form-overlay');
-
-  if (editForm.style.display === 'none' || editForm.style.display === '') {
-    overlay.style.display = 'block';
-    editForm.style.display = 'block';
-    setTimeout(() => {
-      overlay.classList.add('active');
-      editForm.classList.add('active');
-    }, 10);
-  } else {
-    overlay.classList.remove('active');
-    editForm.classList.remove('active');
-    setTimeout(() => {
-      overlay.style.display = 'none';
-      editForm.style.display = 'none';
-    }, 300);
-  }
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-  if (!document.getElementById('form-overlay')) {
-    const overlay = document.createElement('div');
-    overlay.id = 'form-overlay';
-    document.body.appendChild(overlay);
-    overlay.addEventListener('click', function (e) {
-      if (e.target === overlay) {
-        const activeForms = document.querySelectorAll('#add-form.active, .rooms-edit-form.active');
-        activeForms.forEach(form => {
-          form.classList.remove('active');
-          setTimeout(() => {
-            form.style.display = 'none';
-          }, 300);
-        });
-        overlay.classList.remove('active');
-        setTimeout(() => {
-          overlay.style.display = 'none';
-        }, 300);
-      }
-    });
-  }
-
-  hideAllEditForms();
-  hideAddForm();
-});
-
-function hideAllEditForms() {
-  const editForms = document.querySelectorAll('.rooms-edit-form');
-  editForms.forEach(form => {
-    form.style.display = 'none';
-  });
-}
-
-function hideAddForm() {
-  const addForm = document.getElementById('add-form');
-  if (addForm) {
-    addForm.style.display = 'none';
-  }
-}
-*/
