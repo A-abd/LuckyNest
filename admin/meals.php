@@ -18,6 +18,12 @@ $offset = ($page - 1) * $recordsPerPage;
 
 $mealTypes = ['Breakfast', 'Lunch', 'Dinner'];
 
+$uploadDir = __DIR__ . '/../assets/meal_images/';
+
+if (!file_exists($uploadDir)) {
+    mkdir($uploadDir, 0777, true);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action']) && $_POST['action'] === 'add_meal') {
         $name = $_POST['name'];
@@ -25,25 +31,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $price = $_POST['price'];
         $isActive = isset($_POST['is_active']) ? 1 : 0;
         $dietaryTags = isset($_POST['dietary_tags']) ? $_POST['dietary_tags'] : [];
+        $imagePath = null;
 
-        $stmt = $conn->prepare("INSERT INTO meals (name, meal_type, price, is_active) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$name, $mealType, $price, $isActive]);
-
-        if ($stmt) {
-            $mealId = $conn->lastInsertId();
-
-            if (!empty($dietaryTags)) {
-                foreach ($dietaryTags as $tagId) {
-                    $tagStmt = $conn->prepare("INSERT INTO meal_dietary_tags_link (meal_id, meal_dietary_tag_id) VALUES (?, ?)");
-                    $tagStmt->execute([$mealId, $tagId]);
+        if (isset($_FILES['meal_image']) && $_FILES['meal_image']['error'] === UPLOAD_ERR_OK) {
+            $fileExtension = pathinfo($_FILES['meal_image']['name'], PATHINFO_EXTENSION);
+            $fileName = uniqid() . '.' . $fileExtension;
+            $targetPath = $uploadDir . $fileName;
+            
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+            if (in_array(strtolower($fileExtension), $allowedExtensions)) {
+                if (move_uploaded_file($_FILES['meal_image']['tmp_name'], $targetPath)) {
+                    $imagePath = 'assets/meal_images/' . $fileName;
+                } else {
+                    $feedback = 'Error uploading image.';
                 }
+            } else {
+                $feedback = 'Invalid file type. Only JPG, JPEG, PNG, and GIF are allowed.';
             }
+        }
 
-            $feedback = 'Meal added successfully!';
-            header("Location: meals.php?feedback=" . urlencode($feedback));
-            exit();
-        } else {
-            $feedback = 'Error adding meal.';
+        if (empty($feedback)) {
+            $stmt = $conn->prepare("INSERT INTO meals (name, meal_type, price, is_active, image_path) VALUES (?, ?, ?, ?, ?)");
+            $stmt->execute([$name, $mealType, $price, $isActive, $imagePath]);
+
+            if ($stmt) {
+                $mealId = $conn->lastInsertId();
+
+                if (!empty($dietaryTags)) {
+                    foreach ($dietaryTags as $tagId) {
+                        $tagStmt = $conn->prepare("INSERT INTO meal_dietary_tags_link (meal_id, meal_dietary_tag_id) VALUES (?, ?)");
+                        $tagStmt->execute([$mealId, $tagId]);
+                    }
+                }
+
+                $feedback = 'Meal added successfully!';
+                header("Location: meals.php?feedback=" . urlencode($feedback));
+                exit();
+            } else {
+                $feedback = 'Error adding meal.';
+            }
         }
     } elseif (isset($_POST['action']) && $_POST['action'] === 'edit_meal') {
         $mealId = $_POST['meal_id'];
@@ -52,34 +78,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $price = $_POST['price'];
         $isActive = isset($_POST['is_active']) ? 1 : 0;
         $dietaryTags = isset($_POST['dietary_tags']) ? $_POST['dietary_tags'] : [];
+        $imagePath = null;
+        $deleteImage = isset($_POST['delete_image']);
 
-        $stmt = $conn->prepare("UPDATE meals SET name = ?, meal_type = ?, price = ?, is_active = ? WHERE meal_id = ?");
-        $stmt->execute([$name, $mealType, $price, $isActive, $mealId]);
+        $currentImageStmt = $conn->prepare("SELECT image_path FROM meals WHERE meal_id = ?");
+        $currentImageStmt->execute([$mealId]);
+        $currentImage = $currentImageStmt->fetchColumn();
 
-        if ($stmt) {
-            $deleteTagsStmt = $conn->prepare("DELETE FROM meal_dietary_tags_link WHERE meal_id = ?");
-            $deleteTagsStmt->execute([$mealId]);
-
-            if (!empty($dietaryTags)) {
-                foreach ($dietaryTags as $tagId) {
-                    $tagStmt = $conn->prepare("INSERT INTO meal_dietary_tags_link (meal_id, meal_dietary_tag_id) VALUES (?, ?)");
-                    $tagStmt->execute([$mealId, $tagId]);
+        if (isset($_FILES['meal_image']) && $_FILES['meal_image']['error'] === UPLOAD_ERR_OK) {
+            $fileExtension = pathinfo($_FILES['meal_image']['name'], PATHINFO_EXTENSION);
+            $fileName = uniqid() . '.' . $fileExtension;
+            $targetPath = $uploadDir . $fileName;
+            
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+            if (in_array(strtolower($fileExtension), $allowedExtensions)) {
+                if (move_uploaded_file($_FILES['meal_image']['tmp_name'], $targetPath)) {
+                    if ($currentImage && file_exists(__DIR__ . '/../' . $currentImage)) {
+                        unlink(__DIR__ . '/../' . $currentImage);
+                    }
+                    $imagePath = 'assets/meal_images/' . $fileName;
+                } else {
+                    $feedback = 'Error uploading image.';
                 }
+            } else {
+                $feedback = 'Invalid file type. Only JPG, JPEG, PNG, and GIF are allowed.';
             }
-
-            $feedback = 'Meal updated successfully!';
-            header("Location: meals.php?feedback=" . urlencode($feedback));
-            exit();
+        } elseif ($deleteImage && $currentImage) {
+            if (file_exists(__DIR__ . '/../' . $currentImage)) {
+                unlink(__DIR__ . '/../' . $currentImage);
+            }
+            $imagePath = null;
         } else {
-            $feedback = 'Error updating the meal.';
+            $imagePath = $currentImage;
+        }
+
+        if (empty($feedback)) {
+            $stmt = $conn->prepare("UPDATE meals SET name = ?, meal_type = ?, price = ?, is_active = ?, image_path = ? WHERE meal_id = ?");
+            $stmt->execute([$name, $mealType, $price, $isActive, $imagePath, $mealId]);
+
+            if ($stmt) {
+                $deleteTagsStmt = $conn->prepare("DELETE FROM meal_dietary_tags_link WHERE meal_id = ?");
+                $deleteTagsStmt->execute([$mealId]);
+
+                if (!empty($dietaryTags)) {
+                    foreach ($dietaryTags as $tagId) {
+                        $tagStmt = $conn->prepare("INSERT INTO meal_dietary_tags_link (meal_id, meal_dietary_tag_id) VALUES (?, ?)");
+                        $tagStmt->execute([$mealId, $tagId]);
+                    }
+                }
+
+                $feedback = 'Meal updated successfully!';
+                header("Location: meals.php?feedback=" . urlencode($feedback));
+                exit();
+            } else {
+                $feedback = 'Error updating the meal.';
+            }
         }
     } elseif (isset($_POST['action']) && $_POST['action'] === 'delete_meal') {
         $mealId = $_POST['meal_id'];
+
+        $imageStmt = $conn->prepare("SELECT image_path FROM meals WHERE meal_id = ?");
+        $imageStmt->execute([$mealId]);
+        $imagePath = $imageStmt->fetchColumn();
 
         $stmt = $conn->prepare("DELETE FROM meals WHERE meal_id = ?");
         $stmt->execute([$mealId]);
 
         if ($stmt) {
+            if ($imagePath && file_exists(__DIR__ . '/../' . $imagePath)) {
+                unlink(__DIR__ . '/../' . $imagePath);
+            }
             $feedback = 'Meal deleted successfully!';
             header("Location: meals.php?feedback=" . urlencode($feedback));
             exit();
@@ -93,8 +161,7 @@ if (isset($_GET['feedback'])) {
     $feedback = $_GET['feedback'];
 }
 
-$query = "SELECT * FROM meals ORDER BY meal_id LIMIT :limit OFFSET :offset";
-$stmt = $conn->prepare($query);
+$stmt = $conn->prepare("SELECT * FROM meals ORDER BY meal_id LIMIT :limit OFFSET :offset");
 $stmt->bindValue(':limit', $recordsPerPage, PDO::PARAM_INT);
 $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 $stmt->execute();
@@ -152,10 +219,12 @@ $conn = null;
                 <button onclick="LuckyNest.toggleForm('add-form')" class="update-add-button">Add Meal</button>
             </div>
 
+            <br>
+
             <div id="add-form" class="add-form">
                 <button type="button" class="close-button" onclick="LuckyNest.toggleForm('add-form')">✕</button>
                 <h2>Add New Meal</h2>
-                <form method="POST" action="meals.php">
+                <form method="POST" action="meals.php" enctype="multipart/form-data">
                     <input type="hidden" name="action" value="add_meal">
                     <label for="name">Name:</label>
                     <input type="text" id="name" name="name" required>
@@ -175,6 +244,9 @@ $conn = null;
                         <input type="checkbox" id="is_active" name="is_active" checked>
                     </div>
                     
+                    <label for="meal_image">Meal Image (optional):</label>
+                    <input type="file" id="meal_image" name="meal_image" accept="image/*">
+                    
                     <label>Dietary Tags:</label>
                     <?php foreach ($dietaryTags as $tag): ?>
                         <div>
@@ -192,6 +264,7 @@ $conn = null;
                     <tr>
                         <th>ID</th>
                         <th>Name</th>
+                        <th>Image</th>
                         <th>Type</th>
                         <th>Price</th>
                         <th>Status</th>
@@ -204,6 +277,13 @@ $conn = null;
                         <tr>
                             <td><?php echo $meal['meal_id']; ?></td>
                             <td><?php echo $meal['name']; ?></td>
+                            <td>
+                                <?php if ($meal['image_path']): ?>
+                                    <img src="../<?php echo $meal['image_path']; ?>" alt="<?php echo $meal['name']; ?>" style="max-width: 100px; max-height: 100px;">
+                                <?php else: ?>
+                                    No image
+                                <?php endif; ?>
+                            </td>
                             <td><?php echo $meal['meal_type']; ?></td>
                             <td><?php echo '£' . $meal['price']; ?></td>
                             <td><?php echo $meal['is_active'] ? 'Active' : 'Inactive'; ?></td>
@@ -218,7 +298,7 @@ $conn = null;
                             <td>
                                 <button onclick="LuckyNest.toggleForm('edit-form-<?php echo $meal['meal_id']; ?>')" class="update-button">Edit</button>
                                 <div id="edit-form-<?php echo $meal['meal_id']; ?>" class="rooms-type-edit-form">
-                                    <form method="POST" action="meals.php" style="display:inline;">
+                                    <form method="POST" action="meals.php" enctype="multipart/form-data" style="display:inline;">
                                         <button type="button" class="close-button" onclick="LuckyNest.toggleForm('edit-form-<?php echo $meal['meal_id']; ?>')">✕</button>
                                         <h2>Edit Meal</h2>
                                         <input type="hidden" name="action" value="edit_meal">
@@ -244,6 +324,18 @@ $conn = null;
                                             <input type="checkbox" id="is_active_<?php echo $meal['meal_id']; ?>" name="is_active"
                                                 <?php echo $meal['is_active'] ? 'checked' : ''; ?>>
                                         </div>
+                                        
+                                        <label for="meal_image_<?php echo $meal['meal_id']; ?>">Meal Image:</label>
+                                        <?php if ($meal['image_path']): ?>
+                                            <div>
+                                                <img src="../<?php echo $meal['image_path']; ?>" alt="Current image" style="max-width: 100px; max-height: 100px;">
+                                                <div>
+                                                    <input type="checkbox" id="delete_image_<?php echo $meal['meal_id']; ?>" name="delete_image">
+                                                    <label for="delete_image_<?php echo $meal['meal_id']; ?>">Delete current image</label>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
+                                        <input type="file" id="meal_image_<?php echo $meal['meal_id']; ?>" name="meal_image" accept="image/*">
                                         
                                         <label>Dietary Tags:</label>
                                         <?php
