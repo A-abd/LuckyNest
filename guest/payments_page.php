@@ -166,6 +166,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     try {
+        // Convert amount to float to ensure it's a number before rounding
+        $amount = floatval($amount);
         $amountRounded = round($amount, 2);
 
         $checkoutSession = \Stripe\Checkout\Session::create([
@@ -184,8 +186,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]
             ],
             "mode" => "payment",
-            "success_url" => "http://localhost/LuckyNest/guest_dashboard/success.php?session_id={CHECKOUT_SESSION_ID}&reference_id=" . $referenceId . "&payment_type=" . $paymentType,
-            "cancel_url" => "http://localhost/LuckyNest/guest_dashboard/payments_page.php",
+            "success_url" => "http://localhost/LuckyNest/guest/success.php?session_id={CHECKOUT_SESSION_ID}&reference_id=" . $referenceId . "&payment_type=" . $paymentType,
+            "cancel_url" => "http://localhost/LuckyNest/guest/payments_page.php",
         ]);
 
         header("Location: " . $checkoutSession->url);
@@ -203,9 +205,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap" />
+    <link rel="stylesheet" href="../assets/styles.css">
     <title>Checkout</title>
     <script>
-        // roomRates has to be defined here because it depends on php data
         const roomRates = <?php echo json_encode($roomRates); ?>;
         const mealPlanPrices = <?php echo json_encode($mealPlanPrices); ?>;
         const laundryPrices = <?php echo json_encode(array_column($laundrySlots, 'price', 'laundry_slot_id')); ?>;
@@ -215,112 +221,127 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <body>
     <?php include '../include/guest_navbar.php'; ?>
-    <h2>Make a Payment</h2>
+    <div class="blur-layer-3"></div>
+    <div class="manage-default">
+        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
+        <div class="rooms-types-container">
+            <h1>Make a Payment</h1>
+            <div class="button-center">
+                <button onclick="LuckyNest.showPaymentForm('rent')" class="update-add-button">Pay for
+                    Accommodation</button>
+                <button onclick="LuckyNest.showPaymentForm('meal_plan')" class="update-add-button">Pay for Meal
+                    Plans</button>
+                <button onclick="LuckyNest.showPaymentForm('laundry')" class="update-add-button">Pay for
+                    Laundry</button>
+            </div>
 
-    <div>
-        <button onclick="LuckyNest.showPaymentForm('rent')">Pay for Accommodation</button>
-        <button onclick="LuckyNest.showPaymentForm('meal_plan')">Pay for Meal Plans</button>
-        <button onclick="LuckyNest.showPaymentForm('laundry')">Pay for Laundry</button>
+            <div id="rent_form" class="add-form">
+                <h2>Pay for Accommodation</h2>
+                <?php if (empty($bookings)): ?>
+                    <p>No unpaid bookings found for this guest.</p>
+                <?php else: ?>
+                    <form action="" method="POST">
+                        <label for="booking_selection">Select Booking:</label>
+                        <select id="booking_selection" name="booking_id" onchange="LuckyNest.updateBookingDetails()"
+                            required>
+                            <option value="">-- Select a booking --</option>
+                            <?php foreach ($bookings as $booking): ?>
+                                <option value="<?php echo $booking['booking_id']; ?>"
+                                    data-room-id="<?php echo $booking['room_id']; ?>"
+                                    data-check-in="<?php echo $booking['check_in_date']; ?>"
+                                    data-check-out="<?php echo $booking['check_out_date']; ?>">
+                                    Booking #<?php echo $booking['booking_id']; ?>
+                                    (<?php echo $booking['check_in_date']; ?> to <?php echo $booking['check_out_date']; ?>)
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+
+                        <label for="description">Description:</label>
+                        <input type="text" name="description" value="Accommodation Payment" required>
+
+                        <label for="amount">Amount (£):</label>
+                        <input type="number" id="amount" name="amount" readonly>
+
+                        <input type="hidden" id="check_in_date" name="check_in_date">
+                        <input type="hidden" id="check_out_date" name="check_out_date">
+                        <input type="hidden" id="user_id" name="user_id" value="<?php echo $guest_id; ?>">
+                        <input type="hidden" id="room_id" name="room_id">
+                        <input type="hidden" id="payment_type_hidden" name="payment_type" value="rent">
+
+                        <button type="submit" class="update-button">Pay with Stripe</button>
+                    </form>
+                <?php endif; ?>
+            </div>
+
+            <div id="meal_plan_form" class="add-form" style="display: none;">
+                <h2>Pay for Meal Plans</h2>
+                <?php if (empty($mealPlans)): ?>
+                    <p>No unpaid meal plans found for this guest.</p>
+                <?php else: ?>
+                    <form action="" method="POST">
+                        <label for="meal_plan_selection">Select Meal Plan:</label>
+                        <select id="meal_plan_selection" name="meal_plan_id" onchange="LuckyNest.calculateAmount()"
+                            required>
+                            <option value="">-- Select a meal plan --</option>
+                            <?php foreach ($mealPlans as $mealPlan): ?>
+                                <option value="<?php echo $mealPlan['meal_plan_id']; ?>"
+                                    data-price="<?php echo $mealPlan['price']; ?>">
+                                    <?php echo $mealPlan['name']; ?> (<?php echo $mealPlan['meal_plan_type']; ?>) -
+                                    £<?php echo number_format($mealPlan['price'], 2); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+
+                        <label for="description">Description:</label>
+                        <input type="text" name="description" value="Meal Plan Payment" required>
+
+                        <label for="amount">Amount (£):</label>
+                        <input type="number" id="amount" name="amount" readonly>
+
+                        <input type="hidden" id="payment_type_hidden" name="payment_type" value="meal_plan">
+                        <input type="hidden" id="user_id" name="user_id" value="<?php echo $guest_id; ?>">
+
+                        <button type="submit" class="update-button">Pay with Stripe</button>
+                    </form>
+                <?php endif; ?>
+            </div>
+
+            <div id="laundry_form" class="add-form" style="display: none;">
+                <h2>Pay for Laundry</h2>
+                <?php if (empty($laundrySlots)): ?>
+                    <p>No unpaid laundry slots found for this guest.</p>
+                <?php else: ?>
+                    <form action="" method="POST">
+                        <label for="laundry_selection">Select Laundry Slot:</label>
+                        <select id="laundry_selection" name="laundry_slot_id" onchange="LuckyNest.calculateAmount()"
+                            required>
+                            <option value="">-- Select a laundry slot --</option>
+                            <?php foreach ($laundrySlots as $slot): ?>
+                                <option value="<?php echo $slot['laundry_slot_id']; ?>"
+                                    data-price="<?php echo $slot['price']; ?>">
+                                    <?php echo date('F j, Y', strtotime($slot['date'])); ?> at
+                                    <?php echo $slot['start_time']; ?> -
+                                    £<?php echo number_format($slot['price'], 2); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+
+                        <label for="description">Description:</label>
+                        <input type="text" name="description" value="Laundry Service Payment" required>
+
+                        <label for="amount">Amount (£):</label>
+                        <input type="number" id="amount" name="amount" readonly>
+
+                        <input type="hidden" id="payment_type_hidden" name="payment_type" value="laundry">
+                        <input type="hidden" id="user_id" name="user_id" value="<?php echo $guest_id; ?>">
+
+                        <button type="submit" class="update-button">Pay with Stripe</button>
+                    </form>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
-
-    <div id="rent_form">
-        <h3>Pay for Accommodation</h3>
-        <?php if (empty($bookings)): ?>
-            <p>No unpaid bookings found for this guest.</p>
-        <?php else: ?>
-            <form action="" method="POST">
-                <label for="booking_selection">Select Booking:</label>
-                <select id="booking_selection" name="booking_id" onchange="LuckyNest.updateBookingDetails()" required>
-                    <option value="">-- Select a booking --</option>
-                    <?php foreach ($bookings as $booking): ?>
-                        <option value="<?php echo $booking['booking_id']; ?>" data-room-id="<?php echo $booking['room_id']; ?>"
-                            data-check-in="<?php echo $booking['check_in_date']; ?>"
-                            data-check-out="<?php echo $booking['check_out_date']; ?>">
-                            Booking #<?php echo $booking['booking_id']; ?>
-                            (<?php echo $booking['check_in_date']; ?> to <?php echo $booking['check_out_date']; ?>)
-                        </option>
-                    <?php endforeach; ?>
-                </select><br>
-
-                <label for="description">Description:</label>
-                <input type="text" name="description" value="Accommodation Payment" required><br>
-
-                <label for="amount">Amount (£):</label>
-                <input type="number" id="amount" name="amount" readonly><br>
-
-                <input type="hidden" id="check_in_date" name="check_in_date">
-                <input type="hidden" id="check_out_date" name="check_out_date">
-                <input type="hidden" id="user_id" name="user_id" value="<?php echo $guest_id; ?>">
-                <input type="hidden" id="room_id" name="room_id">
-                <input type="hidden" id="payment_type_hidden" name="payment_type" value="rent">
-
-                <button type="submit">Pay with Stripe</button>
-            </form>
-        <?php endif; ?>
-    </div>
-
-    <div id="meal_plan_form" style="display: none;">
-        <h3>Pay for Meal Plans</h3>
-        <?php if (empty($mealPlans)): ?>
-            <p>No unpaid meal plans found for this guest.</p>
-        <?php else: ?>
-            <form action="" method="POST">
-                <label for="meal_plan_selection">Select Meal Plan:</label>
-                <select id="meal_plan_selection" name="meal_plan_id" onchange="LuckyNest.calculateAmount()" required>
-                    <option value="">-- Select a meal plan --</option>
-                    <?php foreach ($mealPlans as $mealPlan): ?>
-                        <option value="<?php echo $mealPlan['meal_plan_id']; ?>" data-price="<?php echo $mealPlan['price']; ?>">
-                            <?php echo $mealPlan['name']; ?> (<?php echo $mealPlan['meal_plan_type']; ?>) -
-                            £<?php echo number_format($mealPlan['price'], 2); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select><br>
-
-                <label for="description">Description:</label>
-                <input type="text" name="description" value="Meal Plan Payment" required><br>
-
-                <label for="amount">Amount (£):</label>
-                <input type="number" id="amount" name="amount" readonly><br>
-
-                <input type="hidden" id="payment_type_hidden" name="payment_type" value="meal_plan">
-                <input type="hidden" id="user_id" name="user_id" value="<?php echo $guest_id; ?>">
-
-                <button type="submit">Pay with Stripe</button>
-            </form>
-        <?php endif; ?>
-    </div>
-
-    <div id="laundry_form" style="display: none;">
-        <h3>Pay for Laundry</h3>
-        <?php if (empty($laundrySlots)): ?>
-            <p>No unpaid laundry slots found for this guest.</p>
-        <?php else: ?>
-            <form action="" method="POST">
-                <label for="laundry_selection">Select Laundry Slot:</label>
-                <select id="laundry_selection" name="laundry_slot_id" onchange="LuckyNest.calculateAmount()" required>
-                    <option value="">-- Select a laundry slot --</option>
-                    <?php foreach ($laundrySlots as $slot): ?>
-                        <option value="<?php echo $slot['laundry_slot_id']; ?>" data-price="<?php echo $slot['price']; ?>">
-                            <?php echo date('F j, Y', strtotime($slot['date'])); ?> at <?php echo $slot['start_time']; ?> -
-                            £<?php echo number_format($slot['price'], 2); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select><br>
-
-                <label for="description">Description:</label>
-                <input type="text" name="description" value="Laundry Service Payment" required><br>
-
-                <label for="amount">Amount (£):</label>
-                <input type="number" id="amount" name="amount" readonly><br>
-
-                <input type="hidden" id="payment_type_hidden" name="payment_type" value="laundry">
-                <input type="hidden" id="user_id" name="user_id" value="<?php echo $guest_id; ?>">
-
-                <button type="submit">Pay with Stripe</button>
-            </form>
-        <?php endif; ?>
-    </div>
-
+    <div id="form-overlay"></div>
 </body>
 
 </html>
