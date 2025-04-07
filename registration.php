@@ -53,46 +53,73 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap" />
+    <link rel="stylesheet" href="assets/styles.css">
     <title>Register</title>
 </head>
-<body>
-    <h1>Register</h1>
-    <?php if ($error): ?>
-        <p class="error"><?php echo $error; ?></p>
-    <?php endif; ?>
-    <?php if ($success): ?>
-        <p class="success"><?php echo $success; ?></p>
-    <?php endif; ?>
-    <form method="POST" action="registration.php">
-        <label for="forename">Forename:</label>
-        <input type="text" id="forename" name="forename" required><br><br>
 
-        <label for="surname">Surname:</label>
-        <input type="text" id="surname" name="surname" required><br><br>
+<body class="registration">
+    <div class="blur-layer"></div>
+    <div class="center-container-registration">
+        <h1 class="title">LuckyNest</h1>
+        <div class="wrapper">
+            <h1>Register</h1>
+            <?php if ($error): ?>
+                <p class="error"><?php echo $error; ?></p>
+            <?php endif; ?>
+            <?php if ($success): ?>
+                <p class="success"><?php echo $success; ?></p>
+            <?php endif; ?>
+            <form method="POST" action="registration.php">
+                <div class="input-box">
+                    <input type="text" id="forename" name="forename" placeholder="Forename" required><br><br>
+                </div>
 
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required><br><br>
+                <div class="input-box">
+                    <input type="text" id="surname" name="surname" placeholder="Surname" required>
+                </div>
 
-        <label for="phone">Phone:</label>
-        <input type="text" id="phone" name="phone" required><br><br>
+                <div class="input-box">
+                    <input type="email" id="email" name="email" placeholder="Email" required>
+                </div>
 
-        <label for="emergency_contact">Emergency Contact:</label>
-        <input type="text" id="emergency_contact" name="emergency_contact" required><br><br>
+                <div class="input-box">
+                    <input type="text" id="phone" name="phone" placeholder="Phone Number" required>
+                </div>
 
-        <label for="address">Address:</label>
-        <input type="text" id="address" name="address" required><br><br>
+                <div class="input-box">
+                    <input type="text" id="emergency_contact" name="emergency_contact"
+                        placeholder="Emergency Contact Number" required>
+                </div>
 
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required><br><br>
+                <div class="input-box">
+                    <input type="text" id="address" name="address" placeholder="Address" required>
+                </div>
 
-        <label for="confirm_password">Confirm Password:</label>
-        <input type="password" id="confirm_password" name="confirm_password" required><br><br>
+                <div class="input-box">
+                    <input type="password" id="password" name="password" placeholder="Password" required>
+                </div>
 
-        <button type="submit">Register</button>
-    </form>
-    <p>Already have an account? <a href="index.php">Login here</a>.</p>
+                <div class="input-box">
+                    <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm Password"
+                        required>
+                </div>
+
+                <button type="submit" class="btn">Register</button>
+
+                <div class="login-link">
+                    <p>Have an account already? <a href="index.php">Login</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
+
 </html>
