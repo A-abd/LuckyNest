@@ -59,7 +59,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$query = "SELECT * FROM maintenance_requests" . $whereClause . " ORDER BY report_date DESC LIMIT $recordsPerPage OFFSET $offset";
+$query = "SELECT * FROM maintenance_requests" . $whereClause . " ORDER BY report_date DESC LIMIT :limit OFFSET :offset";
+$stmt = $conn->prepare($query);
+$stmt->bindValue(':limit', $recordsPerPage, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+
+foreach ($params as $key => $value) {
+    $stmt->bindValue($key, $value);
+}
+$stmt->execute();
+$maintenanceData = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 if (!empty($params)) {
     $stmt = $conn->prepare($query);

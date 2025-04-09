@@ -10,6 +10,9 @@ include __DIR__ . '/../include/db.php';
 include __DIR__ . '/../include/pagination.php';
 
 $feedback = '';
+$recordsPerPage = 10;
+$page = isset($_GET["page"]) ? (int) $_GET["page"] : 1;
+$offset = ($page - 1) * $recordsPerPage;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
@@ -48,8 +51,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$laundryQuery = $conn->query("SELECT * FROM laundry_slots WHERE is_available = 1 ORDER BY date, start_time");
-$laundrySlots = $laundryQuery->fetchAll(PDO::FETCH_ASSOC);
+$laundryStmt = $conn->prepare("SELECT * FROM laundry_slots WHERE is_available = 1 ORDER BY date, start_time LIMIT :limit OFFSET :offset");
+$laundryStmt->bindValue(':limit', $recordsPerPage, PDO::PARAM_INT);
+$laundryStmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$laundryStmt->execute();
+$laundrySlots = $laundryStmt->fetchAll(PDO::FETCH_ASSOC);
+
+$totalRecordsQuery = $conn->query("SELECT COUNT(*) As total FROM laundry_slots WHERE is_available = 1");
+$totalRecords = $totalRecordsQuery->fetch(PDO::FETCH_ASSOC)['total'];
+$totalPages = ceil($totalRecords / $recordsPerPage);
 ?>
 
 <!doctype html>
@@ -110,11 +120,20 @@ $laundrySlots = $laundryQuery->fetchAll(PDO::FETCH_ASSOC);
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+
+                <?php
+                $url = 'laundry.php';
+                echo generatePagination($page, $totalPages, $url);
+                ?>
+
             <?php else: ?>
                 <div class="rooms-feedback">No laundry slots currently available.</div>
             <?php endif; ?>
 
             <br>
+            <div class="back-button-container">
+                <a href="dashboard.php" class="button">Back to Dashboard</a>
+            </div>
         </div>
         <div id="form-overlay"></div>
     </div>

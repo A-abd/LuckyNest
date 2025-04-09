@@ -70,11 +70,12 @@ if (isset($_GET['feedback'])) {
     $feedback = $_GET['feedback'];
 }
 
-$mealPlanQuery = "SELECT * FROM meal_plans LIMIT $recordsPerPage OFFSET $offset";
-$mealPlanResult = $conn->query($mealPlanQuery);
-while ($row = $mealPlanResult->fetch(PDO::FETCH_ASSOC)) {
-    $mealPlanData[] = $row;
-}
+$mealPlanQuery = "SELECT * FROM meal_plans LIMIT :limit OFFSET :offset";
+$stmt = $conn->prepare($mealPlanQuery);
+$stmt->bindValue(':limit', $recordsPerPage, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
+$mealPlanData = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $totalMealPlanRecordsQuery = $conn->query("SELECT COUNT(*) AS total FROM meal_plans");
 $totalMealPlanRecords = $totalMealPlanRecordsQuery->fetch(PDO::FETCH_ASSOC)['total'];

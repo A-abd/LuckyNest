@@ -272,15 +272,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$result = $conn->query("SELECT b.*, r.room_number, rt.room_type_name, u.forename, u.surname
+$stmt = $conn->prepare("SELECT b.*, r.room_number, rt.room_type_name, u.forename, u.surname
     FROM bookings b
     JOIN rooms r ON b.room_id = r.room_id
     JOIN room_types rt ON r.room_type_id = rt.room_type_id
     JOIN users u ON b.guest_id = u.user_id
-    LIMIT $recordsPerPage OFFSET $offset");
-while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-    $bookingData[] = $row;
-}
+    LIMIT :limit OFFSET :offset");
+$stmt->bindValue(':limit', $recordsPerPage, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
+$bookingData = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $totalRecordsQuery = $conn->query("SELECT COUNT(*) As total FROM bookings");
 $totalRecords = $totalRecordsQuery->fetch(PDO::FETCH_ASSOC)['total'];

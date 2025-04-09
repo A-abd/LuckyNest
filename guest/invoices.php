@@ -7,8 +7,12 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require __DIR__ . "/../include/db.php";
+include __DIR__ . '/../include/pagination.php';
 
 $user_id = $_SESSION['user_id'];
+$recordsPerPage = 10;
+$page = isset($_GET["page"]) ? (int) $_GET["page"] : 1;
+$offset = ($page - 1) * $recordsPerPage;
 
 try {
     $stmt = $conn->prepare("
@@ -19,10 +23,24 @@ try {
         LEFT JOIN rooms r ON (b.room_id = r.room_id)
         WHERE i.user_id = :user_id
         ORDER BY i.created_at DESC
+        LIMIT :limit OFFSET :offset
     ");
     $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
+    $stmt->bindValue(':limit', $recordsPerPage, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
     $invoices = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $totalRecordsQuery = $conn->prepare("
+        SELECT COUNT(*) As total 
+        FROM invoices i 
+        JOIN payments p ON i.payment_id = p.payment_id
+        WHERE i.user_id = :user_id
+    ");
+    $totalRecordsQuery->bindValue(':user_id', $user_id, PDO::PARAM_INT);
+    $totalRecordsQuery->execute();
+    $totalRecords = $totalRecordsQuery->fetch(PDO::FETCH_ASSOC)['total'];
+    $totalPages = ceil($totalRecords / $recordsPerPage);
 } catch (PDOException $e) {
     die("Database error: " . $e->getMessage());
 }
@@ -150,6 +168,16 @@ $laundry_invoices = array_filter($invoices, function ($invoice) {
                     </tbody>
                 </table>
             <?php endif; ?>
+
+            <?php
+            $url = 'invoices.php';
+            echo generatePagination($page, $totalPages, $url);
+            ?>
+
+            <br>
+            <div class="back-button-container">
+                <a href="dashboard.php" class="button">Back to Dashboard</a>
+            </div>
         </div>
     </div>
 </body>

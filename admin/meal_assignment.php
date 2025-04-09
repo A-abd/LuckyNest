@@ -134,18 +134,17 @@ while ($row = $mealPlanResult->fetch(PDO::FETCH_ASSOC)) {
     $mealPlanData[] = $row;
 }
 
-$assignmentsQuery = "
-    SELECT mpl.meal_plan_item_link_id, mpl.meal_plan_id, mpl.meal_id, mpl.day_number,
-           m.name AS meal_name, m.meal_type, mp.name AS plan_name, mp.price AS plan_price
-    FROM meal_plan_items_link mpl
-    JOIN meals m ON mpl.meal_id = m.meal_id
-    JOIN meal_plans mp ON mpl.meal_plan_id = mp.meal_plan_id
-    LIMIT $recordsPerPage OFFSET $offset
-";
-$assignmentsResult = $conn->query($assignmentsQuery);
-while ($row = $assignmentsResult->fetch(PDO::FETCH_ASSOC)) {
-    $assignmentsData[] = $row;
-}
+$assignmentsStmt = $conn->prepare(    "
+        SELECT mpl.meal_plan_item_link_id, mpl.meal_plan_id, mpl.meal_id, mpl.day_number,
+        m.name AS meal_name, m.meal_type, mp.name AS plan_name, mp.price AS plan_price
+        FROM meal_plan_items_link mpl
+        JOIN meals m ON mpl.meal_id = m.meal_id
+        JOIN meal_plans mp ON mpl.meal_plan_id = mp.meal_plan_id
+        LIMIT :limit OFFSET :offset");
+$assignmentsStmt->bindValue(':limit', $recordsPerPage, PDO::PARAM_INT);
+$assignmentsStmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$assignmentsStmt->execute();
+$assignmentsData = $assignmentsStmt->fetchAll(PDO::FETCH_ASSOC);
 
 $totalAssignmentsQuery = $conn->query("SELECT COUNT(*) AS total FROM meal_plan_items_link");
 $totalAssignments = $totalAssignmentsQuery->fetch(PDO::FETCH_ASSOC)['total'];

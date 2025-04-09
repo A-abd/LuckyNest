@@ -79,10 +79,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$result = $conn->query("SELECT * FROM visitors LIMIT $recordsPerPage OFFSET $offset");
-while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-    $visitorData[] = $row;
-}
+$stmt = $conn->prepare("SELECT * FROM visitors LIMIT :limit OFFSET :offset");
+$stmt->bindValue(':limit', $recordsPerPage, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
+$visitorData = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $totalRecordsQuery = $conn->query("SELECT COUNT(*) As total FROM visitors");
 $totalRecords = $totalRecordsQuery->fetch(PDO::FETCH_ASSOC)['total'];

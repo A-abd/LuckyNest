@@ -120,10 +120,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$stmt = $conn->query("SELECT r.room_id, r.room_number, r.room_is_available, r.status, rt.room_type_name 
+$stmt = $conn->prepare("SELECT r.room_id, r.room_number, r.room_is_available, r.status, rt.room_type_name 
                       FROM rooms r 
                       JOIN room_types rt ON r.room_type_id = rt.room_type_id
-                      LIMIT $recordsPerPage OFFSET $offset");
+                      LIMIT ?, ?");
+$stmt->bindValue(1, $offset, PDO::PARAM_INT);
+$stmt->bindValue(2, $recordsPerPage, PDO::PARAM_INT);
+$stmt->execute();
 $roomData = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $totalRecordsQuery = $conn->query("SELECT COUNT(*) As total FROM rooms");

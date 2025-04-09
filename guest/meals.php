@@ -16,7 +16,11 @@ $recordsPerPage = 10;
 $page = isset($_GET["page"]) ? (int) $_GET["page"] : 1;
 $offset = ($page - 1) * $recordsPerPage;
 
-$mealPlanQuery = $conn->query("SELECT * FROM meal_plans WHERE is_active = 1 LIMIT $recordsPerPage OFFSET $offset");
+$mealPlanQuery = $conn->prepare("SELECT * FROM meal_plans WHERE is_active = 1 LIMIT :limit OFFSET :offset");
+$mealPlanQuery->bindParam(':limit', $recordsPerPage, PDO::PARAM_INT);
+$mealPlanQuery->bindParam(':offset', $offset, PDO::PARAM_INT);
+$mealPlanQuery->execute();
+
 while ($row = $mealPlanQuery->fetch(PDO::FETCH_ASSOC)) {
     $mealPlanId = $row['meal_plan_id'];
 

@@ -71,7 +71,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$stmt = $conn->query("SELECT * FROM users LIMIT $recordsPerPage OFFSET $offset");
+$stmt = $conn->prepare("SELECT * FROM users LIMIT ?, ?");
+$stmt->bindValue(1, $offset, PDO::PARAM_INT);
+$stmt->bindValue(2, $recordsPerPage, PDO::PARAM_INT);
+$stmt->execute();
 $userData = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $totalRecordsQuery = $conn->query("SELECT COUNT(*) As total FROM users");

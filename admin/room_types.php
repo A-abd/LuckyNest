@@ -68,10 +68,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$result = $conn->query("SELECT * FROM room_types LIMIT $recordsPerPage OFFSET $offset");
-while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-    $roomTypeData[] = $row;
-}
+$stmt = $conn->prepare("SELECT * FROM room_types LIMIT :limit OFFSET :offset");
+$stmt->bindValue(':limit', $recordsPerPage, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
+$roomTypeData = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $totalRecordsQuery = $conn->query("SELECT COUNT(*) As total FROM room_types");
 $totalRecords = $totalRecordsQuery->fetch(PDO::FETCH_ASSOC)['total'];
