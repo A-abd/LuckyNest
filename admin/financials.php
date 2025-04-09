@@ -27,24 +27,24 @@ function generateRevenueReport($conn, $timePeriod, $currentYear, $currentMonth, 
 
     if ($timePeriod == 'monthly') {
         $query = "SELECT 
-                    strftime('%Y-%m', payment_date) as period,
+                    DATE_FORMAT(payment_date, '%Y-%m') as period,
                     payment_type,
                     SUM(amount) as total_amount
                   FROM payments
-                  WHERE strftime('%Y-%m', payment_date) = :yearMonth
+                  WHERE DATE_FORMAT(payment_date, '%Y-%m') = :yearMonth
                   GROUP BY period, payment_type
-                  ORDER BY period DESC";
+                  ORDER BY period DESc";
 
         $yearMonth = $currentYear . '-' . str_pad($currentMonth, 2, '0', STR_PAD_LEFT);
         $stmt = $conn->prepare($query);
         $stmt->bindParam(':yearMonth', $yearMonth, PDO::PARAM_STR);
     } else {
         $query = "SELECT 
-                    strftime('%Y', payment_date) as period,
+                    DATE_FORMAT(payment_date, '%Y') as period,
                     payment_type,
                     SUM(amount) as total_amount
                   FROM payments
-                  WHERE strftime('%Y', payment_date) = :year
+                  WHERe DATE_FORMAT(payment_date, '%Y') = :year
                   GROUP BY period, payment_type
                   ORDER BY period DESC";
 

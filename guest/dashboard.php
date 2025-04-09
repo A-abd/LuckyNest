@@ -71,9 +71,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $review = $_POST['review'];
 
         $stmt = $conn->prepare("INSERT INTO meal_plan_ratings (user_id, meal_plan_id, rating, review) 
-                              VALUES (:user_id, :meal_plan_id, :rating, :review)
-                              ON CONFLICT(user_id, meal_plan_id) 
-                              DO UPDATE SET rating = :rating, review = :review");
+                                    VALUES (:user_id, :meal_plan_id, :rating, :review)
+                                    ON DUPLICATE KEY UPDATE rating = :rating, review = :review");
         $stmt->bindParam(':user_id', $_SESSION['user_id']);
         $stmt->bindParam(':meal_plan_id', $mealPlanId);
         $stmt->bindParam(':rating', $rating);
@@ -90,9 +89,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $review = $_POST['review'];
 
         $stmt = $conn->prepare("INSERT INTO room_ratings (user_id, booking_id, rating, review) 
-                              VALUES (:user_id, :booking_id, :rating, :review)
-                              ON CONFLICT(user_id, booking_id) 
-                              DO UPDATE SET rating = :rating, review = :review");
+                                VALUES (:user_id, :booking_id, :rating, :review)
+                                ON DUPLICATE KEY UPDATE rating = :rating, review = :review");
         $stmt->bindParam(':user_id', $_SESSION['user_id']);
         $stmt->bindParam(':booking_id', $bookingId);
         $stmt->bindParam(':rating', $rating);
@@ -235,10 +233,12 @@ try {
                                     <?php if ($booking['booking_is_paid']): ?>
                                         <?php if ($booking['has_rating'] > 0): ?>
                                             <button class="button"
-                                                onclick="window.LuckyNest.toggleForm('roomRatingForm'); document.getElementById('ratingBookingId').value=<?php echo $booking['booking_id']; ?>">Edit Rating</button>
+                                                onclick="window.LuckyNest.toggleForm('roomRatingForm'); document.getElementById('ratingBookingId').value=<?php echo $booking['booking_id']; ?>">Edit
+                                                Rating</button>
                                         <?php else: ?>
                                             <button class="button"
-                                                onclick="window.LuckyNest.toggleForm('roomRatingForm'); document.getElementById('ratingBookingId').value=<?php echo $booking['booking_id']; ?>">Rate Room</button>
+                                                onclick="window.LuckyNest.toggleForm('roomRatingForm'); document.getElementById('ratingBookingId').value=<?php echo $booking['booking_id']; ?>">Rate
+                                                Room</button>
                                         <?php endif; ?>
                                     <?php endif; ?>
                                 </td>
@@ -268,7 +268,8 @@ try {
                             <textarea name="review" rows="4" cols="50"></textarea>
                         </div>
                         <button type="submit" name="submit_room_rating" class="button">Submit Rating</button>
-                        <button type="button" onclick="window.LuckyNest.toggleForm('roomRatingForm')" class="button cancel-button">Cancel</button>
+                        <button type="button" onclick="window.LuckyNest.toggleForm('roomRatingForm')"
+                            class="button cancel-button">Cancel</button>
                     </form>
                 </div>
             <?php else: ?>
@@ -309,10 +310,12 @@ try {
                                     <?php if ($plan['is_paid']): ?>
                                         <?php if ($plan['has_rating'] > 0): ?>
                                             <button class="button"
-                                                onclick="window.LuckyNest.toggleForm('mealRatingForm'); document.getElementById('ratingMealPlanId').value=<?php echo $plan['meal_plan_id']; ?>">Edit Rating</button>
+                                                onclick="window.LuckyNest.toggleForm('mealRatingForm'); document.getElementById('ratingMealPlanId').value=<?php echo $plan['meal_plan_id']; ?>">Edit
+                                                Rating</button>
                                         <?php else: ?>
                                             <button class="button"
-                                                onclick="window.LuckyNest.toggleForm('mealRatingForm'); document.getElementById('ratingMealPlanId').value=<?php echo $plan['meal_plan_id']; ?>">Rate Plan</button>
+                                                onclick="window.LuckyNest.toggleForm('mealRatingForm'); document.getElementById('ratingMealPlanId').value=<?php echo $plan['meal_plan_id']; ?>">Rate
+                                                Plan</button>
                                         <?php endif; ?>
                                     <?php endif; ?>
                                 </td>
@@ -342,7 +345,8 @@ try {
                             <textarea name="review" rows="4" cols="50"></textarea>
                         </div>
                         <button type="submit" name="submit_meal_rating" class="button">Submit Rating</button>
-                        <button type="button" onclick="window.LuckyNest.toggleForm('mealRatingForm')" class="button cancel-button">Cancel</button>
+                        <button type="button" onclick="window.LuckyNest.toggleForm('mealRatingForm')"
+                            class="button cancel-button">Cancel</button>
                     </form>
                 </div>
             <?php else: ?>

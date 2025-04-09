@@ -14,8 +14,9 @@ use Sonata\GoogleAuthenticator\GoogleAuthenticator;
 use Sonata\GoogleAuthenticator\GoogleQrUrl;
 
 $user_id = $_SESSION['user_id'];
-$stmt = $conn->prepare("SELECT totp_secret, password, email_notifications, sms_notifications, push_notifications, email, phone FROM users WHERE user_id = ?");
-$stmt->execute([$user_id]);
+$stmt = $conn->prepare("SELECT totp_secret, password, email_notifications, sms_notifications, push_notifications, email, phone FROM users WHERE user_id = :user_id");
+$stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
+$stmt->execute();
 $user = $stmt->fetch();
 
 $g = new GoogleAuthenticator();
@@ -72,12 +73,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_notifications'
     $push_notifications = isset($_POST['push_notifications']) ? 1 : 0;
 
     try {
-        $stmt = $conn->prepare("UPDATE users SET email_notifications = ?, sms_notifications = ?, push_notifications = ? WHERE user_id = ?");
-        $stmt->execute([$email_notifications, $sms_notifications, $push_notifications, $user_id]);
+        $stmt = $conn->prepare("UPDATE users SET email_notifications = :email_notifications, sms_notifications = :sms_notifications, push_notifications = :push_notifications WHERE user_id = :user_id");
+        $stmt->bindValue(':email_notifications', $email_notifications, PDO::PARAM_INT);
+        $stmt->bindValue(':sms_notifications', $sms_notifications, PDO::PARAM_INT);
+        $stmt->bindValue(':push_notifications', $push_notifications, PDO::PARAM_INT);
+        $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
+        $stmt->execute();
 
         // Update the user data after changes
-        $stmt = $conn->prepare("SELECT email_notifications, sms_notifications, push_notifications FROM users WHERE user_id = ?");
-        $stmt->execute([$user_id]);
+        $stmt = $conn->prepare("SELECT email_notifications, sms_notifications, push_notifications FROM users WHERE user_id = :user_id");
+        $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
+        $stmt->execute();
         $updated_prefs = $stmt->fetch();
         $user['email_notifications'] = $updated_prefs['email_notifications'];
         $user['sms_notifications'] = $updated_prefs['sms_notifications'];
@@ -96,8 +102,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_password'])) {
     if (password_verify($password, $user['password'])) {
         if (isset($_POST['toggle_2fa'])) {
             if ($secret) {
-                $stmt = $conn->prepare("UPDATE users SET totp_secret = NULL WHERE user_id = ?");
-                $stmt->execute([$user_id]);
+                $stmt = $conn->prepare("UPDATE users SET totp_secret = NULL WHERE user_id = :user_id");
+                $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
+                $stmt->execute();
                 header("Location: settings.php");
                 exit();
             } else {
@@ -117,8 +124,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_code'])) {
 
     if ($g->checkCode($verificationSecret, $code)) {
         if (isset($_SESSION['new_secret'])) {
-            $stmt = $conn->prepare("UPDATE users SET totp_secret = ? WHERE user_id = ?");
-            $stmt->execute([$_SESSION['new_secret'], $user_id]);
+            $stmt = $conn->prepare("UPDATE users SET totp_secret = :totp_secret WHERE user_id = :user_id");
+            $stmt->bindValue(':totp_secret', $_SESSION['new_secret'], PDO::PARAM_STR);
+            $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
+            $stmt->execute();
             unset($_SESSION['new_secret']);
         }
         $_SESSION['2fa_verified'] = true;
@@ -286,7 +295,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_code'])) {
                         <p>Scan this QR code with your Authenticator app:</p>
                         <img src="<?php echo htmlspecialchars($qrCodeUrl); ?>" alt="QR Code">
                         <p>Or enter this secret manually:
-                            <strong><?php echo htmlspecialchars($_SESSION['new_secret']); ?></strong></p>
+                            <strong><?php echo htmlspecialchars($_SESSION['new_secret']); ?></strong>
+                        </p>
                         <form method="POST">
                             <label for="totp_code">Enter Code from your Authenticator app:</label>
                             <input type="text" id="totp_code" name="totp_code" required>
@@ -308,7 +318,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_code'])) {
                         <p class="notification-description">Receive payment reminders, late payment notices, and booking
                             information via email.</p>
                         <p class="notification-description">Current email:
-                            <strong><?php echo htmlspecialchars($user['email']); ?></strong></p>
+                            <strong><?php echo htmlspecialchars($user['email']); ?></strong>
+                        </p>
                     </div>
 
                     <div class="notification-option">
@@ -319,7 +330,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_code'])) {
                         <p class="notification-description">Receive payment reminders and important updates via text
                             message.</p>
                         <p class="notification-description">Current phone:
-                            <strong><?php echo htmlspecialchars($user['phone']); ?></strong></p>
+                            <strong><?php echo htmlspecialchars($user['phone']); ?></strong>
+                        </p>
                     </div>
 
                     <div class="notification-option">

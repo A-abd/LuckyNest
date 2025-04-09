@@ -27,7 +27,7 @@ $query = "
         r.status,
         b.check_in_date,
         b.check_out_date,
-        u.forename || ' ' || u.surname AS guest_name
+        CONCAT(u.forename, ' ', u.surname) AS guest_name
     FROM 
         rooms r
     LEFT JOIN 

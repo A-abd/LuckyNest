@@ -25,7 +25,7 @@ $mealTypeFilter = isset($_GET['meal_type']) ? $_GET['meal_type'] : '';
 $query = "
     SELECT 
         u.user_id,
-        u.forename || ' ' || u.surname AS guest_name,
+        CONCAT(u.forename, ' ', u.surname) AS guest_name,
         mp.name AS meal_plan_name,
         mp.meal_plan_type,
         m.name AS meal_name,

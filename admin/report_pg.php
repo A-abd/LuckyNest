@@ -28,7 +28,7 @@ $query = "
         b.total_price,
         b.booking_is_cancelled,
         b.booking_is_paid,
-        u.forename || ' ' || u.surname AS guest_name
+        CONCAT(u.forename, ' ', u.surname) AS guest_name
         FRoM bookings b
         JOIN  rooms r ON b.room_id = r.room_id
         JOIN room_types rt ON r.room_type_id = rt.room_type_id
