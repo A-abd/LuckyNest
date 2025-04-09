@@ -11,16 +11,12 @@ include __DIR__ . '/../include/db.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['cancel_booking'])) {
         $bookingId = $_POST['booking_id'];
-        $stmt = $conn->prepare("UPDATE bookings SET booking_is_cancelled = 1 WHERE booking_id = :booking_id AND guest_id = :user_id");
-        $stmt->bindParam(':booking_id', $bookingId);
-        $stmt->bindParam(':user_id', $_SESSION['user_id']);
-        $stmt->execute();
+        $stmt = $conn->prepare("UPDATE bookings SET booking_is_cancelled = 1 WHERE booking_id = ? AND guest_id = ?");
+        $stmt->execute([$bookingId, $_SESSION['user_id']]);
 
         $message = "Your booking #$bookingId has been cancelled.";
-        $notifStmt = $conn->prepare("INSERT INTO notifications (user_id, message) VALUES (:user_id, :message)");
-        $notifStmt->bindParam(':user_id', $_SESSION['user_id']);
-        $notifStmt->bindParam(':message', $message);
-        $notifStmt->execute();
+        $notifStmt = $conn->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)");
+        $notifStmt->execute([$_SESSION['user_id'], $message]);
 
         header("Location: dashboard.php");
         exit();
@@ -29,16 +25,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['cancel_meal_plan'])) {
         $mealPlanUserLinkId = $_POST['meal_plan_user_link_id'];
         $stmt = $conn->prepare("UPDATE meal_plan_user_link SET is_cancelled = 1 
-                               WHERE meal_plan_user_link = :meal_plan_user_link_id AND user_id = :user_id");
-        $stmt->bindParam(':meal_plan_user_link_id', $mealPlanUserLinkId);
-        $stmt->bindParam(':user_id', $_SESSION['user_id']);
-        $stmt->execute();
+                               WHERE meal_plan_user_link_id = ? AND user_id = ?");
+        $stmt->execute([$mealPlanUserLinkId, $_SESSION['user_id']]);
 
         $message = "Your meal plan has been cancelled.";
-        $notifStmt = $conn->prepare("INSERT INTO notifications (user_id, message) VALUES (:user_id, :message)");
-        $notifStmt->bindParam(':user_id', $_SESSION['user_id']);
-        $notifStmt->bindParam(':message', $message);
-        $notifStmt->execute();
+        $notifStmt = $conn->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)");
+        $notifStmt->execute([$_SESSION['user_id'], $message]);
 
         header("Location: dashboard.php");
         exit();
@@ -48,18 +40,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $laundryDate = $_POST['laundry_date'];
         $laundryTime = $_POST['laundry_time'];
         $stmt = $conn->prepare("UPDATE laundry_slot_user_link SET is_cancelled = 1 
-                               WHERE user_id = :user_id AND laundry_slot_id IN 
-                               (SELECT laundry_slot_id FROM laundry_slots WHERE date = :date AND start_time = :time)");
-        $stmt->bindParam(':user_id', $_SESSION['user_id']);
-        $stmt->bindParam(':date', $laundryDate);
-        $stmt->bindParam(':time', $laundryTime);
-        $stmt->execute();
+                               WHERE user_id = ? AND laundry_slot_id IN 
+                               (SELECT laundry_slot_id FROM laundry_slots WHERE date = ? AND start_time = ?)");
+        $stmt->execute([$_SESSION['user_id'], $laundryDate, $laundryTime]);
 
         $message = "Your laundry booking on $laundryDate at $laundryTime has been cancelled.";
-        $notifStmt = $conn->prepare("INSERT INTO notifications (user_id, message) VALUES (:user_id, :message)");
-        $notifStmt->bindParam(':user_id', $_SESSION['user_id']);
-        $notifStmt->bindParam(':message', $message);
-        $notifStmt->execute();
+        $notifStmt = $conn->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)");
+        $notifStmt->execute([$_SESSION['user_id'], $message]);
 
         header("Location: dashboard.php");
         exit();
@@ -71,13 +58,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $review = $_POST['review'];
 
         $stmt = $conn->prepare("INSERT INTO meal_plan_ratings (user_id, meal_plan_id, rating, review) 
-                                    VALUES (:user_id, :meal_plan_id, :rating, :review)
-                                    ON DUPLICATE KEY UPDATE rating = :rating, review = :review");
-        $stmt->bindParam(':user_id', $_SESSION['user_id']);
-        $stmt->bindParam(':meal_plan_id', $mealPlanId);
-        $stmt->bindParam(':rating', $rating);
-        $stmt->bindParam(':review', $review);
-        $stmt->execute();
+                                VALUES (?, ?, ?, ?)
+                                ON DUPLICATE KEY UPDATE rating = ?, review = ?");
+        $stmt->execute([$_SESSION['user_id'], $mealPlanId, $rating, $review, $rating, $review]);
 
         header("Location: dashboard.php");
         exit();
@@ -89,13 +72,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $review = $_POST['review'];
 
         $stmt = $conn->prepare("INSERT INTO room_ratings (user_id, booking_id, rating, review) 
-                                VALUES (:user_id, :booking_id, :rating, :review)
-                                ON DUPLICATE KEY UPDATE rating = :rating, review = :review");
-        $stmt->bindParam(':user_id', $_SESSION['user_id']);
-        $stmt->bindParam(':booking_id', $bookingId);
-        $stmt->bindParam(':rating', $rating);
-        $stmt->bindParam(':review', $review);
-        $stmt->execute();
+                                VALUES (?, ?, ?, ?)
+                                ON DUPLICATE KEY UPDATE rating = ?, review = ?");
+        $stmt->execute([$_SESSION['user_id'], $bookingId, $rating, $review, $rating, $review]);
 
         header("Location: dashboard.php");
         exit();
@@ -105,50 +84,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 try {
     $userId = $_SESSION['user_id'];
 
-    $bookingsQuery = $conn->prepare("SELECT b.booking_id, r.room_number, b.check_in_date, b.check_out_date, b.total_price, b.booking_is_paid,
-                                   (SELECT COUNT(*) FROM room_ratings WHERE booking_id = b.booking_id AND user_id = :user_id) as has_rating
-                                   FROM bookings b 
-                                   JOIN rooms r ON b.room_id = r.room_id 
-                                   WHERE b.guest_id = :user_id AND b.booking_is_cancelled = 0 
-                                   ORDER BY b.check_in_date DESC");
-    $bookingsQuery->bindParam(':user_id', $userId);
-    $bookingsQuery->execute();
-    $bookings = $bookingsQuery->fetchAll(PDO::FETCH_ASSOC);
+    // Get bookings
+    $bookingsQuery = $conn->prepare("
+        SELECT b.booking_id, r.room_number, b.check_in_date, b.check_out_date, 
+               b.total_price, b.booking_is_paid,
+               (SELECT COUNT(*) FROM room_ratings 
+                WHERE booking_id = b.booking_id AND user_id = ?) as has_rating
+        FROM bookings b 
+        JOIN rooms r ON b.room_id = r.room_id 
+        WHERE b.guest_id = ? AND b.booking_is_cancelled = 0 
+        ORDER BY b.check_in_date DESC
+    ");
+    $bookingsQuery->execute([$userId, $userId]);
+    $bookings = $bookingsQuery->fetchAll();
 
-    $mealPlansQuery = $conn->prepare("SELECT mp.name, mp.meal_plan_type, mp.duration_days, mpul.is_paid, mp.meal_plan_id, mpul.meal_plan_user_link,
-                                    (SELECT COUNT(*) FROM meal_plan_ratings WHERE meal_plan_id = mp.meal_plan_id AND user_id = :user_id) as has_rating
-                                    FROM meal_plan_user_link mpul
-                                    JOIN meal_plans mp ON mpul.meal_plan_id = mp.meal_plan_id
-                                    WHERE mpul.user_id = :user_id AND mpul.is_cancelled = 0");
-    $mealPlansQuery->bindParam(':user_id', $userId);
-    $mealPlansQuery->execute();
-    $mealPlans = $mealPlansQuery->fetchAll(PDO::FETCH_ASSOC);
+    // Get meal plans - FIXED COLUMN NAME
+    $mealPlansQuery = $conn->prepare("
+        SELECT mp.name, mp.meal_plan_type, mp.duration_days, mpul.is_paid, 
+               mp.meal_plan_id, mpul.meal_plan_user_link,
+               (SELECT COUNT(*) FROM meal_plan_ratings 
+                WHERE meal_plan_id = mp.meal_plan_id AND user_id = ?) as has_rating
+        FROM meal_plan_user_link mpul
+        JOIN meal_plans mp ON mpul.meal_plan_id = mp.meal_plan_id
+        WHERE mpul.user_id = ? AND mpul.is_cancelled = 0
+    ");
+    $mealPlansQuery->execute([$userId, $userId]);
+    $mealPlans = $mealPlansQuery->fetchAll();
 
-    $laundryQuery = $conn->prepare("SELECT ls.date, ls.start_time, ls.price, lsul.is_paid, ls.laundry_slot_id 
+    // Get laundry slots
+    $laundryQuery = $conn->prepare("
+        SELECT ls.date, ls.start_time, ls.price, lsul.is_paid, ls.laundry_slot_id 
         FROM laundry_slot_user_link lsul
         JOIN laundry_slots ls ON lsul.laundry_slot_id = ls.laundry_slot_id
-        WHERE lsul.user_id = :user_id AND lsul.is_cancelled = 0");
-    $laundryQuery->bindParam(':user_id', $userId);
-    $laundryQuery->execute();
-    $laundrySlots = $laundryQuery->fetchAll(PDO::FETCH_ASSOC);
+        WHERE lsul.user_id = ? AND lsul.is_cancelled = 0
+    ");
+    $laundryQuery->execute([$userId]);
+    $laundrySlots = $laundryQuery->fetchAll();
 
-    $notificationsQuery = $conn->prepare("SELECT message, created_at, is_read 
+    // Get notifications
+    $notificationsQuery = $conn->prepare("
+        SELECT message, created_at, is_read 
         FROM notifications 
-        WHERE user_id = :user_id 
+        WHERE user_id = ? 
         ORDER BY created_at DESC 
-        LIMIT 5");
-    $notificationsQuery->bindParam(':user_id', $userId);
-    $notificationsQuery->execute();
-    $notifications = $notificationsQuery->fetchAll(PDO::FETCH_ASSOC);
+        LIMIT 5
+    ");
+    $notificationsQuery->execute([$userId]);
+    $notifications = $notificationsQuery->fetchAll();
 
-    $paymentsQuery = $conn->prepare("SELECT payment_type, amount, payment_date 
+    // Get payments
+    $paymentsQuery = $conn->prepare("
+        SELECT payment_type, amount, payment_date 
         FROM payments 
-        WHERE user_id = :user_id 
+        WHERE user_id = ? 
         ORDER BY payment_date DESC 
-        LIMIT 5");
-    $paymentsQuery->bindParam(':user_id', $userId);
-    $paymentsQuery->execute();
-    $payments = $paymentsQuery->fetchAll(PDO::FETCH_ASSOC);
+        LIMIT 5
+    ");
+    $paymentsQuery->execute([$userId]);
+    $payments = $paymentsQuery->fetchAll();
 
 } catch (PDOException $e) {
     die("Database Error: " . $e->getMessage());
