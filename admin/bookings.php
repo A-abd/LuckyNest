@@ -67,26 +67,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $interval = $checkIn->diff($checkOut);
             $totalDays = $interval->days;
 
-            $isWholeWeeks = ($totalDays % 7 === 0);
-            $isWholeMonths = ($interval->d === 0 && $interval->h === 0 && $interval->i === 0);
+            // Calculate total months (years * 12 + months)
+            $totalMonths = $interval->y * 12 + $interval->m;
 
-            if (!$isWholeWeeks && !$isWholeMonths) {
-                $feedback = 'Error: Bookings must be whole weeks (e.g., 1 week, 2 weeks) or whole months (e.g., 1 month, 2 months).';
+            // Check if there are any remaining days which would make it not a whole month
+            $isWholeMonth = ($interval->d === 0);
+
+            // Check if the booking meets the minimum 6-month requirement
+            if ($totalMonths < 6 || !$isWholeMonth) {
+                $feedback = 'Error: Bookings must be a minimum of 6 whole months (no weeks or partial months allowed, booking must be whole months).';
             } else {
-                $totalMonths = $interval->y * 12 + $interval->m;
-                if ($isWholeWeeks) {
-                    $totalWeeks = intval($totalDays / 7);
-                    if ($totalWeeks > 4) {
-                        $feedback = 'Error: Weekly bookings cannot exceed 4 weeks.';
-                    } else {
-                        $totalMonths = 1; // this charges for the whole month regardless of weeks
-                    }
-                } else {
-                    if ($interval->d > 0 || $interval->h > 0 || $interval->i > 0) {
-                        $totalMonths += 1;
-                    }
-                }
-
                 $roomPriceQuery = $conn->prepare("SELECT rt.rate_monthly
                     FROM rooms r
                     JOIN room_types rt ON r.room_type_id = rt.room_type_id
@@ -164,26 +154,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $interval = $checkIn->diff($checkOut);
                 $totalDays = $interval->days;
 
-                $isWholeWeeks = ($totalDays % 7 === 0);
-                $isWholeMonths = ($interval->d === 0 && $interval->h === 0 && $interval->i === 0);
+                // Calculate total months (years * 12 + months)
+                $totalMonths = $interval->y * 12 + $interval->m;
 
-                if (!$isWholeWeeks && !$isWholeMonths) {
-                    $feedback = 'Error: Bookings must be whole weeks (e.g., 1 week, 2 weeks) or whole months (e.g., 1 month, 2 months).';
+                // Check if there are any remaining days which would make it not a whole month
+                $isWholeMonth = ($interval->d === 0);
+
+                // Check if the booking meets the minimum 6-month requirement
+                if ($totalMonths < 6 || !$isWholeMonth) {
+                    $feedback = 'Error: Bookings must be a minimum of 6 whole months (no weeks or partial months allowed).';
                 } else {
-                    $totalMonths = $interval->y * 12 + $interval->m;
-                    if ($isWholeWeeks) {
-                        $totalWeeks = intval($totalDays / 7);
-                        if ($totalWeeks > 4) {
-                            $feedback = 'Error: Weekly bookings cannot exceed 4 weeks.';
-                        } else {
-                            $totalMonths = 1; // this charges for the whole month regardless of weeks
-                        }
-                    } else {
-                        if ($interval->d > 0 || $interval->h > 0 || $interval->i > 0) {
-                            $totalMonths += 1;
-                        }
-                    }
-
                     $roomPriceQuery = $conn->prepare("SELECT rt.rate_monthly
                         FROM rooms r
                         JOIN room_types rt ON r.room_type_id = rt.room_type_id
