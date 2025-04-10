@@ -19,7 +19,7 @@ try {
         SELECT i.invoice_id, i.invoice_number, i.amount, i.filename, i.created_at, p.payment_type, b.booking_id, r.room_number
         FROM invoices i
         JOIN payments p ON i.payment_id = p.payment_id
-        LEFT JOIN bookings b ON (p.reference_id = b.booking_id AND p.payment_type = 'rent')
+        LEFT JOIN bookings b ON (p.reference_id = b.booking_id AND (p.payment_type = 'rent' OR p.payment_type = 'deposit'))
         LEFT JOIN rooms r ON (b.room_id = r.room_id)
         WHERE i.user_id = :user_id
         ORDER BY i.created_at DESC
@@ -55,6 +55,10 @@ $food_invoices = array_filter($invoices, function ($invoice) {
 
 $laundry_invoices = array_filter($invoices, function ($invoice) {
     return $invoice['payment_type'] === 'laundry';
+});
+
+$deposit_invoices = array_filter($invoices, function ($invoice) {
+    return $invoice['payment_type'] === 'deposit';
 });
 ?>
 
@@ -95,6 +99,39 @@ $laundry_invoices = array_filter($invoices, function ($invoice) {
                     </thead>
                     <tbody>
                         <?php foreach ($rent_invoices as $invoice): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($invoice['invoice_number']); ?></td>
+                                <td><?php echo htmlspecialchars($invoice['booking_id'] ?? 'N/A'); ?></td>
+                                <td><?php echo htmlspecialchars($invoice['room_number'] ?? 'N/A'); ?></td>
+                                <td>£<?php echo number_format($invoice['amount'], 2); ?></td>
+                                <td><?php echo htmlspecialchars($invoice['created_at']); ?></td>
+                                <td>
+                                    <a href="../invoices/<?php echo htmlspecialchars($invoice['filename']); ?>"
+                                        target="_blank">Download</a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+
+            <h1>Security Deposit Payments</h1>
+            <?php if (empty($deposit_invoices)): ?>
+                <p>No security deposit invoices found.</p>
+            <?php else: ?>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Invoice Number</th>
+                            <th>Booking ID</th>
+                            <th>Room Number</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($deposit_invoices as $invoice): ?>
                             <tr>
                                 <td><?php echo htmlspecialchars($invoice['invoice_number']); ?></td>
                                 <td><?php echo htmlspecialchars($invoice['booking_id'] ?? 'N/A'); ?></td>
