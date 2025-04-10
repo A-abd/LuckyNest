@@ -28,10 +28,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'add') {
             $roomTypeName = $_POST['room_type_name'];
             $rateMonthly = $_POST['rate_monthly'];
+            $depositAmount = $_POST['deposit_amount'];
 
-            $stmt = $conn->prepare("INSERT INTO room_types (room_type_name, rate_monthly) VALUES (:roomTypeName, :rateMonthly)");
+            $stmt = $conn->prepare("INSERT INTO room_types (room_type_name, rate_monthly, deposit_amount) VALUES (:roomTypeName, :rateMonthly, :depositAmount)");
             $stmt->bindParam(':roomTypeName', $roomTypeName, PDO::PARAM_STR);
             $stmt->bindParam(':rateMonthly', $rateMonthly, PDO::PARAM_STR);
+            $stmt->bindParam(':depositAmount', $depositAmount, PDO::PARAM_STR);
 
             if ($stmt->execute()) {
                 $feedback = 'Room type added successfully!';
@@ -42,11 +44,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = $_POST['room_type_id'];
             $roomTypeName = $_POST['room_type_name'];
             $rateMonthly = $_POST['rate_monthly'];
+            $depositAmount = $_POST['deposit_amount'];
 
-            $stmt = $conn->prepare("UPDATE room_types SET room_type_name = :roomTypeName, rate_monthly = :rateMonthly WHERE room_type_id = :id");
+            $stmt = $conn->prepare("UPDATE room_types SET room_type_name = :roomTypeName, rate_monthly = :rateMonthly, deposit_amount = :depositAmount WHERE room_type_id = :id");
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $stmt->bindParam(':roomTypeName', $roomTypeName, PDO::PARAM_STR);
             $stmt->bindParam(':rateMonthly', $rateMonthly, PDO::PARAM_STR);
+            $stmt->bindParam(':depositAmount', $depositAmount, PDO::PARAM_STR);
 
             if ($stmt->execute()) {
                 $feedback = 'Room type updated successfully!';
@@ -122,6 +126,8 @@ $conn = null;
                     <input type="text" id="room_type_name" name="room_type_name" required>
                     <label for="rate_monthly">Monthly Rate:</label>
                     <input type="number" step="0.01" id="rate_monthly" name="rate_monthly" required>
+                    <label for="deposit_amount">Security Deposit:</label>
+                    <input type="number" step="0.01" id="deposit_amount" name="deposit_amount" required>
                     <button type="submit" class="update-button">Add Room Type</button>
                 </form>
             </div>
@@ -134,6 +140,7 @@ $conn = null;
                         <th>ID</th>
                         <th>Room Type Name</th>
                         <th>Monthly Rate</th>
+                        <th>Security Deposit</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -143,12 +150,12 @@ $conn = null;
                             <td><?php echo $roomType['room_type_id']; ?></td>
                             <td><?php echo $roomType['room_type_name']; ?></td>
                             <td><?php echo $roomType['rate_monthly']; ?></td>
+                            <td><?php echo $roomType['deposit_amount']; ?></td>
                             <td>
                                 <button onclick="LuckyNest.toggleForm('edit-form-<?php echo $roomType['room_type_id']; ?>')"
                                     class="update-button">Edit</button>
                                 <!-- Edit Form -->
-                                <div id='edit-form-<?php echo $roomType['room_type_id']; ?>'
-                                    class="rooms-type-edit-form">
+                                <div id='edit-form-<?php echo $roomType['room_type_id']; ?>' class="rooms-type-edit-form">
                                     <button type="button" class="close-button"
                                         onclick="LuckyNest.toggleForm('edit-form-<?php echo $roomType['room_type_id']; ?>')">✕</button>
                                     <form method="POST" action="room_types.php" style="display:inline;">
@@ -166,6 +173,12 @@ $conn = null;
                                         <input type="number" step="0.01"
                                             id="rate_monthly_<?php echo $roomType['room_type_id']; ?>" name="rate_monthly"
                                             value="<?php echo $roomType['rate_monthly']; ?>" required>
+                                        <label for="deposit_amount_<?php echo $roomType['room_type_id']; ?>">Security
+                                            Deposit:</label>
+                                        <input type="number" step="0.01"
+                                            id="deposit_amount_<?php echo $roomType['room_type_id']; ?>"
+                                            name="deposit_amount" value="<?php echo $roomType['deposit_amount']; ?>"
+                                            required>
                                         <div class="rooms-button-group">
                                             <button type="submit" class="update-button">Update</button>
                                             <button type="button" class="update-button"
@@ -179,9 +192,6 @@ $conn = null;
                                         <input type="hidden" name="room_type_id"
                                             value="<?php echo $roomType['room_type_id']; ?>">
                                     </form>
-
-
-
                                 </div>
                             </td>
                         </tr>

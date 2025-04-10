@@ -126,6 +126,40 @@ try {
             'start_date' => $laundry_date,
             'end_date' => $laundry_date
         ];
+    } elseif ($payment_type == 'deposit') {
+        $stmt = $conn->prepare("SELECT b.*, u.forename, u.surname, u.email, u.address, u.phone, r.room_number, 
+                               rt.room_type_name, rt.deposit_amount 
+                               FROM bookings b 
+                               JOIN users u ON b.guest_id = u.user_id 
+                               JOIN rooms r ON b.room_id = r.room_id 
+                               JOIN room_types rt ON r.room_type_id = rt.room_type_id 
+                               WHERE b.booking_id = :reference_id");
+        $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$data) {
+            die("Booking not found for deposit.");
+        }
+
+        $user_id = $data['guest_id'];
+        $check_in_date = $data['check_in_date'];
+        $check_out_date = $data['check_out_date'];
+        $guest_name = $data['forename'] . ' ' . $data['surname'];
+        $guest_email = $data['email'];
+        $guest_address = $data['address'];
+        $guest_phone = $data['phone'];
+        $room_number = $data['room_number'];
+        $room_type = $data['room_type_name'];
+        $amount = floatval($data['deposit_amount']);
+
+        $description = "Security Deposit: {$room_type} - Room {$room_number}";
+        $item_details = [
+            'item' => 'Security Deposit - ' . $room_type,
+            'room_number' => $room_number,
+            'start_date' => $check_in_date,
+            'end_date' => $check_out_date
+        ];
     } else {
         die("Invalid payment type.");
     }
@@ -166,6 +200,19 @@ try {
         if (!$isPaid) {
             $stmt = $conn->prepare("UPDATE laundry_slot_user_link SET is_paid = 1 WHERE laundry_slot_user_link_id = :reference_id");
             $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
+            $stmt->execute();
+        }
+    } elseif ($payment_type == 'deposit') {
+        $stmt = $conn->prepare("SELECT deposit_id FROM deposits WHERE booking_id = :booking_id");
+        $stmt->bindValue(':booking_id', $reference_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $depositExists = $stmt->fetchColumn();
+
+        if (!$depositExists) {
+            $stmt = $conn->prepare("INSERT INTO deposits (booking_id, amount, status, date_paid) 
+                                 VALUES (:booking_id, :amount, 'paid', NOW())");
+            $stmt->bindValue(':booking_id', $reference_id, PDO::PARAM_INT);
+            $stmt->bindValue(':amount', $amount, PDO::PARAM_STR);
             $stmt->execute();
         }
     }
@@ -433,6 +480,10 @@ try {
                 <?php elseif ($payment_type == 'laundry'): ?>
                     <p>Laundry Date: <?php echo date('d/m/Y', strtotime($laundry_date)); ?></p>
                     <p>Laundry Time: <?php echo htmlspecialchars($laundry_time); ?></p>
+                <?php elseif ($payment_type == 'deposit'): ?>
+                    <p>Room Type: <?php echo htmlspecialchars($room_type); ?></p>
+                    <p>Room Number: <?php echo htmlspecialchars($room_number); ?></p>
+                    <p>Security Deposit for Booking #<?php echo htmlspecialchars($reference_id); ?></p>
                 <?php endif; ?>
                 <p>Amount Paid (Inc. VAT): <?php echo '£' . number_format($amount, 2); ?></p>
                 <p>VAT (20%): <?php echo '£' . number_format($vat_amount, 2); ?></p>
@@ -444,6 +495,9 @@ try {
 
             <div>
                 <a href="../invoices/<?php echo $pdf_filename; ?>" class="btn" target="_blank">Download Invoice</a>
+                <?php if ($payment_type == 'deposit'): ?>
+                    <a href="../guest/deposits.php" class="btn btn-outline">View My Deposits</a>
+                <?php endif; ?>
                 <a href="../guest/dashboard.php" class="btn btn-outline">Return to Dashboard</a>
             </div>
 
