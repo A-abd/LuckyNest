@@ -319,7 +319,6 @@ const PaymentModule = {
 // Rating
 const RatingModule = {
   init() {
-    // Any initialization code for ratings
   },
 
   showRoomRatingForm(bookingId) {
@@ -468,7 +467,6 @@ const NavModule = {
 // Financial
 const FinancialModule = {
   init() {
-    // Any initialization for financial module
   },
 
   initFinancialCards() {
@@ -498,6 +496,34 @@ const FinancialModule = {
   }
 };
 
+// Deposit
+const DepositModule = {
+  init() {
+  },
+
+  updateDepositForm(status, depositId, maxAmount) {
+    const refundFields = document.getElementById(`refund-fields-${depositId}`);
+    const withholdingFields = document.getElementById(`withholding-fields-${depositId}`);
+    const refundedAmountField = document.getElementById(`refunded_amount_${depositId}`);
+    
+    if (status === 'partially_refunded' || status === 'fully_refunded') {
+      refundFields.style.display = 'block';
+      
+      if (status === 'fully_refunded') {
+        refundedAmountField.value = maxAmount;
+      }
+    } else {
+      refundFields.style.display = 'none';
+    }
+    
+    if (status === 'withheld' || status === 'partially_refunded') {
+      withholdingFields.style.display = 'block';
+    } else {
+      withholdingFields.style.display = 'none';
+    }
+  }
+};
+
 // Main
 document.addEventListener('DOMContentLoaded', function () {
   console.log("LuckyNest initializing...");
@@ -511,6 +537,7 @@ document.addEventListener('DOMContentLoaded', function () {
   RatingModule.init();
   NavModule.init();
   FinancialModule.init();
+  DepositModule.init();
 
   PaymentModule.init({
     roomRates: window.roomRates || {},
@@ -538,5 +565,6 @@ window.LuckyNest = {
   toggleSubmenu: NavModule.toggleSubmenu,
   initSidebar: NavModule.initSidebar,
   toggleFinancialCard: FinancialModule.toggleFinancialCard,
-  initFinancialCards: FinancialModule.initFinancialCards
+  initFinancialCards: FinancialModule.initFinancialCards,
+  updateDepositForm: DepositModule.updateDepositForm
 };
