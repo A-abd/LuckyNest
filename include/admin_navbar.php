@@ -29,24 +29,13 @@
             </li>
 
             <li class="menu-category">User Management</li>
-            <li class="menu-item has-dropdown" onclick="window.LuckyNest.toggleSubmenu(this)">
-                <span><i class="fas fa-users"></i> PG Guests</span>
-                <i class="fas fa-chevron-down"></i>
-            </li>
-            <ul class="submenu">
-                <a href="TODO">
-                    <li class="submenu-item"><i class="fas fa-list"></i> All Guests</li>
-                </a>
-                <a href="../admin/users.php">
-                    <li class="submenu-item"><i class="fas fa-id-card"></i> Guest Profiles</li>
-                </a>
-                <a href="TODO">
-                    <li class="submenu-item"><i class="fas fa-phone"></i> Emergency Contacts</li>
-                </a>
-            </ul>
 
             <li class="menu-item">
-                <a href="TODO"><i class="fas fa-user-shield"></i> Admin Users</a>
+                <a href="../admin/users.php"><i class="fas fa-users"></i> Guests</a>
+            </li>
+
+            <li class="menu-item">
+                <a href="../admin/admins.php"><i class="fas fa-user-shield"></i> Admin Users</a>
             </li>
 
             <li class="menu-category">Property Management</li>
@@ -69,7 +58,7 @@
                 <a href="TODO">
                     <li class="submenu-item"><i class="fas fa-file-invoice"></i> Invoices</li>
                 </a>
-                <a href="TODO">
+                <a href="../admin/deposits.php">
                     <li class="submenu-item"><i class="fas fa-piggy-bank"></i> Security Deposits</li>
                 </a>
             </ul>
@@ -88,7 +77,7 @@
                 <a href="../admin/meal_assignment.php">
                     <li class="submenu-item"><i class="fas fa-clipboard"></i> Assign Meals to Meal Plan</li>
                 </a>
-                <a href="TODO">
+                <a href="../admin/meal_custom_view.php">
                     <li class="submenu-item"><i class="fas fa-concierge-bell"></i> View Special Requests</li>
                 </a>
             </ul>
