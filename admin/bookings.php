@@ -29,7 +29,7 @@ while ($row = $guestResult->fetch(PDO::FETCH_ASSOC)) {
 }
 
 $roomResult = $conn->query("
-    SELECT r.room_id, r.room_number, rt.room_type_name, rt.rate_monthly,
+    SELECT r.room_id, r.room_number, rt.room_type_name, rt.rate_monthly, rt.deposit_amount,
         CASE
             WHEN EXISTS (
                 SELECT 1
@@ -67,24 +67,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $interval = $checkIn->diff($checkOut);
             $totalDays = $interval->days;
 
-            // Calculate total months (years * 12 + months)
             $totalMonths = $interval->y * 12 + $interval->m;
 
-            // Check if there are any remaining days which would make it not a whole month
             $isWholeMonth = ($interval->d === 0);
 
-            // Check if the booking meets the minimum 6-month requirement
             if ($totalMonths < 6 || !$isWholeMonth) {
                 $feedback = 'Error: Bookings must be a minimum of 6 whole months (no weeks or partial months allowed, booking must be whole months).';
             } else {
-                $roomPriceQuery = $conn->prepare("SELECT rt.rate_monthly
+                $roomDetailsQuery = $conn->prepare("SELECT r.room_id, rt.rate_monthly, rt.deposit_amount
                     FROM rooms r
                     JOIN room_types rt ON r.room_type_id = rt.room_type_id
                     WHERE r.room_id = :roomId");
-                $roomPriceQuery->bindParam(':roomId', $roomId, PDO::PARAM_INT);
-                $roomPriceQuery->execute();
-                $roomPriceResult = $roomPriceQuery->fetch(PDO::FETCH_ASSOC);
-                $monthlyRate = $roomPriceResult['rate_monthly'];
+                $roomDetailsQuery->bindParam(':roomId', $roomId, PDO::PARAM_INT);
+                $roomDetailsQuery->execute();
+                $roomDetails = $roomDetailsQuery->fetch(PDO::FETCH_ASSOC);
+                $monthlyRate = $roomDetails['rate_monthly'];
+                $depositAmount = $roomDetails['deposit_amount'];
 
                 $totalPrice = $totalMonths * $monthlyRate;
 
@@ -119,20 +117,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($roomOverlapResult['count'] > 0) {
                         $feedback = 'Error: Room is already booked for the selected dates.';
                     } else {
-                        $stmt = $conn->prepare("INSERT INTO bookings (room_id, guest_id, check_in_date, check_out_date, total_price, booking_is_cancelled, booking_is_paid)
-                            VALUES (:roomId, :guestId, :checkInDate, :checkOutDate, :totalPrice, :isCancelled, :isPaid)");
-                        $stmt->bindParam(':roomId', $roomId, PDO::PARAM_INT);
-                        $stmt->bindParam(':guestId', $guestId, PDO::PARAM_INT);
-                        $stmt->bindParam(':checkInDate', $formattedCheckInDate, PDO::PARAM_STR);
-                        $stmt->bindParam(':checkOutDate', $formattedCheckOutDate, PDO::PARAM_STR);
-                        $stmt->bindParam(':totalPrice', $totalPrice, PDO::PARAM_STR);
-                        $stmt->bindParam(':isCancelled', $isCancelled, PDO::PARAM_INT);
-                        $stmt->bindParam(':isPaid', $isPaid, PDO::PARAM_INT);
+                        try {
+                            $conn->beginTransaction();
 
-                        if ($stmt->execute()) {
-                            $feedback = 'Booking added successfully!';
-                        } else {
-                            $feedback = 'Error adding booking.';
+                            $stmt = $conn->prepare("INSERT INTO bookings (room_id, guest_id, check_in_date, check_out_date, total_price, booking_is_cancelled, booking_is_paid)
+                                VALUES (:roomId, :guestId, :checkInDate, :checkOutDate, :totalPrice, :isCancelled, :isPaid)");
+                            $stmt->bindParam(':roomId', $roomId, PDO::PARAM_INT);
+                            $stmt->bindParam(':guestId', $guestId, PDO::PARAM_INT);
+                            $stmt->bindParam(':checkInDate', $formattedCheckInDate, PDO::PARAM_STR);
+                            $stmt->bindParam(':checkOutDate', $formattedCheckOutDate, PDO::PARAM_STR);
+                            $stmt->bindParam(':totalPrice', $totalPrice, PDO::PARAM_STR);
+                            $stmt->bindParam(':isCancelled', $isCancelled, PDO::PARAM_INT);
+                            $stmt->bindParam(':isPaid', $isPaid, PDO::PARAM_INT);
+                            $stmt->execute();
+
+                            $bookingId = $conn->lastInsertId();
+
+                            $depositStatus = 'pending';
+                            $depositStmt = $conn->prepare("INSERT INTO deposits (booking_id, amount, status)
+                                VALUES (:bookingId, :amount, :status)");
+                            $depositStmt->bindParam(':bookingId', $bookingId, PDO::PARAM_INT);
+                            $depositStmt->bindParam(':amount', $depositAmount, PDO::PARAM_STR);
+                            $depositStmt->bindParam(':status', $depositStatus, PDO::PARAM_STR);
+                            $depositStmt->execute();
+
+                            $conn->commit();
+
+                            $feedback = 'Booking added successfully! A security deposit of ' . $depositAmount . ' has been created.';
+                        } catch (Exception $e) {
+                            $conn->rollBack();
+                            $feedback = 'Error adding booking: ' . $e->getMessage();
                         }
                     }
                 }
@@ -154,13 +168,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $interval = $checkIn->diff($checkOut);
                 $totalDays = $interval->days;
 
-                // Calculate total months (years * 12 + months)
                 $totalMonths = $interval->y * 12 + $interval->m;
 
-                // Check if there are any remaining days which would make it not a whole month
                 $isWholeMonth = ($interval->d === 0);
 
-                // Check if the booking meets the minimum 6-month requirement
                 if ($totalMonths < 6 || !$isWholeMonth) {
                     $feedback = 'Error: Bookings must be a minimum of 6 whole months (no weeks or partial months allowed).';
                 } else {
@@ -252,11 +263,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$stmt = $conn->prepare("SELECT b.*, r.room_number, rt.room_type_name, u.forename, u.surname
+$stmt = $conn->prepare("SELECT b.*, r.room_number, rt.room_type_name, u.forename, u.surname,
+        COALESCE(d.status, 'none') AS deposit_status, COALESCE(d.amount, 0) AS deposit_amount
     FROM bookings b
     JOIN rooms r ON b.room_id = r.room_id
     JOIN room_types rt ON r.room_type_id = rt.room_type_id
     JOIN users u ON b.guest_id = u.user_id
+    LEFT JOIN deposits d ON b.booking_id = d.booking_id
     LIMIT :limit OFFSET :offset");
 $stmt->bindValue(':limit', $recordsPerPage, PDO::PARAM_INT);
 $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
@@ -313,7 +326,8 @@ $conn = null;
                     <select id="room_id" name="room_id" required>
                         <?php foreach ($roomOptions as $room): ?>
                             <option value="<?php echo $room['room_id']; ?>">
-                                Room <?php echo $room['room_number']; ?> (<?php echo $room['room_type_name']; ?>)
+                                Room <?php echo $room['room_number']; ?> (<?php echo $room['room_type_name']; ?>) - Deposit:
+                                <?php echo $room['deposit_amount']; ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -353,6 +367,7 @@ $conn = null;
                         <th>Total Price</th>
                         <th>Cancelled</th>
                         <th>Paid</th>
+                        <th>Deposit Status</th>
                         <th>Room Available Today</th>
                         <th>Actions</th>
                     </tr>
@@ -369,6 +384,8 @@ $conn = null;
                             <td><?php echo $booking['total_price']; ?></td>
                             <td><?php echo $booking['booking_is_cancelled'] ? 'Yes' : 'No'; ?></td>
                             <td><?php echo $booking['booking_is_paid'] ? 'Yes' : 'No'; ?></td>
+                            <td><?php echo ucfirst($booking['deposit_status']); ?>
+                                (<?php echo $booking['deposit_amount']; ?>)</td>
                             <td><?php $isAvailableToday = true;
                             foreach ($roomOptions as $room) {
                                 if ($room['room_id'] == $booking['room_id'] && $room['room_status'] === 'occupied') {

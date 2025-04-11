@@ -214,6 +214,10 @@ try {
             $stmt->bindValue(':booking_id', $reference_id, PDO::PARAM_INT);
             $stmt->bindValue(':amount', $amount, PDO::PARAM_STR);
             $stmt->execute();
+        } else {
+            $stmt = $conn->prepare("UPDATE deposits SET status = 'paid', date_paid = NOW() WHERE booking_id = :booking_id");
+            $stmt->bindValue(':booking_id', $reference_id, PDO::PARAM_INT);
+            $stmt->execute();   
         }
     }
 
@@ -455,6 +459,7 @@ try {
         href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap" />
     <link rel="stylesheet" href="../assets/styles.css">
     <title>Payment Successful</title>
+    <script src="../assets/scripts.js"></script>
 </head>
 
 <body>
@@ -495,9 +500,6 @@ try {
 
             <div>
                 <a href="../invoices/<?php echo $pdf_filename; ?>" class="btn" target="_blank">Download Invoice</a>
-                <?php if ($payment_type == 'deposit'): ?>
-                    <a href="../guest/deposits.php" class="btn btn-outline">View My Deposits</a>
-                <?php endif; ?>
                 <a href="../guest/dashboard.php" class="btn btn-outline">Return to Dashboard</a>
             </div>
 
