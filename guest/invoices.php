@@ -74,10 +74,11 @@ $deposit_invoices = array_filter($invoices, function ($invoice) {
         href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap" />
     <link rel="stylesheet" href="../assets/styles.css">
     <title>My Invoices</title>
+    <script src="../assets/scripts.js"></script>
 </head>
 
 <body>
-    <?php include "../include/admin_navbar.php"; ?>
+    <?php include "../include/guest_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
         <h1><a class="title" href="../index.php">LuckyNest</a></h1>
