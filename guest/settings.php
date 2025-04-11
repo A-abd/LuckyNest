@@ -6,9 +6,9 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-require __DIR__ . '/../vendor/autoload.php';
+include __DIR__ . '/../vendor/autoload.php';
 include __DIR__ . '/../include/db.php';
-require_once __DIR__ . '/../include/notification_utils.php';
+include __DIR__ . '/../include/notification_utils.php';
 
 use Sonata\GoogleAuthenticator\GoogleAuthenticator;
 use Sonata\GoogleAuthenticator\GoogleQrUrl;
@@ -249,10 +249,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_code'])) {
         }
     </script>
     <title>Account Settings</title>
+    <script src="../assets/scripts.js"></script>
 </head>
 
 <body>
     <?php include '../include/guest_navbar.php'; ?>
+
+    <div class="blur-layer"></div>
     <div class="manage-default">
         <h1><a class="title" href="../index.php">LuckyNest</a></h1>
         <div class="rooms-types-container">
