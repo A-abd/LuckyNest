@@ -84,7 +84,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 try {
     $userId = $_SESSION['user_id'];
 
-    // Get bookings
     $bookingsQuery = $conn->prepare("
         SELECT b.booking_id, r.room_number, b.check_in_date, b.check_out_date, 
                b.total_price, b.booking_is_paid,
@@ -98,7 +97,6 @@ try {
     $bookingsQuery->execute([$userId, $userId]);
     $bookings = $bookingsQuery->fetchAll();
 
-    // Get meal plans - FIXED COLUMN NAME
     $mealPlansQuery = $conn->prepare("
         SELECT mp.name, mp.meal_plan_type, mp.duration_days, mpul.is_paid, 
                mp.meal_plan_id, mpul.meal_plan_user_link,
@@ -111,7 +109,6 @@ try {
     $mealPlansQuery->execute([$userId, $userId]);
     $mealPlans = $mealPlansQuery->fetchAll();
 
-    // Get laundry slots
     $laundryQuery = $conn->prepare("
         SELECT ls.date, ls.start_time, ls.price, lsul.is_paid, ls.laundry_slot_id 
         FROM laundry_slot_user_link lsul
@@ -121,7 +118,32 @@ try {
     $laundryQuery->execute([$userId]);
     $laundrySlots = $laundryQuery->fetchAll();
 
-    // Get notifications
+    $depositsQuery = $conn->prepare("
+        SELECT d.deposit_id, d.booking_id, d.amount, d.status, b.check_in_date, 
+               b.check_out_date, r.room_number
+        FROM deposits d
+        JOIN bookings b ON d.booking_id = b.booking_id
+        JOIN rooms r ON b.room_id = r.room_id
+        WHERE b.guest_id = ? AND b.booking_is_cancelled = 0
+        ORDER BY d.deposit_id DESC
+    ");
+    $depositsQuery->execute([$userId]);
+    $deposits = $depositsQuery->fetchAll();
+
+    $pendingDepositsQuery = $conn->prepare("
+        SELECT b.booking_id, r.room_number, b.check_in_date, b.check_out_date, rt.deposit_amount
+        FROM bookings b
+        JOIN rooms r ON b.room_id = r.room_id
+        JOIN room_types rt ON r.room_type_id = rt.room_type_id
+        LEFT JOIN deposits d ON b.booking_id = d.booking_id
+        WHERE b.guest_id = ? 
+        AND b.booking_is_cancelled = 0
+        AND rt.deposit_amount > 0
+        AND (d.deposit_id IS NULL OR d.status = 'pending')
+    ");
+    $pendingDepositsQuery->execute([$userId]);
+    $pendingDeposits = $pendingDepositsQuery->fetchAll();
+
     $notificationsQuery = $conn->prepare("
         SELECT message, created_at, is_read 
         FROM notifications 
@@ -132,7 +154,6 @@ try {
     $notificationsQuery->execute([$userId]);
     $notifications = $notificationsQuery->fetchAll();
 
-    // Get payments
     $paymentsQuery = $conn->prepare("
         SELECT payment_type, amount, payment_date 
         FROM payments 
@@ -219,8 +240,8 @@ try {
                                         <button type="submit" name="cancel_booking" class="button cancel-button">Cancel</button>
                                     </form>
                                     <?php if (!$booking['booking_is_paid']): ?>
-                                        <a href="payments_page.php?type=rent&id=<?php echo $booking['booking_id']; ?>"
-                                            class="button">Pay</a>
+                                        <a href="../include/checkout.php?type=rent&id=<?php echo $booking['booking_id']; ?>"
+                                            class="button">Pay Now</a>
                                     <?php endif; ?>
 
                                     <?php if ($booking['booking_is_paid']): ?>
@@ -296,8 +317,8 @@ try {
                                             class="button cancel-button">Cancel</button>
                                     </form>
                                     <?php if (!$plan['is_paid']): ?>
-                                        <a href="payments_page.php?type=meal_plan&id=<?php echo $plan['meal_plan_id']; ?>"
-                                            class="button">Pay</a>
+                                        <a href="../include/checkout.php?type=meal_plan&id=<?php echo $plan['meal_plan_id']; ?>"
+                                            class="button">Pay Now</a>
                                     <?php endif; ?>
 
                                     <?php if ($plan['is_paid']): ?>
@@ -372,8 +393,8 @@ try {
                                         <button type="submit" name="cancel_laundry" class="button cancel-button">Cancel</button>
                                     </form>
                                     <?php if (!$slot['is_paid']): ?>
-                                        <a href="payments_page.php?type=laundry&date=<?php echo urlencode($slot['date']); ?>&time=<?php echo urlencode($slot['start_time']); ?>"
-                                            class="button">Pay</a>
+                                        <a href="../include/checkout.php?type=laundry&id=<?php echo $slot['laundry_slot_id']; ?>"
+                                            class="button">Pay Now</a>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -382,6 +403,68 @@ try {
                 </table>
             <?php else: ?>
                 <p>You have no active laundry bookings.</p>
+            <?php endif; ?>
+
+            <h2>My Security Deposits</h2>
+            <?php if (count($deposits) > 0 || count($pendingDeposits) > 0): ?>
+                <?php if (count($pendingDeposits) > 0): ?>
+                    <h3>Pending Deposits</h3>
+                    <table border="1">
+                        <thead>
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Room Number</th>
+                                <th>Check-in Date</th>
+                                <th>Check-out Date</th>
+                                <th>Deposit Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($pendingDeposits as $deposit): ?>
+                                <tr>
+                                    <td><?php echo $deposit['booking_id']; ?></td>
+                                    <td><?php echo $deposit['room_number']; ?></td>
+                                    <td><?php echo $deposit['check_in_date']; ?></td>
+                                    <td><?php echo $deposit['check_out_date']; ?></td>
+                                    <td>$<?php echo number_format($deposit['deposit_amount'], 2); ?></td>
+                                    <td>
+                                        <a href="../include/checkout.php?type=deposit&id=<?php echo $deposit['booking_id']; ?>"
+                                            class="button">Pay Now</a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
+
+                <?php if (count($deposits) > 0): ?>
+                    <h3>Deposit History</h3>
+                    <table border="1">
+                        <thead>
+                            <tr>
+                                <th>Deposit ID</th>
+                                <th>Booking ID</th>
+                                <th>Room Number</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($deposits as $deposit): ?>
+                                <tr>
+                                    <td><?php echo $deposit['deposit_id']; ?></td>
+                                    <td><?php echo $deposit['booking_id']; ?></td>
+                                    <td><?php echo $deposit['room_number']; ?></td>
+                                    <td>$<?php echo number_format($deposit['amount'], 2); ?></td>
+                                    <td><?php echo ucfirst($deposit['status']); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
+            <?php else: ?>
+                <p>You have no security deposits.</p>
             <?php endif; ?>
 
             <h2>Recent Notifications</h2>
