@@ -63,6 +63,20 @@ const Utils = {
   }
 };
 
+// User Management Module
+const UserManagementModule = {
+  init() {
+  },
+
+  confirmRoleChange(userId, currentRole) {
+    let newRole = currentRole === 'guest' ? 'admin' : 'guest';
+    if (confirm(`Are you sure you want to change this user's role from ${currentRole} to ${newRole}?`)) {
+      document.getElementById(`role_${userId}_confirmed`).value = 'yes';
+      document.getElementById(`role_${userId}_form`).submit();
+    }
+  }
+};
+
 // Notification Module
 const NotificationModule = {
   init() {
@@ -82,28 +96,23 @@ const NotificationModule = {
       console.error('EventSource error:', error);
       eventSource.close();
 
-      // Try to reconnect after 5 seconds
       setTimeout(() => this.setupNotificationListener(), 5000);
     };
   },
 
   showNotification(message) {
-    // You can implement your own notification UI here
     console.log('New notification:', message);
 
-    // Example: Create a toast notification
     const toast = document.createElement('div');
     toast.className = 'notification-toast';
     toast.innerHTML = message;
 
     document.body.appendChild(toast);
 
-    // Show the toast
     setTimeout(() => {
       toast.classList.add('show');
     }, 10);
 
-    // Remove the toast after 5 seconds
     setTimeout(() => {
       toast.classList.remove('show');
       setTimeout(() => {
@@ -588,6 +597,7 @@ document.addEventListener('DOMContentLoaded', function () {
   Utils.hideAllElements(CONFIG.selectors.forms.edit);
   Utils.hideAllElements(CONFIG.selectors.forms.add);
 
+  UserManagementModule.init();
   MealModule.init();
   LaundryModule.init();
   BookingModule.init();
@@ -612,6 +622,7 @@ if (typeof LuckyNest === 'undefined') {
 
 window.LuckyNest = {
   toggleForm: Utils.toggleForm,
+  confirmRoleChange: UserManagementModule.confirmRoleChange,
   toggleDeleteLaundryForm: LaundryModule.toggleDeleteLaundryForm,
   updateBookingDetails: PaymentModule.updateBookingDetails,
   showPaymentForm: PaymentModule.showPaymentForm,

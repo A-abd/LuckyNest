@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $mail->isHTML(true);
                             $mail->Subject = 'Invitation to Register at LuckyNest';
 
-                            $registrationLink = 'http://' . $_SERVER['HTTP_HOST'] . 'LuckyNest/registration.php?token=' . $token;
+                            $registrationLink = 'http://' . $_SERVER['HTTP_HOST'] . '/LuckyNest/registration.php?token=' . $token;
 
                             $mail->Body = "
                             <html>
@@ -134,15 +134,6 @@ $conn = null;
     <link rel="stylesheet" href="../assets/styles.css">
     <script src="../assets/scripts.js"></script>
     <title>Create Users</title>
-    <script>
-        function confirmRoleChange(userId, currentRole) {
-            let newRole = currentRole === 'guest' ? 'admin' : 'guest';
-            if (confirm(`Are you sure you want to change this user's role from ${currentRole} to ${newRole}?`)) {
-                document.getElementById(`role_${userId}_confirmed`).value = 'yes';
-                document.getElementById(`role_${userId}_form`).submit();
-            }
-        }
-    </script>
 </head>
 
 <body>
@@ -166,7 +157,7 @@ $conn = null;
             <div id="add-form" class="add-form">
                 <button type="button" class="close-button" onclick="LuckyNest.toggleForm('add-form')">✕</button>
                 <h2>Send Registration Invitation</h2>
-                <form method="POST" action="create_account.php">
+                <form method="POST" action="create_users.php">
                     <input type="hidden" name="action" value="invite">
                     <label for="email">Email Address:</label>
                     <input type="email" id="email" name="email" required>
@@ -201,7 +192,7 @@ $conn = null;
                                 <td>
                                     <?php if ($user['role'] === 'guest' || $user['role'] === 'admin'): ?>
                                         <form id="role_<?php echo $user['user_id']; ?>_form" method="POST"
-                                            action="create_account.php">
+                                            action="create_users.php">
                                             <input type="hidden" name="action" value="change_role">
                                             <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
                                             <input type="hidden" name="new_role"
@@ -209,7 +200,7 @@ $conn = null;
                                             <input type="hidden" id="role_<?php echo $user['user_id']; ?>_confirmed"
                                                 name="confirmed" value="no">
                                             <button type="button"
-                                                onclick="confirmRoleChange(<?php echo $user['user_id']; ?>, '<?php echo $user['role']; ?>')"
+                                                onclick="LuckyNest.confirmRoleChange(<?php echo $user['user_id']; ?>, '<?php echo $user['role']; ?>')"
                                                 class="update-button">
                                                 Change to <?php echo $user['role'] === 'guest' ? 'Admin' : 'Guest'; ?>
                                             </button>
