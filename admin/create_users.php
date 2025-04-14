@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute();
 
                 if ($stmt->fetch(PDO::FETCH_ASSOC)) {
-                    $feedback = 'Email already exists in the system.';
+                    $feedback = 'Email already used.';
                 } else {
                     $token = bin2hex(random_bytes(32));
 
