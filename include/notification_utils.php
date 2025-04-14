@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/mail_config.php';
-require_once __DIR__ . '/sms_config.php';
+include __DIR__ . '/mail_config.php';
+include __DIR__ . '/sms_config.php';
 
 /**
  * Send notifications to a user based on their preferences
@@ -14,33 +14,44 @@ require_once __DIR__ . '/sms_config.php';
  * @param string $notification_type
  * @return array results of notification attempt
  */
-function sendUserNotifications($conn, $user_id, $subject, $html_message, $sms_message, $notification_message, $notification_type = '') {
+function sendUserNotifications($conn, $user_id, $subject, $html_message, $sms_message, $notification_message, $notification_type = '')
+{
     $results = [
         'email' => false,
         'sms' => false,
-        'push' => false,
         'notification' => false
     ];
-    
+
     try {
         // getting user details and their preferences
-        $stmt = $conn->prepare("SELECT email, phone, email_notifications, sms_notifications, push_notifications, forename, surname 
+        $stmt = $conn->prepare("SELECT email, phone, email_notifications, sms_notifications, forename, surname 
                                FROM users WHERE user_id = :user_id");
         $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
         $stmt->execute();
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if (!$user) {
             return ['error' => 'User not found'];
         }
-        
+
         // always logging to notifications table regardless of the user's preferences
         $stmt = $conn->prepare("INSERT INTO notifications (user_id, message) VALUES (:user_id, :message)");
         $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
         $stmt->bindValue(':message', $notification_message, PDO::PARAM_STR);
         $stmt->execute();
         $results['notification'] = true;
-        
+
+        // output JavaScript to play notification sound if this is a web request
+        if (!empty($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'text/html') !== false) {
+            echo "<script>
+                const sound = new Audio('/LuckyNest/assets/sounds/notification.mp3');
+                sound.play().catch(error => {
+                    console.error('Failed to play notification sound:', error);
+                });
+            </script>";
+            flush();
+        }
+
         // send email if enabled
         if ($user['email_notifications'] && !empty($user['email'])) {
             try {
@@ -54,7 +65,7 @@ function sendUserNotifications($conn, $user_id, $subject, $html_message, $sms_me
                 error_log("Failed to send email notification: " . $e->getMessage());
             }
         }
-        
+
         // send sms if enabled
         if ($user['sms_notifications'] && !empty($user['phone'])) {
             try {
@@ -65,19 +76,14 @@ function sendUserNotifications($conn, $user_id, $subject, $html_message, $sms_me
 
                     $formatted_phone = '+44' . $formatted_phone;
                 }
-                
+
                 sendSMS($formatted_phone, $sms_message);
                 $results['sms'] = true;
             } catch (Exception $e) {
                 error_log("Failed to send SMS notification: " . $e->getMessage());
             }
         }
-        
-        // push notifications will be implemented here, i will add them later
-        if ($user['push_notifications']) {
-            $results['push'] = 'not implemented';
-        }
-        
+
         return $results;
     } catch (Exception $e) {
         error_log("Error in sendUserNotifications: " . $e->getMessage());
@@ -95,9 +101,10 @@ function sendUserNotifications($conn, $user_id, $subject, $html_message, $sms_me
  * @param int $reference_id
  * @return array
  */
-function sendPaymentReminder($conn, $user_id, $payment_type, $amount, $due_date, $reference_id) {
+function sendPaymentReminder($conn, $user_id, $payment_type, $amount, $due_date, $reference_id)
+{
     $payment_type_display = ucfirst(str_replace('_', ' ', $payment_type));
-    
+
     // the email content:
     $subject = "Payment Reminder: Your {$payment_type_display} Payment is Due Soon";
     $html_message = "
@@ -134,13 +141,13 @@ function sendPaymentReminder($conn, $user_id, $payment_type, $amount, $due_date,
         </body>
         </html>
     ";
-    
+
     // SMS content (shorter)
     $sms_message = "LuckyNest: Your {$payment_type_display} payment of £" . number_format($amount, 2) . " is due on {$due_date}. Please log in to make your payment.";
-    
+
     // In-app notification
     $notification_message = "Your {$payment_type_display} payment of £" . number_format($amount, 2) . " is due on {$due_date}.";
-    
+
     return sendUserNotifications($conn, $user_id, $subject, $html_message, $sms_message, $notification_message, 'payment_reminder');
 }
 
@@ -156,9 +163,10 @@ function sendPaymentReminder($conn, $user_id, $payment_type, $amount, $due_date,
  * @param int $days_late
  * @return array results of notif attempts
  */
-function sendLatePaymentNotice($conn, $user_id, $payment_type, $amount, $due_date, $reference_id, $days_late) {
+function sendLatePaymentNotice($conn, $user_id, $payment_type, $amount, $due_date, $reference_id, $days_late)
+{
     $payment_type_display = ucfirst(str_replace('_', ' ', $payment_type));
-    
+
     // the email content
     $subject = "IMPORTANT: Your {$payment_type_display} Payment is Overdue";
     $html_message = "
@@ -197,10 +205,10 @@ function sendLatePaymentNotice($conn, $user_id, $payment_type, $amount, $due_dat
         </body>
         </html>
     ";
-    
+
     $sms_message = "IMPORTANT: Your {$payment_type_display} payment of £" . number_format($amount, 2) . " is {$days_late} days overdue. Please log in immediately to make your payment.";
-    
+
     $notification_message = "OVERDUE: Your {$payment_type_display} payment of £" . number_format($amount, 2) . " was due on {$due_date} and is now {$days_late} days late.";
-    
+
     return sendUserNotifications($conn, $user_id, $subject, $html_message, $sms_message, $notification_message, 'late_payment');
 }

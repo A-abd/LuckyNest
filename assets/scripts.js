@@ -53,6 +53,63 @@ const Utils = {
 
   formatCurrency(amount) {
     return `£${parseFloat(amount).toFixed(2)}`;
+  },
+
+  playNotificationSound() {
+    const sound = new Audio('/LuckyNest/assets/sounds/notification.mp3');
+    sound.play().catch(error => {
+      console.error('Failed to play notification sound:', error);
+    });
+  }
+};
+
+// Notification Module
+const NotificationModule = {
+  init() {
+    this.setupNotificationListener();
+  },
+
+  setupNotificationListener() {
+    const eventSource = new EventSource('/LuckyNest/include/notification_listener.php');
+
+    eventSource.addEventListener('notification', (event) => {
+      const data = JSON.parse(event.data);
+      this.showNotification(data.message);
+      Utils.playNotificationSound();
+    });
+
+    eventSource.onerror = (error) => {
+      console.error('EventSource error:', error);
+      eventSource.close();
+
+      // Try to reconnect after 5 seconds
+      setTimeout(() => this.setupNotificationListener(), 5000);
+    };
+  },
+
+  showNotification(message) {
+    // You can implement your own notification UI here
+    console.log('New notification:', message);
+
+    // Example: Create a toast notification
+    const toast = document.createElement('div');
+    toast.className = 'notification-toast';
+    toast.innerHTML = message;
+
+    document.body.appendChild(toast);
+
+    // Show the toast
+    setTimeout(() => {
+      toast.classList.add('show');
+    }, 10);
+
+    // Remove the toast after 5 seconds
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => {
+        document.body.removeChild(toast);
+      }, 300);
+    }, 5000);
   }
 };
 
@@ -505,17 +562,17 @@ const DepositModule = {
     const refundFields = document.getElementById(`refund-fields-${depositId}`);
     const withholdingFields = document.getElementById(`withholding-fields-${depositId}`);
     const refundedAmountField = document.getElementById(`refunded_amount_${depositId}`);
-    
+
     if (status === 'partially_refunded' || status === 'fully_refunded') {
       refundFields.style.display = 'block';
-      
+
       if (status === 'fully_refunded') {
         refundedAmountField.value = maxAmount;
       }
     } else {
       refundFields.style.display = 'none';
     }
-    
+
     if (status === 'withheld' || status === 'partially_refunded') {
       withholdingFields.style.display = 'block';
     } else {
@@ -538,6 +595,7 @@ document.addEventListener('DOMContentLoaded', function () {
   NavModule.init();
   FinancialModule.init();
   DepositModule.init();
+  NotificationModule.init();
 
   PaymentModule.init({
     roomRates: window.roomRates || {},
@@ -566,5 +624,6 @@ window.LuckyNest = {
   initSidebar: NavModule.initSidebar,
   toggleFinancialCard: FinancialModule.toggleFinancialCard,
   initFinancialCards: FinancialModule.initFinancialCards,
-  updateDepositForm: DepositModule.updateDepositForm
+  updateDepositForm: DepositModule.updateDepositForm,
+  playNotificationSound: Utils.playNotificationSound
 };
