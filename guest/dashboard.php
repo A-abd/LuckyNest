@@ -85,7 +85,7 @@ try {
     $userId = $_SESSION['user_id'];
 
     $bookingsQuery = $conn->prepare("
-        SELECT b.booking_id, r.room_number, b.check_in_date, b.check_out_date, 
+        SELECT b.booking_id, r.room_id, r.room_number, b.check_in_date, b.check_out_date, 
                b.total_price, b.booking_is_paid,
                (SELECT COUNT(*) FROM room_ratings 
                 WHERE booking_id = b.booking_id AND user_id = ?) as has_rating
@@ -101,7 +101,10 @@ try {
         SELECT mp.name, mp.meal_plan_type, mp.duration_days, mpul.is_paid, 
                mp.meal_plan_id, mpul.meal_plan_user_link,
                (SELECT COUNT(*) FROM meal_plan_ratings 
-                WHERE meal_plan_id = mp.meal_plan_id AND user_id = ?) as has_rating
+                WHERE meal_plan_id = mp.meal_plan_id AND user_id = ?) as has_rating,
+               (SELECT SUM(m.price) FROM meal_plan_items_link mpil 
+                JOIN meals m ON mpil.meal_id = m.meal_id 
+                WHERE mpil.meal_plan_id = mp.meal_plan_id) as price
         FROM meal_plan_user_link mpul
         JOIN meal_plans mp ON mpul.meal_plan_id = mp.meal_plan_id
         WHERE mpul.user_id = ? AND mpul.is_cancelled = 0
@@ -240,8 +243,20 @@ try {
                                         <button type="submit" name="cancel_booking" class="button cancel-button">Cancel</button>
                                     </form>
                                     <?php if (!$booking['booking_is_paid']): ?>
-                                        <a href="../include/checkout.php?type=rent&id=<?php echo $booking['booking_id']; ?>"
-                                            class="button">Pay Now</a>
+                                        <form method="post" action="../include/checkout.php" style="display: inline;">
+                                            <input type="hidden" name="payment_type" value="rent">
+                                            <input type="hidden" name="booking_id" value="<?php echo $booking['booking_id']; ?>">
+                                            <input type="hidden" name="room_id" value="<?php echo $booking['room_id']; ?>">
+                                            <input type="hidden" name="check_in_date"
+                                                value="<?php echo $booking['check_in_date']; ?>">
+                                            <input type="hidden" name="check_out_date"
+                                                value="<?php echo $booking['check_out_date']; ?>">
+                                            <input type="hidden" name="description"
+                                                value="Room payment for booking #<?php echo $booking['booking_id']; ?>">
+                                            <input type="hidden" name="amount" value="<?php echo $booking['total_price']; ?>">
+                                            <input type="hidden" name="user_id" value="<?php echo $_SESSION['user_id']; ?>">
+                                            <button type="submit" class="button">Pay Now</button>
+                                        </form>
                                     <?php endif; ?>
 
                                     <?php if ($booking['booking_is_paid']): ?>
@@ -317,8 +332,15 @@ try {
                                             class="button cancel-button">Cancel</button>
                                     </form>
                                     <?php if (!$plan['is_paid']): ?>
-                                        <a href="../include/checkout.php?type=meal_plan&id=<?php echo $plan['meal_plan_id']; ?>"
-                                            class="button">Pay Now</a>
+                                        <form method="post" action="../include/checkout.php" style="display: inline;">
+                                            <input type="hidden" name="payment_type" value="meal_plan">
+                                            <input type="hidden" name="meal_plan_id" value="<?php echo $plan['meal_plan_id']; ?>">
+                                            <input type="hidden" name="description"
+                                                value="Payment for meal plan: <?php echo $plan['name']; ?>">
+                                            <input type="hidden" name="amount" value="<?php echo $plan['price']; ?>">
+                                            <input type="hidden" name="user_id" value="<?php echo $_SESSION['user_id']; ?>">
+                                            <button type="submit" class="button">Pay Now</button>
+                                        </form>
                                     <?php endif; ?>
 
                                     <?php if ($plan['is_paid']): ?>
@@ -393,8 +415,16 @@ try {
                                         <button type="submit" name="cancel_laundry" class="button cancel-button">Cancel</button>
                                     </form>
                                     <?php if (!$slot['is_paid']): ?>
-                                        <a href="../include/checkout.php?type=laundry&id=<?php echo $slot['laundry_slot_id']; ?>"
-                                            class="button">Pay Now</a>
+                                        <form method="post" action="../include/checkout.php" style="display: inline;">
+                                            <input type="hidden" name="payment_type" value="laundry">
+                                            <input type="hidden" name="laundry_slot_id"
+                                                value="<?php echo $slot['laundry_slot_id']; ?>">
+                                            <input type="hidden" name="description"
+                                                value="Laundry slot payment for <?php echo $slot['date']; ?> at <?php echo $slot['start_time']; ?>">
+                                            <input type="hidden" name="amount" value="<?php echo $slot['price']; ?>">
+                                            <input type="hidden" name="user_id" value="<?php echo $_SESSION['user_id']; ?>">
+                                            <button type="submit" class="button">Pay Now</button>
+                                        </form>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -429,8 +459,15 @@ try {
                                     <td><?php echo $deposit['check_out_date']; ?></td>
                                     <td>$<?php echo number_format($deposit['deposit_amount'], 2); ?></td>
                                     <td>
-                                        <a href="../include/checkout.php?type=deposit&id=<?php echo $deposit['booking_id']; ?>"
-                                            class="button">Pay Now</a>
+                                        <form method="post" action="../include/checkout.php" style="display: inline;">
+                                            <input type="hidden" name="payment_type" value="deposit">
+                                            <input type="hidden" name="booking_id" value="<?php echo $deposit['booking_id']; ?>">
+                                            <input type="hidden" name="description"
+                                                value="Security deposit for booking #<?php echo $deposit['booking_id']; ?>">
+                                            <input type="hidden" name="amount" value="<?php echo $deposit['deposit_amount']; ?>">
+                                            <input type="hidden" name="user_id" value="<?php echo $_SESSION['user_id']; ?>">
+                                            <button type="submit" class="button">Pay Now</button>
+                                        </form>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
