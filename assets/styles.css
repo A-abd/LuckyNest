@@ -814,6 +814,119 @@ tbody {
   cursor: pointer;
 }
 
+.add-form {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 600px;
+  background-color: #ecf0f0;
+  padding: 20px;
+  border: 2px solid #507878;
+  border-radius: 4px;
+  z-index: 1000;
+  display: none;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.add-form.active {
+  display: block;
+}
+
+.add-form h2 {
+  display: flex;
+  justify-content: center;
+  font-size: 30px;
+  color: #2b4949;
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.add-form label {
+  display: block;
+  margin-top: 10px;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #2b4949;
+}
+
+.add-form input,
+.add-form select {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  background: #f7d8ce;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  outline: none;
+  cursor: text;
+}
+
+.add-form .update-button {
+  width: 100%;
+  height: 45px;
+  background: #507878;
+  border: 2px solid #507878;
+  outline: none;
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  font-size: 16px;
+  color: #fed7ca;
+  font-weight: 600;
+  margin-top: 15px;
+}
+
+.add-form .update-button:hover {
+  transform: translateY(-3px);
+  transition: transform 0.4s ease;
+}
+
+.add-form .update-button:active {
+  background-color: #648686;
+}
+
+.add-form .close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  background-color: #507878;
+  border: none;
+  border-radius: 2px;
+  color: #fed7ca;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease, transform 0.2s ease-in-out;
+  z-index: 1001;
+}
+
+.add-form .close-button:hover {
+  background-color: #2b4949;
+  transform: scale(1.1);
+}
+
+.add-form .close-button:active {
+  transform: scale(0.95);
+}
+
+.add-form, #form-overlay {
+  transition: opacity 0.2s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.add-form.active, #form-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .rooms-button-group {
   display: flex;
   gap: 10px;
