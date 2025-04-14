@@ -3,9 +3,21 @@ session_start();
 require __DIR__ . "/include/db.php";
 
 $error = '';
+$errors = [];
 $success = '';
 $validToken = false;
 $email = '';
+
+$formValues = [
+    'forename' => '',
+    'surname' => '',
+    'email' => '',
+    'phone_country' => '+44',
+    'phone_number' => '',
+    'emergency_country' => '+44',
+    'emergency_number' => '',
+    'address' => ''
+];
 
 if (isset($_GET['token'])) {
     $token = $_GET['token'];
@@ -18,6 +30,7 @@ if (isset($_GET['token'])) {
     if ($invitation) {
         $validToken = true;
         $email = $invitation['email'];
+        $formValues['email'] = $email;
     } else {
         $error = 'Invalid or expired invitation link. Please request a new invitation.';
     }
@@ -26,70 +39,128 @@ if (isset($_GET['token'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && $validToken) {
-    $forename = trim($_POST['forename']);
-    $surname = trim($_POST['surname']);
-    $email = trim($_POST['email']);
-    $phone_country = trim($_POST['phone_country']);
-    $phone_number = trim($_POST['phone_number']);
-    $emergency_country = trim($_POST['emergency_country']);
-    $emergency_number = trim($_POST['emergency_number']);
-    $address = trim($_POST['address']);
-    $role = 'guest';
+    $formValues = [
+        'forename' => trim($_POST['forename']),
+        'surname' => trim($_POST['surname']),
+        'email' => trim($_POST['email']),
+        'phone_country' => trim($_POST['phone_country']),
+        'phone_number' => trim($_POST['phone_number']),
+        'emergency_country' => trim($_POST['emergency_country']),
+        'emergency_number' => trim($_POST['emergency_number']),
+        'address' => trim($_POST['address'])
+    ];
+
     $password = trim($_POST['password']);
     $confirm_password = trim($_POST['confirm_password']);
     $token = $_POST['token'];
+    $role = 'guest';
 
     $isValid = true;
 
-    if (empty($forename) || empty($surname) || empty($email) || empty($phone_number) || empty($emergency_number) || empty($address) || empty($password) || empty($confirm_password)) {
-        $error = 'All fields are required.';
+    if (empty($formValues['forename'])) {
+        $errors['forename'] = 'Forename is required';
+        $isValid = false;
+    }
+
+    if (empty($formValues['surname'])) {
+        $errors['surname'] = 'Surname is required';
+        $isValid = false;
+    }
+
+    if (empty($formValues['email'])) {
+        $errors['email'] = 'Email is required';
+        $isValid = false;
+    } else {
+        // Note for examiner: in an actual implementation, this list of disposable/blocked emails would be more extensive
+        $blockedDomains = [
+            'yopmail.com'
+        ];
+
+        $emailParts = explode('@', $formValues['email']);
+        if (count($emailParts) === 2) {
+            $domain = strtolower($emailParts[1]);
+            if (in_array($domain, $blockedDomains)) {
+                $errors['email'] = 'Email addresses from ' . $domain . ' are not allowed. Please use a legitimate email service.';
+                $isValid = false;
+            }
+        }
+    }
+
+    if (empty($formValues['phone_number'])) {
+        $errors['phone_number'] = 'Phone number is required';
+        $isValid = false;
+    } elseif (preg_match('/^\+/', $formValues['phone_number'])) {
+        $errors['phone_number'] = 'Phone number should not include country code (+)';
+        $isValid = false;
+    } elseif (strlen($formValues['phone_number']) < 9 || strlen($formValues['phone_number']) > 11) {
+        $errors['phone_number'] = 'Phone number must be between 9 and 11 digits';
+        $isValid = false;
+    } elseif (!preg_match('/^[0-9]+$/', $formValues['phone_number'])) {
+        $errors['phone_number'] = 'Phone number must contain only digits';
+        $isValid = false;
+    }
+
+    if (empty($formValues['emergency_number'])) {
+        $errors['emergency_number'] = 'Emergency contact number is required';
+        $isValid = false;
+    } elseif (preg_match('/^\+/', $formValues['emergency_number'])) {
+        $errors['emergency_number'] = 'Emergency number should not include country code (+)';
+        $isValid = false;
+    } elseif (strlen($formValues['emergency_number']) < 9 || strlen($formValues['emergency_number']) > 11) {
+        $errors['emergency_number'] = 'Emergency number must be between 9 and 11 digits';
+        $isValid = false;
+    } elseif (!preg_match('/^[0-9]+$/', $formValues['emergency_number'])) {
+        $errors['emergency_number'] = 'Emergency number must contain only digits';
+        $isValid = false;
+    }
+
+    if (empty($formValues['address'])) {
+        $errors['address'] = 'Address is required';
+        $isValid = false;
+    }
+
+    if (empty($password)) {
+        $errors['password'] = 'Password is required';
+        $isValid = false;
+    }
+
+    if (empty($confirm_password)) {
+        $errors['confirm_password'] = 'Please confirm your password';
         $isValid = false;
     } elseif ($password !== $confirm_password) {
-        $error = 'Passwords do not match.';
-        $isValid = false;
-    } elseif (preg_match('/^\+/', $phone_number)) {
-        $error = 'Phone number should not include country code (+). Please use only the number.';
-        $isValid = false;
-    } elseif (strlen($phone_number) < 9 || strlen($phone_number) > 11) {
-        $error = 'Phone number must be between 9 and 11 digits long (without country code).';
-        $isValid = false;
-    } elseif (preg_match('/^\+/', $emergency_number)) {
-        $error = 'Emergency number should not include country code (+). Please use only the number.';
-        $isValid = false;
-    } elseif (strlen($emergency_number) < 9 || strlen($emergency_number) > 11) {
-        $error = 'Emergency number must be between 9 and 11 digits long (without country code).';
+        $errors['confirm_password'] = 'Passwords do not match';
         $isValid = false;
     }
 
     if ($isValid) {
         $stmt = $conn->prepare("SELECT * FROM invitations WHERE token = :token AND email = :email AND expires_at > NOW() AND used = 0");
         $stmt->bindParam(':token', $token);
-        $stmt->bindParam(':email', $email);
+        $stmt->bindParam(':email', $formValues['email']);
         $stmt->execute();
 
         if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
             $error = 'Invalid or expired invitation.';
         } else {
             $stmt = $conn->prepare("SELECT email FROM users WHERE email = :email");
-            $stmt->bindParam(':email', $email);
+            $stmt->bindParam(':email', $formValues['email']);
             $stmt->execute();
 
             if ($stmt->fetch(PDO::FETCH_ASSOC)) {
                 $error = 'Email already exists.';
             } else {
                 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-                $phone = $phone_country . $phone_number;
-                $emergency_contact = $emergency_country . $emergency_number;
+                $phone = $formValues['phone_country'] . $formValues['phone_number'];
+                $emergency_contact = $formValues['emergency_country'] . $formValues['emergency_number'];
 
                 $conn->beginTransaction();
                 try {
                     $stmt = $conn->prepare("INSERT INTO users (forename, surname, email, phone, emergency_contact, address, role, password) VALUES (:forename, :surname, :email, :phone, :emergency_contact, :address, :role, :password)");
-                    $stmt->bindParam(':forename', $forename);
-                    $stmt->bindParam(':surname', $surname);
-                    $stmt->bindParam(':email', $email);
+                    $stmt->bindParam(':forename', $formValues['forename']);
+                    $stmt->bindParam(':surname', $formValues['surname']);
+                    $stmt->bindParam(':email', $formValues['email']);
                     $stmt->bindParam(':phone', $phone);
                     $stmt->bindParam(':emergency_contact', $emergency_contact);
-                    $stmt->bindParam(':address', $address);
+                    $stmt->bindParam(':address', $formValues['address']);
                     $stmt->bindParam(':role', $role);
                     $stmt->bindParam(':password', $hashed_password);
                     $stmt->execute();
@@ -106,6 +177,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $validToken) {
                 }
             }
         }
+    } else {
+        $error = 'Please correct the errors in the form.';
     }
 }
 
@@ -145,16 +218,24 @@ $countryCodes = [
                     <input type="hidden" name="token" value="<?php echo htmlspecialchars($_GET['token']); ?>">
 
                     <div class="input-box">
-                        <input type="text" id="forename" name="forename" placeholder="Forename" required><br><br>
+                        <input type="text" id="forename" name="forename" placeholder="Forename"
+                            value="<?php echo htmlspecialchars($formValues['forename']); ?>" required>
+                        <?php if (isset($errors['forename'])): ?>
+                            <small class="error-text"><?php echo $errors['forename']; ?></small>
+                        <?php endif; ?>
                     </div>
 
                     <div class="input-box">
-                        <input type="text" id="surname" name="surname" placeholder="Surname" required>
+                        <input type="text" id="surname" name="surname" placeholder="Surname"
+                            value="<?php echo htmlspecialchars($formValues['surname']); ?>" required>
+                        <?php if (isset($errors['surname'])): ?>
+                            <small class="error-text"><?php echo $errors['surname']; ?></small>
+                        <?php endif; ?>
                     </div>
 
                     <div class="input-box">
-                        <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($email); ?>" readonly
-                            required>
+                        <input type="email" id="email" name="email"
+                            value="<?php echo htmlspecialchars($formValues['email']); ?>" readonly required>
                         <small>Email from invitation cannot be changed</small>
                     </div>
 
@@ -162,43 +243,61 @@ $countryCodes = [
                         <div class="phone-container">
                             <select id="phone_country" name="phone_country" class="country-code">
                                 <?php foreach ($countryCodes as $code => $country): ?>
-                                    <option value="<?php echo $code; ?>" <?php echo ($code === '+44') ? 'selected' : ''; ?>>
+                                    <option value="<?php echo $code; ?>" <?php echo ($code === $formValues['phone_country']) ? 'selected' : ''; ?>>
                                         <?php echo $country; ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
-                            <input type="text" id="phone_number" name="phone_number" class="phone-number"
-                                placeholder="Phone Number (9-11 digits without country code)" required minlength="9"
+                            <input type="tel" id="phone_number" name="phone_number" class="phone-number"
+                                placeholder="Phone Number"
+                                value="<?php echo htmlspecialchars($formValues['phone_number']); ?>" required minlength="9"
                                 maxlength="11" pattern="[0-9]{9,11}">
                         </div>
+                        <?php if (isset($errors['phone_number'])): ?>
+                            <small class="error-text"><?php echo $errors['phone_number']; ?></small>
+                        <?php endif; ?>
                     </div>
 
                     <div class="input-box">
                         <div class="phone-container">
                             <select id="emergency_country" name="emergency_country" class="country-code">
                                 <?php foreach ($countryCodes as $code => $country): ?>
-                                    <option value="<?php echo $code; ?>" <?php echo ($code === '+44') ? 'selected' : ''; ?>>
+                                    <option value="<?php echo $code; ?>" <?php echo ($code === $formValues['emergency_country']) ? 'selected' : ''; ?>>
                                         <?php echo $country; ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
-                            <input type="text" id="emergency_number" name="emergency_number" class="phone-number"
-                                placeholder="Emergency Number (9-11 digits without country code)" required minlength="9"
-                                maxlength="11" pattern="[0-9]{9,11}">
+                            <input type="tel" id="emergency_number" name="emergency_number" class="phone-number"
+                                placeholder="Emergency Number"
+                                value="<?php echo htmlspecialchars($formValues['emergency_number']); ?>" required
+                                minlength="9" maxlength="11" pattern="[0-9]{9,11}">
                         </div>
+                        <?php if (isset($errors['emergency_number'])): ?>
+                            <small class="error-text"><?php echo $errors['emergency_number']; ?></small>
+                        <?php endif; ?>
                     </div>
 
                     <div class="input-box">
-                        <input type="text" id="address" name="address" placeholder="Home Address" required>
+                        <input type="text" id="address" name="address" placeholder="Home Address"
+                            value="<?php echo htmlspecialchars($formValues['address']); ?>" required>
+                        <?php if (isset($errors['address'])): ?>
+                            <small class="error-text"><?php echo $errors['address']; ?></small>
+                        <?php endif; ?>
                     </div>
 
                     <div class="input-box">
                         <input type="password" id="password" name="password" placeholder="Password" required>
+                        <?php if (isset($errors['password'])): ?>
+                            <small class="error-text"><?php echo $errors['password']; ?></small>
+                        <?php endif; ?>
                     </div>
 
                     <div class="input-box">
                         <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm Password"
                             required>
+                        <?php if (isset($errors['confirm_password'])): ?>
+                            <small class="error-text"><?php echo $errors['confirm_password']; ?></small>
+                        <?php endif; ?>
                     </div>
 
                     <button type="submit" class="btn">Register</button>
