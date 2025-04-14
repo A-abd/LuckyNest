@@ -29,20 +29,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $validToken) {
     $forename = trim($_POST['forename']);
     $surname = trim($_POST['surname']);
     $email = trim($_POST['email']);
-    $phone = trim($_POST['phone']);
-    $emergency_contact = trim($_POST['emergency_contact']);
+    $phone_country = trim($_POST['phone_country']);
+    $phone_number = trim($_POST['phone_number']);
+    $emergency_country = trim($_POST['emergency_country']);
+    $emergency_number = trim($_POST['emergency_number']);
     $address = trim($_POST['address']);
     $role = 'guest';
     $password = trim($_POST['password']);
     $confirm_password = trim($_POST['confirm_password']);
     $token = $_POST['token'];
 
-    if (empty($forename) || empty($surname) || empty($email) || empty($phone) || empty($emergency_contact) || empty($address) || empty($password) || empty($confirm_password)) {
+    $isValid = true;
+
+    if (empty($forename) || empty($surname) || empty($email) || empty($phone_number) || empty($emergency_number) || empty($address) || empty($password) || empty($confirm_password)) {
         $error = 'All fields are required.';
+        $isValid = false;
     } elseif ($password !== $confirm_password) {
         $error = 'Passwords do not match.';
-    } else {
-        // Verify the token again for security
+        $isValid = false;
+    } elseif (preg_match('/^\+/', $phone_number)) {
+        $error = 'Phone number should not include country code (+). Please use only the number.';
+        $isValid = false;
+    } elseif (strlen($phone_number) < 9 || strlen($phone_number) > 11) {
+        $error = 'Phone number must be between 9 and 11 digits long (without country code).';
+        $isValid = false;
+    } elseif (preg_match('/^\+/', $emergency_number)) {
+        $error = 'Emergency number should not include country code (+). Please use only the number.';
+        $isValid = false;
+    } elseif (strlen($emergency_number) < 9 || strlen($emergency_number) > 11) {
+        $error = 'Emergency number must be between 9 and 11 digits long (without country code).';
+        $isValid = false;
+    }
+
+    if ($isValid) {
         $stmt = $conn->prepare("SELECT * FROM invitations WHERE token = :token AND email = :email AND expires_at > NOW() AND used = 0");
         $stmt->bindParam(':token', $token);
         $stmt->bindParam(':email', $email);
@@ -59,10 +78,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $validToken) {
                 $error = 'Email already exists.';
             } else {
                 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                $phone = $phone_country . $phone_number;
+                $emergency_contact = $emergency_country . $emergency_number;
 
                 $conn->beginTransaction();
                 try {
-                    $stmt = $conn->prepare("INSERT INTO users (forename, surname, email, phone, emergency_contact, address, role, password, created_at) VALUES (:forename, :surname, :email, :phone, :emergency_contact, :address, :role, :password, NOW())");
+                    $stmt = $conn->prepare("INSERT INTO users (forename, surname, email, phone, emergency_contact, address, role, password) VALUES (:forename, :surname, :email, :phone, :emergency_contact, :address, :role, :password)");
                     $stmt->bindParam(':forename', $forename);
                     $stmt->bindParam(':surname', $surname);
                     $stmt->bindParam(':email', $email);
@@ -87,6 +108,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $validToken) {
         }
     }
 }
+
+$countryCodes = [
+    "+44" => "UK (+44)",
+    "+1" => "USA (+1)"
+];
 ?>
 
 <!DOCTYPE html>
@@ -133,12 +159,33 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $validToken) {
                     </div>
 
                     <div class="input-box">
-                        <input type="text" id="phone" name="phone" placeholder="Phone Number" required>
+                        <div class="phone-container">
+                            <select id="phone_country" name="phone_country" class="country-code">
+                                <?php foreach ($countryCodes as $code => $country): ?>
+                                    <option value="<?php echo $code; ?>" <?php echo ($code === '+44') ? 'selected' : ''; ?>>
+                                        <?php echo $country; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <input type="text" id="phone_number" name="phone_number" class="phone-number"
+                                placeholder="Phone Number (9-11 digits without country code)" required minlength="9"
+                                maxlength="11" pattern="[0-9]{9,11}">
+                        </div>
                     </div>
 
                     <div class="input-box">
-                        <input type="text" id="emergency_contact" name="emergency_contact"
-                            placeholder="Emergency Contact Number" required>
+                        <div class="phone-container">
+                            <select id="emergency_country" name="emergency_country" class="country-code">
+                                <?php foreach ($countryCodes as $code => $country): ?>
+                                    <option value="<?php echo $code; ?>" <?php echo ($code === '+44') ? 'selected' : ''; ?>>
+                                        <?php echo $country; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <input type="text" id="emergency_number" name="emergency_number" class="phone-number"
+                                placeholder="Emergency Number (9-11 digits without country code)" required minlength="9"
+                                maxlength="11" pattern="[0-9]{9,11}">
+                        </div>
                     </div>
 
                     <div class="input-box">
