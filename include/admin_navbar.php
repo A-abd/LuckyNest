@@ -37,6 +37,10 @@
             <li class="menu-item">
                 <a href="../admin/admins.php"><i class="fas fa-user-shield"></i> Admin Users</a>
             </li>
+                        
+            <li class="menu-item">
+                <a href="../admin/create_users.php"><i class="fas fa-user-plus"></i> Create An Account</a>
+            </li>
 
             <li class="menu-category">Property Management</li>
             <li class="menu-item">
