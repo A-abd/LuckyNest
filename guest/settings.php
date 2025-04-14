@@ -14,7 +14,7 @@ use Sonata\GoogleAuthenticator\GoogleAuthenticator;
 use Sonata\GoogleAuthenticator\GoogleQrUrl;
 
 $user_id = $_SESSION['user_id'];
-$stmt = $conn->prepare("SELECT totp_secret, password, email_notifications, sms_notifications, push_notifications, email, phone FROM users WHERE user_id = :user_id");
+$stmt = $conn->prepare("SELECT totp_secret, password, email_notifications, sms_notifications, email, phone FROM users WHERE user_id = :user_id");
 $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
 $stmt->execute();
 $user = $stmt->fetch();
@@ -70,24 +70,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_test_notificatio
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_notifications'])) {
     $email_notifications = isset($_POST['email_notifications']) ? 1 : 0;
     $sms_notifications = isset($_POST['sms_notifications']) ? 1 : 0;
-    $push_notifications = isset($_POST['push_notifications']) ? 1 : 0;
 
     try {
-        $stmt = $conn->prepare("UPDATE users SET email_notifications = :email_notifications, sms_notifications = :sms_notifications, push_notifications = :push_notifications WHERE user_id = :user_id");
+        $stmt = $conn->prepare("UPDATE users SET email_notifications = :email_notifications, sms_notifications = :sms_notifications WHERE user_id = :user_id");
         $stmt->bindValue(':email_notifications', $email_notifications, PDO::PARAM_INT);
         $stmt->bindValue(':sms_notifications', $sms_notifications, PDO::PARAM_INT);
-        $stmt->bindValue(':push_notifications', $push_notifications, PDO::PARAM_INT);
         $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
         $stmt->execute();
 
         // Update the user data after changes
-        $stmt = $conn->prepare("SELECT email_notifications, sms_notifications, push_notifications FROM users WHERE user_id = :user_id");
+        $stmt = $conn->prepare("SELECT email_notifications, sms_notifications FROM users WHERE user_id = :user_id");
         $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
         $stmt->execute();
         $updated_prefs = $stmt->fetch();
         $user['email_notifications'] = $updated_prefs['email_notifications'];
         $user['sms_notifications'] = $updated_prefs['sms_notifications'];
-        $user['push_notifications'] = $updated_prefs['push_notifications'];
 
         $success_message = "Notification preferences updated successfully.";
     } catch (PDOException $e) {
@@ -320,7 +317,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_code'])) {
                         </label>
                         <p class="notification-description">Receive payment reminders, late payment notices, and booking
                             information via email.</p>
-                        <p class="notification-description">Current email:
+                        <p class="notification-description">Your email address:
                             <strong><?php echo htmlspecialchars($user['email']); ?></strong>
                         </p>
                     </div>
@@ -332,23 +329,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_code'])) {
                         </label>
                         <p class="notification-description">Receive payment reminders and important updates via text
                             message.</p>
-                        <p class="notification-description">Current phone:
+                        <p class="notification-description">Your phone number:
                             <strong><?php echo htmlspecialchars($user['phone']); ?></strong>
                         </p>
-                    </div>
-
-                    <div class="notification-option">
-                        <label for="push_notifications">
-                            <input type="checkbox" id="push_notifications" name="push_notifications" <?php echo $user['push_notifications'] ? 'checked' : ''; ?>>
-                            <span>Push Notifications</span>
-                        </label>
-                        <p class="notification-description">Receive notifications through the app (when available).</p>
                     </div>
 
                     <button type="submit" name="update_notifications" class="update-button">Save Notification
                         Settings</button>
                 </form>
 
+                <!-- NOTE FOR EXAMINER: This section purely exists to show you that the notification system works in the video presentation -->
+                <!-- This section would be removed in a public version of the software as the notifications are automatically sent (if needed) via the cron job -->
                 <div class="test-section">
                     <h3>Test Notifications</h3>
                     <p>Send test notifications to verify your current settings:</p>
