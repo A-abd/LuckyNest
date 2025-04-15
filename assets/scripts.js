@@ -219,26 +219,93 @@ const BookingModule = {
   },
 
   initDatePicker(dateInput, bookedDates) {
+    const form = dateInput.closest('form');
+    if (!form) return;
+    
+    const roomIdInput = form.querySelector('select[name="room_id"], input[name="room_id"]');
+    if (!roomIdInput) return;
+    
+    const roomId = roomIdInput.value;
+    
+    const guestIdInput = form.querySelector('select[name="guest_id"], input[name="guest_id"]');
+    if (!guestIdInput) return;
+    
+    const guestId = guestIdInput.value;
+    
+    const bookingIdInput = form.querySelector('input[name="booking_id"]');
+    const bookingId = bookingIdInput ? bookingIdInput.value : null;
+
     flatpickr(dateInput, {
       minDate: "today",
       dateFormat: "Y-m-d",
       onDayCreate: (dObj, dStr, fp, dayElem) => {
         const currentDate = dayElem.dateObj;
-        const isBooked = this.isDateBooked(currentDate, bookedDates);
+        const isRoomBooked = this.isDateBooked(currentDate, bookedDates, roomId, null, bookingId);
+        const isGuestBooked = this.isGuestBooked(currentDate, bookedDates, guestId, bookingId);
 
-        dayElem.style.backgroundColor = isBooked ? "#ffcccc" : "#ffffff";
-        if (isBooked) {
+        if (isRoomBooked || isGuestBooked) {
           dayElem.classList.add("booked-date");
+          dayElem.style.backgroundColor = "#ffcccc";
           dayElem.style.color = "#666";
         }
       }
     });
+    
+    if (roomIdInput.tagName === 'SELECT') {
+      roomIdInput.addEventListener('change', () => {
+        if (dateInput._flatpickr) {
+          dateInput._flatpickr.destroy();
+        }
+        this.initDatePicker(dateInput, bookedDates);
+      });
+    }
+    
+    if (guestIdInput.tagName === 'SELECT') {
+      guestIdInput.addEventListener('change', () => {
+        if (dateInput._flatpickr) {
+          dateInput._flatpickr.destroy();
+        }
+        this.initDatePicker(dateInput, bookedDates);
+      });
+    }
   },
 
-  isDateBooked(currentDate, bookedDates) {
+  isDateBooked(currentDate, bookedDates, roomId, guestId, currentBookingId) {
     currentDate.setHours(0, 0, 0, 0);
 
     return bookedDates.some(booking => {
+      if (currentBookingId && booking.booking_id == currentBookingId) {
+        return false;
+      }
+      
+      if (booking.room_id != roomId) {
+        return false;
+      }
+
+      const startDate = new Date(booking.start);
+      const endDate = new Date(booking.end);
+
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(0, 0, 0, 0);
+
+      return currentDate >= startDate && currentDate <= endDate;
+    });
+  },
+  
+  isGuestBooked(currentDate, bookedDates, guestId, currentBookingId) {
+    if (!currentDate || !guestId) return false;
+    
+    currentDate.setHours(0, 0, 0, 0);
+
+    return bookedDates.some(booking => {
+      if (currentBookingId && booking.booking_id == currentBookingId) {
+        return false;
+      }
+      
+      if (booking.guest_id != guestId) {
+        return false;
+      }
+      
       const startDate = new Date(booking.start);
       const endDate = new Date(booking.end);
 

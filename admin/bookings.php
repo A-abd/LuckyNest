@@ -470,12 +470,15 @@ $conn = null;
     <!--pass bookedDates data to JS here as it is generated in the PHP-->
     <script id="booked-dates" type="application/json">
     <?php echo json_encode(array_map(function ($booking) {
-        return [
+            return [
+            'booking_id' => $booking['booking_id'],
+            'room_id' => $booking['room_id'],
+            'guest_id' => $booking['guest_id'],
             'start' => $booking['check_in_date'],
             'end' => $booking['check_out_date']
         ];
     }, $bookingData)); ?>
-    </script>
+</script>
 </body>
 
 </html>
