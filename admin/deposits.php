@@ -12,6 +12,10 @@ include __DIR__ . '/../include/pagination.php';
 $feedback = '';
 $depositData = [];
 
+if (isset($_GET['feedback'])) {
+    $feedback = $_GET['feedback'];
+}
+
 $recordsPerPage = 10;
 $page = isset($_GET["page"]) ? (int) $_GET["page"] : 1;
 $offset = ($page - 1) * $recordsPerPage;
@@ -23,19 +27,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'edit') {
             $deposit_id = $_POST['deposit_id'];
             $status = $_POST['status'];
-            $refunded_amount = $_POST['refunded_amount'];
-            $withholding_reason = $_POST['withholding_reason'];
             
-            $stmt = $conn->prepare("UPDATE deposits SET status = :status, refunded_amount = :refunded_amount, withholding_reason = :withholding_reason, date_refunded = CASE WHEN status IN ('partially_refunded', 'fully_refunded') THEN NOW() ELSE date_refunded END WHERE deposit_id = :deposit_id");
-            $stmt->bindParam(':deposit_id', $deposit_id, PDO::PARAM_INT);
-            $stmt->bindParam(':status', $status, PDO::PARAM_STR);
-            $stmt->bindParam(':refunded_amount', $refunded_amount, PDO::PARAM_STR);
-            $stmt->bindParam(':withholding_reason', $withholding_reason, PDO::PARAM_STR);
-
-            if ($stmt->execute()) {
-                $feedback = 'Deposit status updated successfully!';
+            if (in_array($status, ['partially_refunded', 'fully_refunded'])) {
+                $refund_amount = $_POST['refunded_amount'];
+                $withholding_reason = $_POST['withholding_reason'] ?? '';
+                
+                header('Location: ../include/refund.php');
+                exit();
             } else {
-                $feedback = 'Error updating deposit status.';
+                $refunded_amount = $_POST['refunded_amount'] ?? 0;
+                $withholding_reason = $_POST['withholding_reason'] ?? '';
+                
+                $stmt = $conn->prepare("UPDATE deposits SET status = :status, refunded_amount = :refunded_amount, withholding_reason = :withholding_reason, date_refunded = CASE WHEN status IN ('partially_refunded', 'fully_refunded') THEN NOW() ELSE date_refunded END WHERE deposit_id = :deposit_id");
+                $stmt->bindParam(':deposit_id', $deposit_id, PDO::PARAM_INT);
+                $stmt->bindParam(':status', $status, PDO::PARAM_STR);
+                $stmt->bindParam(':refunded_amount', $refunded_amount, PDO::PARAM_STR);
+                $stmt->bindParam(':withholding_reason', $withholding_reason, PDO::PARAM_STR);
+
+                if ($stmt->execute()) {
+                    $feedback = 'Deposit status updated successfully!';
+                } else {
+                    $feedback = 'Error updating deposit status.';
+                }
             }
         }
     }
@@ -126,14 +139,16 @@ $conn = null;
                                 <div id="edit-form-<?php echo $deposit['deposit_id']; ?>" class="rooms-type-edit-form">
                                     <button type="button" class="close-button"
                                         onclick="LuckyNest.toggleForm('edit-form-<?php echo $deposit['deposit_id']; ?>')">✕</button>
-                                    <form method="POST" action="deposits.php">
-                                        <h2>Manage Deposit</h2>
+                                    
+                                    <h2>Manage Deposit</h2>
+                                    <p><strong>Guest:</strong> <?php echo $deposit['forename'] . ' ' . $deposit['surname']; ?></p>
+                                    <p><strong>Room:</strong> <?php echo $deposit['room_number']; ?></p>
+                                    <p><strong>Original Amount:</strong> £<?php echo number_format($deposit['amount'], 2); ?></p>
+                                    
+                                    <!-- Modified form action to use refund.php for refund actions -->
+                                    <form method="POST" action="<?php echo in_array($deposit['status'], ['paid']) ? '../include/refund.php' : 'deposits.php'; ?>" id="form-<?php echo $deposit['deposit_id']; ?>">
                                         <input type="hidden" name="action" value="edit">
                                         <input type="hidden" name="deposit_id" value="<?php echo $deposit['deposit_id']; ?>">
-                                        
-                                        <p><strong>Guest:</strong> <?php echo $deposit['forename'] . ' ' . $deposit['surname']; ?></p>
-                                        <p><strong>Room:</strong> <?php echo $deposit['room_number']; ?></p>
-                                        <p><strong>Original Amount:</strong> £<?php echo number_format($deposit['amount'], 2); ?></p>
                                         
                                         <label for="status_<?php echo $deposit['deposit_id']; ?>">Status:</label>
                                         <select id="status_<?php echo $deposit['deposit_id']; ?>" name="status" onchange="LuckyNest.updateDepositForm(this.value, <?php echo $deposit['deposit_id']; ?>, <?php echo $deposit['amount']; ?>)">
@@ -146,7 +161,7 @@ $conn = null;
                                         
                                         <div id="refund-fields-<?php echo $deposit['deposit_id']; ?>" <?php echo (!in_array($deposit['status'], ['partially_refunded', 'fully_refunded'])) ? 'style="display:none;"' : ''; ?>>
                                             <label for="refunded_amount_<?php echo $deposit['deposit_id']; ?>">Refunded Amount:</label>
-                                            <input type="number" step="0.01" id="refunded_amount_<?php echo $deposit['deposit_id']; ?>" name="refunded_amount" value="<?php echo $deposit['refunded_amount'] ?? 0; ?>" min="0" max="<?php echo $deposit['amount']; ?>">
+                                            <input type="number" step="0.01" id="refunded_amount_<?php echo $deposit['deposit_id']; ?>" name="refund_amount" value="<?php echo $deposit['refunded_amount'] ?? 0; ?>" min="0" max="<?php echo $deposit['amount']; ?>">
                                         </div>
                                         
                                         <div id="withholding-fields-<?php echo $deposit['deposit_id']; ?>" <?php echo ($deposit['status'] != 'withheld' && $deposit['status'] != 'partially_refunded') ? 'style="display:none;"' : ''; ?>>
@@ -156,6 +171,18 @@ $conn = null;
                                         
                                         <button type="submit" class="update-button">Update Deposit</button>
                                     </form>
+                                    <script>
+                                        document.getElementById('status_<?php echo $deposit["deposit_id"]; ?>').addEventListener('change', function() {
+                                            const form = document.getElementById('form-<?php echo $deposit["deposit_id"]; ?>');
+                                            const status = this.value;
+                                            
+                                            if (status === 'partially_refunded' || status === 'fully_refunded') {
+                                                form.action = '../include/refund.php';
+                                            } else {
+                                                form.action = 'deposits.php';
+                                            }
+                                        });
+                                    </script>
                                 </div>
                             </td>
                         </tr>
