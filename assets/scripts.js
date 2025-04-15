@@ -306,24 +306,42 @@ const PaymentModule = {
   },
 
   showPaymentForm(type) {
-    ['rent_form', 'meal_plan_form', 'laundry_form'].forEach(formId => {
+    ['rent_form', 'meal_plan_form', 'laundry_form', 'deposit_form'].forEach(formId => {
       const formElement = document.getElementById(formId);
-      if (formElement) formElement.style.display = 'none';
+      if (formElement) {
+        formElement.style.display = 'none';
+        formElement.classList.remove('active');
+      }
     });
 
+    const overlay = document.getElementById('form-overlay');
+
     const selectedForm = document.getElementById(`${type}_form`);
-    if (selectedForm) selectedForm.style.display = 'block';
+    if (selectedForm) {
+      selectedForm.style.display = 'block';
+
+      if (overlay) {
+        overlay.style.display = 'block';
+        setTimeout(() => {
+          overlay.classList.add('active');
+        }, 10);
+      }
+
+      setTimeout(() => {
+        selectedForm.classList.add('active');
+      }, 10);
+    }
 
     const paymentTypeInputs = document.querySelectorAll('input[id="payment_type_hidden"]');
     paymentTypeInputs.forEach(input => {
       input.value = type;
     });
 
-    setTimeout(() => this.calculateAmount(), 0);
+    setTimeout(() => this.calculateAmount(), 50);
   },
 
   calculateAmount() {
-    const visibleForm = ['rent_form', 'meal_plan_form', 'laundry_form'].find(id => {
+    const visibleForm = ['rent_form', 'meal_plan_form', 'laundry_form', 'deposit_form'].find(id => {
       const form = document.getElementById(id);
       return form && form.style.display !== 'none';
     });
