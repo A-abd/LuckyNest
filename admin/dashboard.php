@@ -39,6 +39,12 @@ try {
     $laundryQuery = $conn->query("SELECT COUNT(*) as total_laundry_slots FROM laundry_slots WHERE is_available = 1");
     $totalLaundrySlots = $laundryQuery->fetch(PDO::FETCH_ASSOC)['total_laundry_slots'];
 
+    function formatDate($dateString)
+    {
+        $date = new DateTime($dateString);
+        return $date->format('d/m/Y');
+    }
+
 } catch (PDOException $e) {
     die("Database Error: " . $e->getMessage());
 }
@@ -46,6 +52,7 @@ try {
 
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -57,6 +64,7 @@ try {
     <script src="../assets/scripts.js"></script>
     <title>Admin Dashboard</title>
 </head>
+
 <body>
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
@@ -113,13 +121,14 @@ try {
                             <td><?php echo $booking['booking_id']; ?></td>
                             <td><?php echo $booking['forename'] . ' ' . $booking['surname']; ?></td>
                             <td><?php echo $booking['room_number']; ?></td>
-                            <td><?php echo $booking['check_in_date']; ?></td>
-                            <td><?php echo $booking['check_out_date']; ?></td>
+                            <td><?php echo formatDate($booking['check_in_date']); ?></td>
+                            <td><?php echo formatDate($booking['check_out_date']); ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
-        <div id="form-overlay"></div>
-    </div>
+            <div id="form-overlay"></div>
+        </div>
 </body>
+
 </html>

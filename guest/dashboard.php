@@ -23,10 +23,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (isset($_POST['cancel_meal_plan'])) {
-        $mealPlanUserLinkId = $_POST['meal_plan_user_link_id'];
+        $mealPlanUserLink = $_POST['meal_plan_user_link'];
         $stmt = $conn->prepare("UPDATE meal_plan_user_link SET is_cancelled = 1 
-                               WHERE meal_plan_user_link_id = ? AND user_id = ?");
-        $stmt->execute([$mealPlanUserLinkId, $_SESSION['user_id']]);
+                               WHERE meal_plan_user_link = ? AND user_id = ?");
+        $stmt->execute([$mealPlanUserLink, $_SESSION['user_id']]);
 
         $message = "Your meal plan has been cancelled.";
         $notifStmt = $conn->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)");
@@ -37,14 +37,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (isset($_POST['cancel_laundry'])) {
-        $laundryDate = $_POST['laundry_date'];
-        $laundryTime = $_POST['laundry_time'];
+        $laundrySlotUserLinkId = $_POST['laundry_slot_user_link_id'];
         $stmt = $conn->prepare("UPDATE laundry_slot_user_link SET is_cancelled = 1 
-                               WHERE user_id = ? AND laundry_slot_id IN 
-                               (SELECT laundry_slot_id FROM laundry_slots WHERE date = ? AND start_time = ?)");
-        $stmt->execute([$_SESSION['user_id'], $laundryDate, $laundryTime]);
+                               WHERE laundry_slot_user_link_id = ? AND user_id = ?");
+        $stmt->execute([$laundrySlotUserLinkId, $_SESSION['user_id']]);
 
-        $message = "Your laundry booking on $laundryDate at $laundryTime has been cancelled.";
+        $message = "Your laundry booking has been cancelled.";
         $notifStmt = $conn->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)");
         $notifStmt->execute([$_SESSION['user_id'], $message]);
 
@@ -113,7 +111,7 @@ try {
     $mealPlans = $mealPlansQuery->fetchAll();
 
     $laundryQuery = $conn->prepare("
-        SELECT ls.date, ls.start_time, ls.price, lsul.is_paid, ls.laundry_slot_id 
+        SELECT ls.date, ls.start_time, ls.price, lsul.is_paid, ls.laundry_slot_id, lsul.laundry_slot_user_link_id
         FROM laundry_slot_user_link lsul
         JOIN laundry_slots ls ON lsul.laundry_slot_id = ls.laundry_slot_id
         WHERE lsul.user_id = ? AND lsul.is_cancelled = 0
@@ -166,6 +164,18 @@ try {
     ");
     $paymentsQuery->execute([$userId]);
     $payments = $paymentsQuery->fetchAll();
+
+    function formatDate($dateString)
+    {
+        $date = new DateTime($dateString);
+        return $date->format('d/m/Y');
+    }
+
+    function formatDateTime($dateTimeString)
+    {
+        $dateTime = new DateTime($dateTimeString);
+        return $dateTime->format('d/m/Y H:i');
+    }
 
 } catch (PDOException $e) {
     die("Database Error: " . $e->getMessage());
@@ -233,8 +243,8 @@ try {
                             <tr>
                                 <td><?php echo $booking['booking_id']; ?></td>
                                 <td><?php echo $booking['room_number']; ?></td>
-                                <td><?php echo $booking['check_in_date']; ?></td>
-                                <td><?php echo $booking['check_out_date']; ?></td>
+                                <td><?php echo formatDate($booking['check_in_date']); ?></td>
+                                <td><?php echo formatDate($booking['check_out_date']); ?></td>
                                 <td>$<?php echo number_format($booking['total_price'], 2); ?></td>
                                 <td><?php echo $booking['booking_is_paid'] ? 'Paid' : 'Unpaid'; ?></td>
                                 <td>
@@ -326,7 +336,7 @@ try {
                                 <td><?php echo $plan['is_paid'] ? 'Paid' : 'Unpaid'; ?></td>
                                 <td>
                                     <form method="post" style="display: inline;">
-                                        <input type="hidden" name="meal_plan_user_link_id"
+                                        <input type="hidden" name="meal_plan_user_link"
                                             value="<?php echo $plan['meal_plan_user_link']; ?>">
                                         <button type="submit" name="cancel_meal_plan"
                                             class="button cancel-button">Cancel</button>
@@ -404,14 +414,14 @@ try {
                     <tbody>
                         <?php foreach ($laundrySlots as $slot): ?>
                             <tr>
-                                <td><?php echo $slot['date']; ?></td>
+                                <td><?php echo formatDate($slot['date']); ?></td>
                                 <td><?php echo $slot['start_time']; ?></td>
                                 <td>$<?php echo number_format($slot['price'], 2); ?></td>
                                 <td><?php echo $slot['is_paid'] ? 'Paid' : 'Unpaid'; ?></td>
                                 <td>
                                     <form method="post" style="display: inline;">
-                                        <input type="hidden" name="laundry_date" value="<?php echo $slot['date']; ?>">
-                                        <input type="hidden" name="laundry_time" value="<?php echo $slot['start_time']; ?>">
+                                        <input type="hidden" name="laundry_slot_user_link_id"
+                                            value="<?php echo $slot['laundry_slot_user_link_id']; ?>">
                                         <button type="submit" name="cancel_laundry" class="button cancel-button">Cancel</button>
                                     </form>
                                     <?php if (!$slot['is_paid']): ?>
@@ -420,7 +430,7 @@ try {
                                             <input type="hidden" name="laundry_slot_id"
                                                 value="<?php echo $slot['laundry_slot_id']; ?>">
                                             <input type="hidden" name="description"
-                                                value="Laundry slot payment for <?php echo $slot['date']; ?> at <?php echo $slot['start_time']; ?>">
+                                                value="Laundry slot payment for <?php echo formatDate($slot['date']); ?> at <?php echo $slot['start_time']; ?>">
                                             <input type="hidden" name="amount" value="<?php echo $slot['price']; ?>">
                                             <input type="hidden" name="user_id" value="<?php echo $_SESSION['user_id']; ?>">
                                             <button type="submit" class="button">Pay Now</button>
@@ -455,8 +465,8 @@ try {
                                 <tr>
                                     <td><?php echo $deposit['booking_id']; ?></td>
                                     <td><?php echo $deposit['room_number']; ?></td>
-                                    <td><?php echo $deposit['check_in_date']; ?></td>
-                                    <td><?php echo $deposit['check_out_date']; ?></td>
+                                    <td><?php echo formatDate($deposit['check_in_date']); ?></td>
+                                    <td><?php echo formatDate($deposit['check_out_date']); ?></td>
                                     <td>$<?php echo number_format($deposit['deposit_amount'], 2); ?></td>
                                     <td>
                                         <form method="post" action="../include/checkout.php" style="display: inline;">
@@ -510,7 +520,7 @@ try {
                     <?php foreach ($notifications as $notification): ?>
                         <div class="notification-item <?php echo $notification['is_read'] ? 'read' : 'unread'; ?>">
                             <p><?php echo $notification['message']; ?></p>
-                            <small><?php echo $notification['created_at']; ?></small>
+                            <small><?php echo formatDateTime($notification['created_at']); ?></small>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -533,7 +543,7 @@ try {
                             <tr>
                                 <td><?php echo ucfirst(str_replace('_', ' ', $payment['payment_type'])); ?></td>
                                 <td>$<?php echo number_format($payment['amount'], 2); ?></td>
-                                <td><?php echo $payment['payment_date']; ?></td>
+                                <td><?php echo formatDateTime($payment['payment_date']); ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
