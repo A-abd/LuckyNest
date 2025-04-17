@@ -18,3 +18,17 @@ How to setup phpmailer:
           SMTP_PORT=587
           SMTP_USERNAME=your@gmail.com
           SMTP_PASSWORD=your-app-password
+
+
+How to setup the automated notifications:
+     1. Open up Windows Task Scheduler by searching for "Task Scheduler" in the start menu
+     2. Click "Create a Basic Task" on the right
+     3. Choose when you want to run it and click next
+     4. Then choose what frequency you want to run it and click Next
+     5. Select start a program and click next
+     6. In the program/script section add: C:\xampp\php\php.exe (you may have to adjust the path to the file)
+     7. In add arguments enter: C:\xampp\htdocs\LuckyNest\notification_scheduler.php (you may have to adjust the path to the file)
+     8. Click Next, then finish
+     9. Create a notification_logs.php file in the logs folder (although not necessary as the scripts should automatically create it)
+
+     Note: you can manually run it via "C:\xampp\php\php.exe C:\xampp\htdocs\LuckyNest\notification_scheduler.php" (you may have to adjust the path to the file)

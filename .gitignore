@@ -1,8 +1,7 @@
-
-index.php
-registration.php
 .env
-
 
 invoices/*
 !invoices/.gitkeep
+
+logs/*
+!log/.gitkeep
