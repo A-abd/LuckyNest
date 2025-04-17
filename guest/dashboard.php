@@ -97,7 +97,7 @@ try {
 
     $mealPlansQuery = $conn->prepare("
         SELECT mp.name, mp.meal_plan_type, mp.duration_days, mpul.is_paid, 
-               mp.meal_plan_id, mpul.meal_plan_user_link,
+               mp.meal_plan_id, mpul.meal_plan_user_link, mpul.start_date,
                (SELECT COUNT(*) FROM meal_plan_ratings 
                 WHERE meal_plan_id = mp.meal_plan_id AND user_id = ?) as has_rating,
                (SELECT SUM(m.price) FROM meal_plan_items_link mpil 
@@ -323,6 +323,7 @@ try {
                             <th>Meal Plan</th>
                             <th>Type</th>
                             <th>Duration (days)</th>
+                            <th>Start Date</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -333,6 +334,7 @@ try {
                                 <td><?php echo $plan['name']; ?></td>
                                 <td><?php echo $plan['meal_plan_type']; ?></td>
                                 <td><?php echo $plan['duration_days']; ?></td>
+                                <td><?php echo formatDate($plan['start_date']); ?></td>
                                 <td><?php echo $plan['is_paid'] ? 'Paid' : 'Unpaid'; ?></td>
                                 <td>
                                     <form method="post" style="display: inline;">
