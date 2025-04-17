@@ -149,6 +149,7 @@ const MealModule = {
 
     this.initMealModal();
     this.initMealPlanDatePickers();
+    this.initMealAssignmentModule();
   },
 
   showMealPlanDetails(planId) {
@@ -296,6 +297,75 @@ const MealModule = {
 
       flatpickr(picker, config);
     });
+  },
+
+  // Meal Assignment Module
+  initMealAssignmentModule() {
+    document.addEventListener('DOMContentLoaded', function () {
+      const planSelect = document.getElementById('plan_id');
+      if (planSelect) {
+        updateDayOptions(planSelect.value);
+      }
+    });
+  },
+
+  updateDayOptions(planId) {
+    const planSelect = document.getElementById('plan_id');
+    if (!planSelect) return;
+
+    const selectedOption = planSelect.options[planSelect.selectedIndex];
+    const planType = selectedOption.getAttribute('data-plan-type');
+    const daySelect = document.getElementById('day_number');
+    const dayContainer = document.getElementById('day_selection_container');
+    const defaultDayInput = document.getElementById('default_day_number');
+
+    if (planType === 'Daily') {
+      // Hide day selection for daily plans and use default value
+      dayContainer.style.display = 'none';
+      defaultDayInput.disabled = false;
+      return;
+    } else {
+      // Show day selection for weekly and monthly plans
+      dayContainer.style.display = 'block';
+      defaultDayInput.disabled = true;
+
+      // Clear existing options
+      daySelect.innerHTML = '';
+
+      if (planType === 'Weekly') {
+        const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        for (let i = 0; i < 7; i++) {
+          const option = document.createElement('option');
+          option.value = i + 1;
+          option.textContent = daysOfWeek[i];
+          daySelect.appendChild(option);
+        }
+      } else if (planType === 'Monthly') {
+        // Get the current month's days or stored month for this plan
+        fetch(`meal_assignment.php?ajax=get_month_days&plan_id=${planId}`)
+          .then(response => response.json())
+          .then(data => {
+            const daysInMonth = data.days || 30; // Default to 30 if not specified
+
+            for (let i = 1; i <= daysInMonth; i++) {
+              const option = document.createElement('option');
+              option.value = i;
+              option.textContent = `Day ${i}`;
+              daySelect.appendChild(option);
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching month days:', error);
+            // Fallback to 31 days if fetch fails
+            for (let i = 1; i <= 31; i++) {
+              const option = document.createElement('option');
+              option.value = i;
+              option.textContent = `Day ${i}`;
+              daySelect.appendChild(option);
+            }
+          });
+      }
+    }
   }
 };
 
@@ -861,5 +931,6 @@ window.LuckyNest = {
   toggleFinancialCard: FinancialModule.toggleFinancialCard,
   initFinancialCards: FinancialModule.initFinancialCards,
   updateDepositForm: DepositModule.updateDepositForm,
-  playNotificationSound: Utils.playNotificationSound
+  playNotificationSound: Utils.playNotificationSound,
+  updateDayOptions: MealModule.updateDayOptions
 };
