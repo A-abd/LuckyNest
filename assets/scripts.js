@@ -139,6 +139,16 @@ const MealModule = {
       });
       this.calculateTotal();
     }
+
+    const mealPlanCheckboxes = document.querySelectorAll('input[name="meal_plan_ids[]"]');
+    if (mealPlanCheckboxes.length > 0) {
+      mealPlanCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', this.updateSelectedPlansCount);
+      });
+    }
+
+    this.initMealModal();
+    this.initMealPlanDatePickers();
   },
 
   showMealPlanDetails(planId) {
@@ -164,6 +174,128 @@ const MealModule = {
     });
 
     document.getElementById('total-price').textContent = Utils.formatCurrency(total);
+  },
+
+  updateSelectedPlansCount() {
+    const selectedPlans = document.querySelectorAll('input[name="meal_plan_ids[]"]:checked');
+    const submitButton = document.querySelector('button[type="submit"]');
+
+    if (submitButton) {
+      if (selectedPlans.length > 0) {
+        submitButton.textContent = `Book ${selectedPlans.length} Selected Plan${selectedPlans.length > 1 ? 's' : ''}`;
+      } else {
+        submitButton.textContent = 'Book Selected Plans';
+      }
+    }
+  },
+
+  initMealModal() {
+    const modal = document.getElementById('mealModal');
+    if (!modal) return;
+
+    const closeBtn = modal.querySelector('.close');
+    const mealLinks = document.querySelectorAll('.meal-name-link');
+
+    if (closeBtn) {
+      closeBtn.onclick = function () {
+        modal.style.display = "none";
+      };
+    }
+
+    window.addEventListener('click', function (event) {
+      if (event.target === modal) {
+        modal.style.display = "none";
+      }
+    });
+
+    mealLinks.forEach(link => {
+      link.addEventListener('click', function () {
+        const mealId = this.getAttribute('data-meal-id');
+        const mealName = this.getAttribute('data-meal-name');
+        const mealType = this.getAttribute('data-meal-type');
+        const mealPrice = this.getAttribute('data-meal-price');
+        const mealTags = this.getAttribute('data-meal-tags');
+        const mealImage = this.getAttribute('data-meal-image');
+
+        document.getElementById('modalMealName').textContent = mealName;
+        document.getElementById('modalMealType').textContent = mealType;
+        document.getElementById('modalMealPrice').textContent = mealPrice;
+        document.getElementById('modalMealTags').textContent = mealTags;
+
+        const imgElement = document.getElementById('modalMealImage');
+        if (mealImage && mealImage !== '') {
+          imgElement.src = mealImage;
+          document.getElementById('modalImageContainer').style.display = 'block';
+        } else {
+          document.getElementById('modalImageContainer').style.display = 'none';
+        }
+
+        modal.style.display = "block";
+      });
+    });
+  },
+
+  initMealPlanDatePickers() {
+    if (!window.flatpickr) return;
+
+    const datePickers = document.querySelectorAll('.meal-plan-date-picker');
+
+    datePickers.forEach(picker => {
+      const planType = picker.getAttribute('data-plan-type');
+
+      let config = {
+        minDate: "today",
+        dateFormat: "Y-m-d",
+      };
+
+      if (planType === 'Daily') {
+        config.onDayCreate = function (dObj, dStr, fp, dayElem) {
+          dayElem.style.backgroundColor = "#e6ffe6";
+        };
+      }
+      else if (planType === 'Weekly') {
+        config.onDayCreate = function (dObj, dStr, fp, dayElem) {
+          const dayOfWeek = dayElem.dateObj.getDay();
+          if (dayOfWeek === 1) { // Monday is 1
+            dayElem.style.backgroundColor = "#e6ffe6";
+          } else {
+            dayElem.classList.add("flatpickr-disabled");
+          }
+        };
+        config.enable = [
+          function (date) {
+            return date.getDay() === 1;
+          }
+        ];
+      }
+      else if (planType === 'Monthly') {
+        config = {
+          minDate: "today",
+          dateFormat: "Y-m-d",
+          onDayCreate: function (dObj, dStr, fp, dayElem) {
+            if (dayElem.dateObj.getDate() === 1) { // 1st day of month
+              dayElem.style.backgroundColor = "#e6ffe6";
+            } else {
+              dayElem.classList.add("flatpickr-disabled");
+            }
+          },
+          enable: [
+            function (date) {
+              return date.getDate() === 1;
+            }
+          ],
+          plugins: [
+            new window.flatpickrMonthSelectPlugin({
+              shorthand: true,
+              dateFormat: "Y-m-d",
+              altFormat: "F Y"
+            })
+          ]
+        };
+      }
+
+      flatpickr(picker, config);
+    });
   }
 };
 
@@ -221,17 +353,25 @@ const BookingModule = {
   initDatePicker(dateInput, bookedDates) {
     const form = dateInput.closest('form');
     if (!form) return;
-    
+
     const roomIdInput = form.querySelector('select[name="room_id"], input[name="room_id"]');
-    if (!roomIdInput) return;
-    
+    if (!roomIdInput) {
+      if (window.flatpickr) {
+        flatpickr(dateInput, {
+          minDate: "today",
+          dateFormat: "Y-m-d"
+        });
+      }
+      return;
+    }
+
     const roomId = roomIdInput.value;
-    
+
     const guestIdInput = form.querySelector('select[name="guest_id"], input[name="guest_id"]');
     if (!guestIdInput) return;
-    
+
     const guestId = guestIdInput.value;
-    
+
     const bookingIdInput = form.querySelector('input[name="booking_id"]');
     const bookingId = bookingIdInput ? bookingIdInput.value : null;
 
@@ -250,7 +390,7 @@ const BookingModule = {
         }
       }
     });
-    
+
     if (roomIdInput.tagName === 'SELECT') {
       roomIdInput.addEventListener('change', () => {
         if (dateInput._flatpickr) {
@@ -259,7 +399,7 @@ const BookingModule = {
         this.initDatePicker(dateInput, bookedDates);
       });
     }
-    
+
     if (guestIdInput.tagName === 'SELECT') {
       guestIdInput.addEventListener('change', () => {
         if (dateInput._flatpickr) {
@@ -271,13 +411,15 @@ const BookingModule = {
   },
 
   isDateBooked(currentDate, bookedDates, roomId, guestId, currentBookingId) {
+    if (!currentDate || !bookedDates || !roomId) return false;
+
     currentDate.setHours(0, 0, 0, 0);
 
     return bookedDates.some(booking => {
       if (currentBookingId && booking.booking_id == currentBookingId) {
         return false;
       }
-      
+
       if (booking.room_id != roomId) {
         return false;
       }
@@ -291,21 +433,21 @@ const BookingModule = {
       return currentDate >= startDate && currentDate <= endDate;
     });
   },
-  
+
   isGuestBooked(currentDate, bookedDates, guestId, currentBookingId) {
-    if (!currentDate || !guestId) return false;
-    
+    if (!currentDate || !bookedDates || !guestId) return false;
+
     currentDate.setHours(0, 0, 0, 0);
 
     return bookedDates.some(booking => {
       if (currentBookingId && booking.booking_id == currentBookingId) {
         return false;
       }
-      
+
       if (booking.guest_id != guestId) {
         return false;
       }
-      
+
       const startDate = new Date(booking.start);
       const endDate = new Date(booking.end);
 
@@ -621,12 +763,10 @@ const FinancialModule = {
   },
 
   initFinancialCards() {
-    // Automatically show the first financial card
     const firstCardHeader = document.querySelector('.financial-card-header');
     if (firstCardHeader) {
       const cardId = firstCardHeader.getAttribute('onclick');
       if (cardId) {
-        // Extract card ID from the onclick attribute
         const match = cardId.match(/['"](.*?)['"]/);
         if (match && match[1]) {
           this.toggleFinancialCard(match[1]);

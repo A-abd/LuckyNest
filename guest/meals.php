@@ -66,33 +66,63 @@ while ($row = $mealPlanQuery->fetch(PDO::FETCH_ASSOC)) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'book') {
-    $mealPlanId = $_POST['meal_plan_id'];
     $userId = $_SESSION['user_id'];
+    $mealPlanIds = isset($_POST['meal_plan_ids']) ? $_POST['meal_plan_ids'] : [];
+    $startDates = isset($_POST['start_dates']) ? $_POST['start_dates'] : [];
 
-    $checkQuery = $conn->prepare("
-        SELECT * FROM meal_plan_user_link 
-        WHERE user_id = :userId AND meal_plan_id = :mealPlanId AND is_cancelled = 0
-    ");
-    $checkQuery->bindParam(':userId', $userId, PDO::PARAM_INT);
-    $checkQuery->bindParam(':mealPlanId', $mealPlanId, PDO::PARAM_INT);
-    $checkQuery->execute();
+    $successCount = 0;
+    $errorCount = 0;
+    $duplicateCount = 0;
 
-    if ($checkQuery->rowCount() > 0) {
-        $feedback = 'You already have this meal plan booked!';
-    } else {
+    foreach ($mealPlanIds as $index => $mealPlanId) {
+        if (!isset($startDates[$index]) || empty($startDates[$index])) {
+            continue;
+        }
+
+        $startDate = $startDates[$index];
+
+        $checkQuery = $conn->prepare("
+            SELECT * FROM meal_plan_user_link 
+            WHERE user_id = :userId AND meal_plan_id = :mealPlanId AND is_cancelled = 0
+        ");
+        $checkQuery->bindParam(':userId', $userId, PDO::PARAM_INT);
+        $checkQuery->bindParam(':mealPlanId', $mealPlanId, PDO::PARAM_INT);
+        $checkQuery->execute();
+
+        if ($checkQuery->rowCount() > 0) {
+            $duplicateCount++;
+            continue;
+        }
+
         $addQuery = $conn->prepare("
-            INSERT INTO meal_plan_user_link (user_id, meal_plan_id) 
-            VALUES (:userId, :mealPlanId)
+            INSERT INTO meal_plan_user_link (user_id, meal_plan_id, start_date) 
+            VALUES (:userId, :mealPlanId, :startDate)
         ");
         $addQuery->bindParam(':userId', $userId, PDO::PARAM_INT);
         $addQuery->bindParam(':mealPlanId', $mealPlanId, PDO::PARAM_INT);
+        $addQuery->bindParam(':startDate', $startDate, PDO::PARAM_STR);
 
         if ($addQuery->execute()) {
-            $mealPlanUserLinkId = $conn->lastInsertId();
-            header("Location: payments_page.php?type=meal_plan&id=$mealPlanUserLinkId");
+            $successCount++;
+            $latestMealPlanUserLinkId = $conn->lastInsertId();
+        } else {
+            $errorCount++;
+        }
+    }
+
+    if ($successCount > 0) {
+        if ($successCount == 1) {
+            header("Location: payments_page.php?type=meal_plan&id=$latestMealPlanUserLinkId");
             exit();
         } else {
-            $feedback = 'Error booking meal plan.';
+            header("Location: payments_page.php?type=meal_plan_multiple&count=$successCount");
+            exit();
+        }
+    } else {
+        if ($duplicateCount > 0) {
+            $feedback = 'You already have ' . ($duplicateCount == 1 ? 'this meal plan' : 'these meal plans') . ' booked!';
+        } else {
+            $feedback = 'Error booking meal plan' . ($errorCount > 1 ? 's' : '') . '.';
         }
     }
 }
@@ -115,6 +145,10 @@ $conn = null;
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap" />
     <link rel="stylesheet" href="../assets/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
     <script src="../assets/scripts.js"></script>
     <title>Meal Plans</title>
     <style>
@@ -189,53 +223,66 @@ $conn = null;
             <?php if (empty($mealPlans)): ?>
                 <p>No meal plans available at the moment.</p>
             <?php else: ?>
-                <?php foreach ($mealPlans as $plan): ?>
-                    <div class="meal-plan-card">
-                        <h2><?php echo $plan['name']; ?></h2>
-                        <p>Type: <?php echo $plan['meal_plan_type']; ?></p>
-                        <p>Duration: <?php echo $plan['duration_days']; ?> days</p>
-                        <p>Total Price: £<?php echo number_format($plan['total_price'], 2); ?></p>
+                <form method="POST" action="meals.php">
+                    <input type="hidden" name="action" value="book">
 
-                        <h3>Included Meals:</h3>
-                        <table border="1">
-                            <thead>
-                                <tr>
-                                    <th>Day</th>
-                                    <th>Name</th>
-                                    <th>Type</th>
-                                    <th>Price</th>
-                                    <th>Dietary Tags</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($plan['meals'] as $meal): ?>
+                    <?php foreach ($mealPlans as $index => $plan): ?>
+                        <div class="meal-plan-card">
+                            <h2><?php echo $plan['name']; ?></h2>
+                            <p>Type: <?php echo $plan['meal_plan_type']; ?></p>
+                            <p>Duration: <?php echo $plan['duration_days']; ?> days</p>
+                            <p>Total Price: £<?php echo number_format($plan['total_price'], 2); ?></p>
+
+                            <div>
+                                <input type="checkbox" id="select_plan_<?php echo $plan['meal_plan_id']; ?>"
+                                    name="meal_plan_ids[]" value="<?php echo $plan['meal_plan_id']; ?>">
+                                <label for="select_plan_<?php echo $plan['meal_plan_id']; ?>">Select this plan</label>
+                            </div>
+
+                            <div>
+                                <label for="start_date_<?php echo $plan['meal_plan_id']; ?>">Start Date:</label>
+                                <input type="date" id="start_date_<?php echo $plan['meal_plan_id']; ?>"
+                                    class="meal-plan-date-picker" data-plan-type="<?php echo $plan['meal_plan_type']; ?>"
+                                    name="start_dates[]" min="<?php echo date('Y-m-d'); ?>">
+                            </div>
+
+                            <h3>Included Meals:</h3>
+                            <table border="1">
+                                <thead>
                                     <tr>
-                                        <td>Day <?php echo $meal['day_number']; ?></td>
-                                        <td>
-                                            <span class="meal-name-link" data-meal-id="<?php echo $meal['meal_id']; ?>"
-                                                data-meal-name="<?php echo htmlspecialchars($meal['name']); ?>"
-                                                data-meal-type="<?php echo htmlspecialchars($meal['meal_type']); ?>"
-                                                data-meal-price="<?php echo number_format($meal['price'], 2); ?>"
-                                                data-meal-tags="<?php echo htmlspecialchars(implode(', ', $meal['tags'])); ?>"
-                                                data-meal-image="<?php echo htmlspecialchars($meal['image_path'] ?? ''); ?>">
-                                                <?php echo $meal['name']; ?>
-                                            </span>
-                                        </td>
-                                        <td><?php echo $meal['meal_type']; ?></td>
-                                        <td>£<?php echo number_format($meal['price'], 2); ?></td>
-                                        <td><?php echo implode(', ', $meal['tags']); ?></td>
+                                        <th>Day</th>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Price</th>
+                                        <th>Dietary Tags</th>
                                     </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($plan['meals'] as $meal): ?>
+                                        <tr>
+                                            <td>Day <?php echo $meal['day_number']; ?></td>
+                                            <td>
+                                                <span class="meal-name-link" data-meal-id="<?php echo $meal['meal_id']; ?>"
+                                                    data-meal-name="<?php echo htmlspecialchars($meal['name']); ?>"
+                                                    data-meal-type="<?php echo htmlspecialchars($meal['meal_type']); ?>"
+                                                    data-meal-price="<?php echo number_format($meal['price'], 2); ?>"
+                                                    data-meal-tags="<?php echo htmlspecialchars(implode(', ', $meal['tags'])); ?>"
+                                                    data-meal-image="<?php echo htmlspecialchars($meal['image_path'] ?? ''); ?>">
+                                                    <?php echo $meal['name']; ?>
+                                                </span>
+                                            </td>
+                                            <td><?php echo $meal['meal_type']; ?></td>
+                                            <td>£<?php echo number_format($meal['price'], 2); ?></td>
+                                            <td><?php echo implode(', ', $meal['tags']); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endforeach; ?>
 
-                        <form method="POST" action="meals.php">
-                            <input type="hidden" name="action" value="book">
-                            <input type="hidden" name="meal_plan_id" value="<?php echo $plan['meal_plan_id']; ?>">
-                            <button type="submit" class="update-button">Book Plan</button>
-                        </form>
-                    </div>
-                <?php endforeach; ?>
+                    <button type="submit" class="update-button">Book Selected Plans</button>
+                </form>
             <?php endif; ?>
 
             <?php
