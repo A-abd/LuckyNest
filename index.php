@@ -66,16 +66,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['email'], $_POST['passw
     </script>
 </head>
 <body class="login">
-    <div class="blur-layer-4"></div>
-    <h1 class="title">LuckyNest</h1>
     <div class="login-container">
+        <h1 class="title-login">LuckyNest</h1>
         <div class="wrapper">
             <?php if (isset($_SESSION['2fa_pending'])): ?>
                 <script>toggleForms(true);</script>
                 <form id="2fa-form" method="POST" action="index.php">
                     <h1>Two-Factor Authentication</h1>
                     <p>Enter the authentication code from your app:</p>
-                    <input type="text" name="totp_code" placeholder="Authentication Code" required>
+                    <div class="input-box">
+                        <input type="text" name="totp_code" placeholder="Authentication Code" required>
+                    </div>
                     <button type="submit" class="btn">Verify</button>
                 </form>
             <?php else: ?>
@@ -96,9 +97,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['email'], $_POST['passw
                     <a href="#">Forgot your password?</a>
                 </div>
                 <button type="submit" class="btn">Login</button>
+                <div class="register-link">
+                    <p>Don't have an account? <a href="register.php">Register</a></p>
+                </div>
                 </form>
             <?php endif; ?>
         </div>
     </div>
+    <img
+      src="/assets/images/sven-brandsma-GZ5cKOgeIB0-unsplash.jpg"
+      alt="room with a sofa"
+      class="right-img"
+    />
 </body>
 </html>
