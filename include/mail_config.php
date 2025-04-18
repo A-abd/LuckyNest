@@ -1,14 +1,26 @@
 <?php
+include __DIR__ . '/../vendor/autoload.php';
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+
+$logs_dir = __DIR__ . '/../logs';
+if (!file_exists($logs_dir)) {
+    mkdir($logs_dir, 0755, true);
+}
+
+if (!ini_get('error_log')) {
+    ini_set('error_log', $logs_dir . '/notifications_logs.php');
+}
 
 /**
  * @param string $path
  * @return void
  */
-function loadEnv($path = '../.env')
+function loadEnv($path = __DIR__ . '../.env')
 {
     if (!file_exists($path)) {
+        error_log("ENV file not found at: {$path}");
         return;
     }
 
