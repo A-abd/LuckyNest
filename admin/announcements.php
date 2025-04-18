@@ -160,8 +160,9 @@ $conn = null;
                                 <button
                                     onclick="LuckyNest.toggleForm('edit-form-<?php echo $announcement['announcement_id']; ?>')"
                                     class="update-button">Edit</button>
+                                <!-- Edit Form -->
                                 <div id="edit-form-<?php echo $announcement['announcement_id']; ?>"
-                                    class="announcements-edit-form">
+                                    class="rooms-type-edit-form">
                                     <button type="button" class="close-button"
                                         onclick="LuckyNest.toggleForm('edit-form-<?php echo $announcement['announcement_id']; ?>')">✕</button>
                                     <form method="POST" action="announcements.php" style="display:inline;">
@@ -184,7 +185,7 @@ $conn = null;
                                             <label for="important_<?php echo $announcement['announcement_id']; ?>">Mark as
                                                 Important</label>
                                         </div>
-                                        <div class="announcements-button-group">
+                                        <div class="rooms-button-group">
                                             <button type="submit" class="update-button">Update</button>
                                             <button type="button" class="update-button"
                                                 onclick="document.getElementById('delete-form-<?php echo $announcement['announcement_id']; ?>').submit(); return false;">Delete</button>
