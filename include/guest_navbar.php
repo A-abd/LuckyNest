@@ -64,6 +64,10 @@
                 </a>
             </ul>
 
+            <li class="menu-category">Communication</li>
+            <li class="menu-item">
+                <a href="../guest/view_announcements.php"><i class="fas fa-bullhorn"></i> Announcements</a>
+            </li>
 
             <li class="menu-category">Settings</li>
             <li class="menu-item">
