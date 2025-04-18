@@ -14,7 +14,7 @@ if (!ini_get('error_log')) {
  * @param string $path
  * @return void
  */
-function loadEnvSMS($path =__DIR__ . '../.env')
+function loadEnvSMS($path = __DIR__ . '../.env')
 {
     if (!file_exists($path)) {
         error_log("ENV file not found at: {$path}");

@@ -679,6 +679,7 @@ try {
     error_log("Laundry reminders (day before) sent: " . count($laundry_reminders_day_before));
     error_log("Laundry reminders (2 hours) sent: " . count($laundry_reminders_2_hours));
     error_log("Checkout reminders sent: " . count($checkout_reminders));
+    error_log("End of List\n" . count($checkout_reminders));
 } catch (Exception $e) {
     error_log("CRITICAL ERROR in notification scheduler: " . $e->getMessage());
     error_log("Stack trace: " . $e->getTraceAsString());
