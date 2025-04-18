@@ -14,6 +14,9 @@ $recordsPerPage = 10;
 $page = isset($_GET["page"]) ? (int) $_GET["page"] : 1;
 $offset = ($page - 1) * $recordsPerPage;
 
+$selectedDate = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+$displayDate = date('j F, Y', strtotime($selectedDate));
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         $action = $_POST['action'];
@@ -51,13 +54,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$laundryStmt = $conn->prepare("SELECT * FROM laundry_slots WHERE is_available = 1 ORDER BY date, start_time LIMIT :limit OFFSET :offset");
-$laundryStmt->bindValue(':limit', $recordsPerPage, PDO::PARAM_INT);
-$laundryStmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+// Get dates with available slots for the calendar
+$availableDatesStmt = $conn->query("SELECT DISTINCT date FROM laundry_slots WHERE is_available = 1 ORDER BY date");
+$availableDates = $availableDatesStmt->fetchAll(PDO::FETCH_COLUMN);
+$availableDatesJson = json_encode($availableDates);
+
+// Get slots for the selected date
+$laundryStmt = $conn->prepare("SELECT * FROM laundry_slots WHERE is_available = 1 AND date = :selected_date ORDER BY start_time");
+$laundryStmt->bindParam(':selected_date', $selectedDate, PDO::PARAM_STR);
 $laundryStmt->execute();
 $laundrySlots = $laundryStmt->fetchAll(PDO::FETCH_ASSOC);
 
-$totalRecordsQuery = $conn->query("SELECT COUNT(*) As total FROM laundry_slots WHERE is_available = 1");
+// Count total available slots for the selected date
+$totalRecordsQuery = $conn->prepare("SELECT COUNT(*) As total FROM laundry_slots WHERE is_available = 1 AND date = :selected_date");
+$totalRecordsQuery->bindParam(':selected_date', $selectedDate, PDO::PARAM_STR);
+$totalRecordsQuery->execute();
 $totalRecords = $totalRecordsQuery->fetch(PDO::FETCH_ASSOC)['total'];
 $totalPages = ceil($totalRecords / $recordsPerPage);
 ?>
@@ -72,9 +83,35 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap" />
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="../assets/styles.css">
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="../assets/scripts.js"></script>
     <title>Laundry Slots</title>
+    <style>
+        .date-picker-container {
+            margin-bottom: 20px;
+        }
+
+        #date-picker {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            width: 200px;
+        }
+
+        .no-slots-date {
+            background-color: #ffcccc !important;
+            color: #ff0000 !important;
+        }
+
+        .has-slots-date {
+            background-color: #ccffcc !important;
+            color: #006600 !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -88,12 +125,16 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
                 <div class="rooms-feedback" id="feedback_message"><?php echo $feedback; ?></div>
             <?php endif; ?>
 
-            <h2>Available Slots</h2>
+            <div class="date-picker-container">
+                <h2>Select Date</h2>
+                <input type="text" id="date-picker" value="<?php echo $selectedDate; ?>" placeholder="Select a date">
+            </div>
+
+            <h2>Available Slots for <?php echo date('j F, Y', strtotime($selectedDate)); ?></h2>
             <?php if (count($laundrySlots) > 0): ?>
                 <table border="1">
                     <thead>
                         <tr>
-                            <th>Date</th>
                             <th>Start Time</th>
                             <th>Recurring</th>
                             <th>Price</th>
@@ -103,12 +144,12 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
                     <tbody>
                         <?php foreach ($laundrySlots as $slot): ?>
                             <tr>
-                                <td><?php echo $slot['date']; ?></td>
-                                <td><?php echo $slot['start_time']; ?></td>
+                                <td><?php echo substr($slot['start_time'], 0, 5); ?></td>
                                 <td><?php echo $slot['recurring'] ? 'Yes' : 'No'; ?></td>
                                 <td><?php echo number_format($slot['price'], 2); ?></td>
                                 <td>
-                                    <form method="POST" action="laundry.php" style="display:inline;">
+                                    <form method="POST" action="laundry.php?date=<?php echo $selectedDate; ?>"
+                                        style="display:inline;">
                                         <input type="hidden" name="action" value="book_laundry_slot">
                                         <input type="hidden" name="laundry_slot_id"
                                             value="<?php echo $slot['laundry_slot_id']; ?>">
@@ -121,13 +162,8 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
                     </tbody>
                 </table>
 
-                <?php
-                $url = 'laundry.php';
-                echo generatePagination($page, $totalPages, $url);
-                ?>
-
             <?php else: ?>
-                <div class="rooms-feedback">No laundry slots currently available.</div>
+                <div class="rooms-feedback">No laundry slots available for this date.</div>
             <?php endif; ?>
 
             <br>
@@ -137,6 +173,38 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
         </div>
         <div id="form-overlay"></div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const availableDates = <?php echo $availableDatesJson; ?>;
+
+            const flatpickrInstance = flatpickr("#date-picker", {
+                dateFormat: "d/m/Y",
+                inline: false,
+                minDate: "today",
+                defaultDate: new Date(),
+                onChange: function (selectedDates, dateStr) {
+                    const dateParts = dateStr.split('/');
+                    const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+                    window.location.href = 'laundry.php?date=' + formattedDate;
+                },
+                onDayCreate: function (dObj, dStr, fp, dayElem) {
+                    const year = dayElem.dateObj.getFullYear();
+                    const month = String(dayElem.dateObj.getMonth() + 1).padStart(2, '0');
+                    const day = String(dayElem.dateObj.getDate()).padStart(2, '0');
+                    const formattedDate = `${year}-${month}-${day}`;
+
+                    if (!availableDates.includes(formattedDate) && dayElem.dateObj >= new Date()) {
+                        dayElem.classList.add('no-slots-date');
+                    }
+
+                    if (availableDates.includes(formattedDate)) {
+                        dayElem.classList.add('has-slots-date');
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
