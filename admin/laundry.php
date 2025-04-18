@@ -182,11 +182,11 @@ if ($selectedDay < 1 || $selectedDay > 7) {
 $dayPattern = '____-__-' . sprintf('%02d', $selectedDay);
 $today = date('Y-m-d');
 
-$stmt = $conn->prepare("SELECT date, start_time, price 
+$stmt = $conn->prepare("SELECT MIN(date) as min_date, start_time, price 
                       FROM laundry_slots 
                       WHERE date >= :today 
                       AND date LIKE :day_pattern 
-                      GROUP BY start_time 
+                      GROUP BY start_time, price 
                       ORDER BY start_time");
 $stmt->bindValue(':today', $today, PDO::PARAM_STR);
 $stmt->bindValue(':day_pattern', $dayPattern, PDO::PARAM_STR);
