@@ -111,7 +111,7 @@ $conn = null;
     <div class="blur-layer-3"></div>
     <div class="manage-default">
         <h1><a class="title" href="../index.php">LuckyNest</a></h1>
-        <div class="announcements-container">
+        <div class="rooms-types-container">
             <h1>Announcements</h1>
 
             <?php if (count($announcementData) > 0): ?>
@@ -125,7 +125,8 @@ $conn = null;
                         </div>
                         <div class="announcement-meta">
                             By <?php echo htmlspecialchars($announcement['forename'] . ' ' . $announcement['surname']); ?>
-                            on <?php echo date('Y-m-d H:i:s', strtotime($announcement['created_at'])); ?>
+                            at <?php echo date('H:i', strtotime($announcement['created_at'])); ?>
+                            on <?php echo date('d/m/Y', strtotime($announcement['created_at'])); ?>
                         </div>
                         <div class="announcement-message">
                             <?php echo nl2br(htmlspecialchars($announcement['message'])); ?>
