@@ -34,10 +34,12 @@
                 <a href="../admin/users.php"><i class="fas fa-users"></i> Guests</a>
             </li>
 
-            <li class="menu-item">
-                <a href="../admin/admins.php"><i class="fas fa-user-shield"></i> Admin Users</a>
-            </li>
-                        
+            <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'owner'): ?>
+                <li class="menu-item">
+                    <a href="../admin/admins.php"><i class="fas fa-user-shield"></i> Admin Users</a>
+                </li>
+            <?php endif; ?>
+
             <li class="menu-item">
                 <a href="../admin/create_users.php"><i class="fas fa-user-plus"></i> Create An Account</a>
             </li>
@@ -59,7 +61,7 @@
                 <i class="fas fa-chevron-down"></i>
             </li>
             <ul class="submenu">
-                <a href="TODO">
+                <a href="../admin/invoices.php">
                     <li class="submenu-item"><i class="fas fa-file-invoice"></i> Invoices</li>
                 </a>
                 <a href="../admin/deposits.php">
@@ -105,10 +107,7 @@
 
             <li class="menu-category">Communication</li>
             <li class="menu-item">
-                <a href="TODO"><i class="fas fa-bell"></i> Notifications</a>
-            </li>
-            <li class="menu-item">
-                <a href="TODO"><i class="fas fa-bullhorn"></i> Announcements</a>
+                <a href="../admin/announcements.php"><i class="fas fa-bullhorn"></i> Announcements</a>
             </li>
 
             <li class="menu-category">Reports</li>
@@ -133,12 +132,6 @@
 
             <li class="menu-category">Settings</li>
             <li class="menu-item">
-                <a href="TODO"><i class="fas fa-sliders-h"></i> System Settings</a>
-            </li>
-            <li class="menu-item">
-                <a href="TODO"><i class="fas fa-user-cog"></i> Account Settings</a>
-            </li>
-            <li class="menu-item">
                 <a href="../logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </li>
         </ul>
@@ -148,7 +141,7 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             window.LuckyNest.initSidebar();
         });
     </script>
