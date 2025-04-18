@@ -35,21 +35,24 @@ $query = "
     LEFT JOIN 
         bookings b ON r.room_id = b.room_id AND b.booking_is_cancelled = 0
         AND (
-            (b.check_in_date BETWEEN :start_date AND :end_date) OR 
-            (b.check_out_date BETWEEN :start_date AND :end_date) OR 
-            (:start_date BETWEEN b.check_in_date AND b.check_out_date)
+            (b.check_in_date BETWEEN :start_date1 AND :end_date1) OR 
+            (b.check_out_date BETWEEN :start_date2 AND :end_date2) OR 
+            (:start_date3 BETWEEN b.check_in_date AND b.check_out_date)
         )
     LEFT JOIN 
         users u ON b.guest_id = u.user_id
     ORDER BY 
         r.room_number
-    LIMIT :records_per_page OFFSET :offset
+    LIMIT :limit OFFSET :offset
 ";
 
 $stmt = $conn->prepare($query);
-$stmt->bindParam(':start_date', $startDate, PDO::PARAM_STR);
-$stmt->bindParam(':end_date', $endDate, PDO::PARAM_STR);
-$stmt->bindParam(':records_per_page', $recordsPerPage, PDO::PARAM_INT);
+$stmt->bindParam(':start_date1', $startDate, PDO::PARAM_STR);
+$stmt->bindParam(':end_date1', $endDate, PDO::PARAM_STR);
+$stmt->bindParam(':start_date2', $startDate, PDO::PARAM_STR);
+$stmt->bindParam(':end_date2', $endDate, PDO::PARAM_STR);
+$stmt->bindParam(':start_date3', $startDate, PDO::PARAM_STR);
+$stmt->bindParam(':limit', $recordsPerPage, PDO::PARAM_INT);
 $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
 $stmt->execute();
 
@@ -60,13 +63,16 @@ $totalRecordsQuery = $conn->prepare("
     FROM rooms r
     LEFT JOIN bookings b ON r.room_id = b.room_id AND b.booking_is_cancelled = 0
     AND (
-        (b.check_in_date BETWEEN :start_date AND :end_date) OR 
-        (b.check_out_date BETWEEN :start_date AND :end_date) OR 
-        (:start_date BETWEEN b.check_in_date AND b.check_out_date)
+        (b.check_in_date BETWEEN :start_date1 AND :end_date1) OR 
+        (b.check_out_date BETWEEN :start_date2 AND :end_date2) OR 
+        (:start_date3 BETWEEN b.check_in_date AND b.check_out_date)
     )
 ");
-$totalRecordsQuery->bindParam(':start_date', $startDate, PDO::PARAM_STR);
-$totalRecordsQuery->bindParam(':end_date', $endDate, PDO::PARAM_STR);
+$totalRecordsQuery->bindParam(':start_date1', $startDate, PDO::PARAM_STR);
+$totalRecordsQuery->bindParam(':end_date1', $endDate, PDO::PARAM_STR);
+$totalRecordsQuery->bindParam(':start_date2', $startDate, PDO::PARAM_STR);
+$totalRecordsQuery->bindParam(':end_date2', $endDate, PDO::PARAM_STR);
+$totalRecordsQuery->bindParam(':start_date3', $startDate, PDO::PARAM_STR);
 $totalRecordsQuery->execute();
 $totalRecords = $totalRecordsQuery->fetch(PDO::FETCH_ASSOC)['total'];
 $totalPages = ceil($totalRecords / $recordsPerPage);
@@ -81,13 +87,16 @@ $summaryQuery = $conn->prepare("
     LEFT JOIN 
         bookings b ON r.room_id = b.room_id AND b.booking_is_cancelled = 0
         AND (
-            (b.check_in_date BETWEEN :start_date AND :end_date) OR 
-            (b.check_out_date BETWEEN :start_date AND :end_date) OR 
-            (:start_date BETWEEN b.check_in_date AND b.check_out_date)
+            (b.check_in_date BETWEEN :start_date1 AND :end_date1) OR 
+            (b.check_out_date BETWEEN :start_date2 AND :end_date2) OR 
+            (:start_date3 BETWEEN b.check_in_date AND b.check_out_date)
         )
 ");
-$summaryQuery->bindParam(':start_date', $startDate, PDO::PARAM_STR);
-$summaryQuery->bindParam(':end_date', $endDate, PDO::PARAM_STR);
+$summaryQuery->bindParam(':start_date1', $startDate, PDO::PARAM_STR);
+$summaryQuery->bindParam(':end_date1', $endDate, PDO::PARAM_STR);
+$summaryQuery->bindParam(':start_date2', $startDate, PDO::PARAM_STR);
+$summaryQuery->bindParam(':end_date2', $endDate, PDO::PARAM_STR);
+$summaryQuery->bindParam(':start_date3', $startDate, PDO::PARAM_STR);
 $summaryQuery->execute();
 $summary = $summaryQuery->fetch(PDO::FETCH_ASSOC);
 

@@ -59,11 +59,15 @@ function generateRevenueReport($conn, $timePeriod, $currentYear, $currentMonth, 
     $revenueByType = [
         'rent' => 0,
         'meal_plan' => 0,
-        'laundry' => 0
+        'laundry' => 0,
+        'deposit' => 0,
+        'deposit_refund' => 0
     ];
 
     foreach ($results as $row) {
-        $revenueByType[$row['payment_type']] += $row['total_amount'];
+        if (isset($row['payment_type']) && array_key_exists($row['payment_type'], $revenueByType)) {
+            $revenueByType[$row['payment_type']] += $row['total_amount'];
+        }
         $totalRevenue += $row['total_amount'];
     }
 

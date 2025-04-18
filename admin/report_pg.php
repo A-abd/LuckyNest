@@ -104,6 +104,7 @@ $conn = null;
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap" />
     <link rel="stylesheet" href="../assets/styles.css">
+    <script src="../assets/scripts.js"></script>
     <title>Guest Booking Report</title>
 </head>
 
@@ -111,9 +112,10 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1>Guest Booking Report</h1>
 
         <div class="rooms-types-container">
+        <h1>Guest Booking Report</h1>
+
 
             <form method="GET" action="report_pg.php">
                 <label for="guest_id">Select Guest:</label>

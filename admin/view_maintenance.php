@@ -61,43 +61,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $query = "SELECT * FROM maintenance_requests" . $whereClause . " ORDER BY report_date DESC LIMIT :limit OFFSET :offset";
 $stmt = $conn->prepare($query);
+
 $stmt->bindValue(':limit', $recordsPerPage, PDO::PARAM_INT);
 $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 
-foreach ($params as $key => $value) {
-    $stmt->bindValue($key, $value);
+if (!empty($statusFilter)) {
+    $stmt->bindValue(':status', $statusFilter, PDO::PARAM_STR);
 }
+
 $stmt->execute();
 $maintenanceData = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-if (!empty($params)) {
-    $stmt = $conn->prepare($query);
-    foreach ($params as $key => $value) {
-        $stmt->bindValue($key, $value);
-    }
-    $stmt->execute();
-    $result = $stmt;
-} else {
-    $result = $conn->query($query);
+$countQuery = "SELECT COUNT(*) AS total FROM maintenance_requests" . $whereClause;
+$countStmt = $conn->prepare($countQuery);
+
+if (!empty($statusFilter)) {
+    $countStmt->bindValue(':status', $statusFilter, PDO::PARAM_STR);
 }
 
-while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-    $maintenanceData[] = $row;
-}
-
-$countQuery = "SELECT COUNT(*) As total FROM maintenance_requests" . $whereClause;
-if (!empty($params)) {
-    $countStmt = $conn->prepare($countQuery);
-    foreach ($params as $key => $value) {
-        $countStmt->bindValue($key, $value);
-    }
-    $countStmt->execute();
-    $totalRecords = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
-} else {
-    $totalRecordsQuery = $conn->query($countQuery);
-    $totalRecords = $totalRecordsQuery->fetch(PDO::FETCH_ASSOC)['total'];
-}
-
+$countStmt->execute();
+$totalRecords = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
 $totalPages = ceil($totalRecords / $recordsPerPage);
 
 $conn = null;
