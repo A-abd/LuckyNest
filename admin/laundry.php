@@ -276,10 +276,13 @@ $conn = null;
                     <?php if (count($timeslots) > 0): ?>
                         <?php foreach ($timeslots as $timeslot):
                             $startTime = $timeslot['start_time'];
+
+                            $formattedStartTime = date("H:i", strtotime($startTime));
+                            
                             $endTime = (new DateTime($startTime))->modify('+1 hour')->format('H:00');
                             ?>
                             <tr>
-                                <td><?php echo htmlspecialchars($startTime); ?></td>
+                                <td><?php echo htmlspecialchars($formattedStartTime); ?></td>
                                 <td><?php echo htmlspecialchars($endTime); ?></td>
                                 <td>£<?php echo htmlspecialchars($timeslot['price']); ?></td>
                                 <td>
