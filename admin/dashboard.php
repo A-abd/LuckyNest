@@ -69,8 +69,8 @@ try {
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
-        <div class="rooms-types-container">
+        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <div class="content-container">
             <h1>Admin Dashboard</h1>
 
             <div class="dashboard-stats" style="display: flex; justify-content: space-between;">

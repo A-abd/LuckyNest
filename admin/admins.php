@@ -198,8 +198,8 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
-        <div class="rooms-types-container">
+        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <div class="content-container">
             <h1>Manage Admin Users</h1>
             <?php if ($feedback): ?>
                 <div class="admin-feedback" id="feedback_message"><?php echo $feedback; ?></div>
@@ -275,7 +275,7 @@ $conn = null;
                                         class="update-button">Edit</button>
 
                                     <!-- Edit Form -->
-                                    <div id='edit-form-<?php echo $admin['user_id']; ?>' class="admin-edit-form">
+                                    <div id='edit-form-<?php echo $admin['user_id']; ?>' class="edit-form">
                                         <button type="button" class="close-button"
                                             onclick="LuckyNest.toggleForm('edit-form-<?php echo $admin['user_id']; ?>')">✕</button>
                                         <form method="POST" action="admins.php" style="display:inline;">
@@ -319,7 +319,7 @@ $conn = null;
                                             <input type="password" id="password_<?php echo $admin['user_id']; ?>"
                                                 name="password">
 
-                                            <div class="admin-button-group">
+                                            <div class="button-group">
                                                 <button type="submit" class="update-button">Update</button>
                                                 <?php if ($admin['role'] === 'admin' && $admin['user_id'] !== $_SESSION['user_id']): ?>
                                                     <button type="button" class="delete-button"
@@ -347,9 +347,6 @@ $conn = null;
             echo generatePagination($page, $totalPages, $url);
             ?>
             <br>
-            <div class="back-button-container">
-                <a href="dashboard.php" class="button">Back to Dashboard</a>
-            </div>
         </div>
         <div id="form-overlay"></div>
 </body>

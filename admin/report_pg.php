@@ -113,8 +113,8 @@ $conn = null;
     <div class="blur-layer-3"></div>
     <div class="manage-default">
 
-        <div class="rooms-types-container">
-        <h1>Guest Booking Report</h1>
+        <div class="content-container">
+            <h1>Guest Booking Report</h1>
 
 
             <form method="GET" action="report_pg.php">

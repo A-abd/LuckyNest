@@ -94,7 +94,7 @@ $conn = null;
 
     <div class="blur-layer"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../guest/dashboard.php">LuckyNest</a></h1>
         <div class="centering">
             <h2 class="manage-profile">Manage Profile</h2>
             <?php if ($feedback): ?>
@@ -181,9 +181,7 @@ $conn = null;
                 </div>
             </div>
             <br>
-            <div class="button-center"><a href="dashboard.php" class="button">&larr; Back to Dashboard</a></div>
         </div>
-    </div>
 </body>
 
 </html>

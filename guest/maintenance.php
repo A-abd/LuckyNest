@@ -81,11 +81,11 @@ $conn = null;
     <?php include "../include/guest_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
-        <div class="rooms-types-container">
+        <h1><a class="title" href="../guest/dashboard.php">LuckyNest</a></h1>
+        <div class="content-container">
             <h1>Maintenance Request</h1>
             <?php if ($feedback): ?>
-                <div class="maintenance-feedback" id="feedback_message"><?php echo $feedback; ?></div>
+                <div class="feedback-message" id="feedback_message"><?php echo $feedback; ?></div>
             <?php endif; ?>
 
             <div id="maintenance-form" class="maintenance-form">

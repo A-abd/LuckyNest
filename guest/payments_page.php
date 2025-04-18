@@ -166,8 +166,8 @@ if (isset($_GET['deposit']) && isset($_GET['booking_id'])) {
     <?php include '../include/guest_navbar.php'; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
-        <div class="rooms-types-container">
+        <h1><a class="title" href="../guest/dashboard.php">LuckyNest</a></h1>
+        <div class="content-container">
             <h1>Make a Payment</h1>
             <div class="button-center">
                 <button onclick="LuckyNest.showPaymentForm('rent')" class="update-add-button">Pay for

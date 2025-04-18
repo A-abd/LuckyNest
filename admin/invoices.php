@@ -151,11 +151,11 @@ function getPaymentTypes()
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
-        <div class="rooms-types-container">
+        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <div class="content-container">
             <h1>View User Invoices</h1>
             <?php if ($feedback): ?>
-                <div class="rooms-feedback" id="feedback_message"><?php echo $feedback; ?></div>
+                <div class="feedback-message" id="feedback_message"><?php echo $feedback; ?></div>
             <?php endif; ?>
 
             <div class="user-selection-form">
@@ -267,9 +267,7 @@ function getPaymentTypes()
             <?php endif; ?>
 
             <br>
-            <div class="back-button-container">
-                <a href="dashboard.php" class="button">Back to Dashboard</a>
-            </div>
+
         </div>
     </div>
 </body>

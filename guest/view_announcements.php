@@ -110,8 +110,8 @@ $conn = null;
     <?php include "../include/" . ($_SESSION['role'] == 'guest' ? 'guest_navbar.php' : 'admin_navbar.php'); ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
-        <div class="rooms-types-container">
+        <h1><a class="title" href="../guest/dashboard.php">LuckyNest</a></h1>
+        <div class="content-container">
             <h1>Announcements</h1>
 
             <?php if (count($announcementData) > 0): ?>
@@ -145,9 +145,6 @@ $conn = null;
             <?php endif; ?>
 
             <br>
-            <div class="back-button-container">
-                <a href="dashboard.php" class="button">Back to Dashboard</a>
-            </div>
         </div>
     </div>
 </body>

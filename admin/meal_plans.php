@@ -103,11 +103,11 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
-        <div class="rooms-types-container">
+        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <div class="content-container">
             <h1>Manage Meal Plans</h1>
             <?php if ($feedback): ?>
-                <div class="rooms-feedback" id="feedback_message"><?php echo $feedback; ?></div>
+                <div class="feedback-message" id="feedback_message"><?php echo $feedback; ?></div>
             <?php endif; ?>
 
             <div class="button-center">
@@ -138,7 +138,7 @@ $conn = null;
                     <button type="submit" class="update-button">Add Meal Plan</button>
                 </form>
             </div>
-
+            <br>
             <table border="1">
                 <thead>
                     <tr>
@@ -158,7 +158,7 @@ $conn = null;
                             <td><?php echo $mealPlan['is_active'] ? 'Active' : 'Inactive'; ?></td>
                             <td>
                                 <button onclick="LuckyNest.toggleForm('edit-form-<?php echo $mealPlan['meal_plan_id']; ?>')" class="update-button">Edit</button>
-                                <div id="edit-form-<?php echo $mealPlan['meal_plan_id']; ?>" class="rooms-type-edit-form">
+                                <div id="edit-form-<?php echo $mealPlan['meal_plan_id']; ?>" class="edit-form">
                                     <form method="POST" action="meal_plans.php" style="display:inline;">
                                         <button type="button" class="close-button" onclick="LuckyNest.toggleForm('edit-form-<?php echo $mealPlan['meal_plan_id']; ?>')">✕</button>
                                         <h2>Edit Meal Plan</h2>
@@ -182,7 +182,7 @@ $conn = null;
                                                 name="is_active" <?php echo $mealPlan['is_active'] ? 'checked' : ''; ?>>
                                         </div>
                                         
-                                        <div class="rooms-button-group">
+                                        <div class="button-group">
                                             <button type="submit" class="update-button">Update</button>
                                             <button type="button" class="update-button" 
                                                 onclick="document.getElementById('delete-meal-plan-form-<?php echo $mealPlan['meal_plan_id']; ?>').submit(); return false;">

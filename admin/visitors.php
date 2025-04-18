@@ -111,11 +111,11 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
-        <div class="rooms-types-container">
+        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <div class="content-container">
             <h1>Manage Visitors</h1>
             <?php if ($feedback): ?>
-                <div class="rooms-feedback" id="feedback_message"><?php echo $feedback; ?></div>
+                <div class="feedback-message" id="feedback_message"><?php echo $feedback; ?></div>
             <?php endif; ?>
 
             <!-- Add Visitor Button -->
@@ -173,16 +173,17 @@ $conn = null;
                             <td>
                                 <button onclick="LuckyNest.toggleForm('edit-form-<?php echo $visitor['visitor_id']; ?>')"
                                     class="update-button">Edit</button>
-                                <div id="edit-form-<?php echo $visitor['visitor_id']; ?>" class="rooms-type-edit-form">
+                                <div id="edit-form-<?php echo $visitor['visitor_id']; ?>" class="edit-form">
                                     <form method="POST" action="visitors.php" style="display:inline;">
                                         <button type="button" class="close-button"
                                             onclick="LuckyNest.toggleForm('edit-form-<?php echo $visitor['visitor_id']; ?>')">✕</button>
                                         <h2>Edit Visitor</h2>
                                         <input type="hidden" name="action" value="edit">
-                                        <input type="hidden" name="visitor_id" value="<?php echo $visitor['visitor_id']; ?>">
+                                        <input type="hidden" name="visitor_id"
+                                            value="<?php echo $visitor['visitor_id']; ?>">
                                         <label for="forename_<?php echo $visitor['visitor_id']; ?>">Forename:</label>
-                                        <input type="text" id="forename_<?php echo $visitor['visitor_id']; ?>" name="forename"
-                                            value="<?php echo $visitor['forename']; ?>" required>
+                                        <input type="text" id="forename_<?php echo $visitor['visitor_id']; ?>"
+                                            name="forename" value="<?php echo $visitor['forename']; ?>" required>
                                         <label for="surname_<?php echo $visitor['visitor_id']; ?>">Surname:</label>
                                         <input type="text" id="surname_<?php echo $visitor['visitor_id']; ?>" name="surname"
                                             value="<?php echo $visitor['surname']; ?>" required>
@@ -202,7 +203,7 @@ $conn = null;
                                             name="leave_time"
                                             value="<?php echo date('Y-m-d\TH:i', strtotime($visitor['leave_time'])); ?>"
                                             required>
-                                        <div class="rooms-button-group">
+                                        <div class="button-group">
                                             <button type="submit" class="update-button">Update</button>
                                             <button type="button" class="update-button"
                                                 onclick="document.getElementById('delete-form-<?php echo $visitor['visitor_id']; ?>').submit(); return false;">Delete</button>
@@ -212,7 +213,8 @@ $conn = null;
                                     <form id="delete-form-<?php echo $visitor['visitor_id']; ?>" method="POST"
                                         action="visitors.php" style="display:none;">
                                         <input type="hidden" name="action" value="delete">
-                                        <input type="hidden" name="visitor_id" value="<?php echo $visitor['visitor_id']; ?>">
+                                        <input type="hidden" name="visitor_id"
+                                            value="<?php echo $visitor['visitor_id']; ?>">
                                     </form>
                                 </div>
                             </td>
@@ -225,9 +227,7 @@ $conn = null;
             echo generatePagination($page, $totalPages, $url);
             ?>
             <br>
-            <div class="back-button-container">
-                <a href="dashboard.php" class="button">Back to Dashboard</a>
-            </div>
+
         </div>
         <div id="form-overlay"></div>
     </div>

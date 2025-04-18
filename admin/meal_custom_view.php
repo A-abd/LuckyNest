@@ -102,7 +102,7 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
 $conn = null;
 ?>
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
@@ -121,11 +121,11 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
-        <div class="rooms-types-container">
+        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <div class="content-container">
             <h1>Manage Custom Meal Requests</h1>
             <?php if ($feedback): ?>
-                <div class="rooms-feedback" id="feedback_message"><?php echo $feedback; ?></div>
+                <div class="feedback-message" id="feedback_message"><?php echo $feedback; ?></div>
             <?php endif; ?>
 
             <div class="search-filter-container">
@@ -186,7 +186,7 @@ $conn = null;
                                     class="update-button">Update</button>
 
                                 <div id='view-form-<?php echo $mealCustom['meal_custom_id']; ?>'
-                                    class="rooms-type-edit-form">
+                                    class="edit-form">
                                     <button type="button" class="close-button"
                                         onclick="LuckyNest.toggleForm('view-form-<?php echo $mealCustom['meal_custom_id']; ?>')">✕</button>
                                     <h2>View Custom Meal Request</h2>
@@ -228,7 +228,7 @@ $conn = null;
                                         <strong>Submitted:</strong>
                                         <p><?php echo date('Y-m-d H:i', strtotime($mealCustom['created_at'])); ?></p>
                                     </div>
-                                    <div class="rooms-button-group">
+                                    <div class="button-group">
                                         <button type="button" class="update-button"
                                             onclick="LuckyNest.toggleForm('status-form-<?php echo $mealCustom['meal_custom_id']; ?>'); LuckyNest.toggleForm('view-form-<?php echo $mealCustom['meal_custom_id']; ?>')">Update
                                             Status</button>
@@ -245,7 +245,7 @@ $conn = null;
                                 </div>
 
                                 <div id='status-form-<?php echo $mealCustom['meal_custom_id']; ?>'
-                                    class="rooms-type-edit-form">
+                                    class="edit-form">
                                     <button type="button" class="close-button"
                                         onclick="LuckyNest.toggleForm('status-form-<?php echo $mealCustom['meal_custom_id']; ?>')">✕</button>
                                     <h2>Update Request Status</h2>
@@ -265,7 +265,7 @@ $conn = null;
                                             Notes:</label>
                                         <textarea id="admin_notes_<?php echo $mealCustom['meal_custom_id']; ?>"
                                             name="admin_notes"><?php echo $mealCustom['admin_notes']; ?></textarea>
-                                        <div class="rooms-button-group">
+                                        <div class="button-group">
                                             <button type="submit" class="update-button">Update Status</button>
                                             <button type="button" class="update-button"
                                                 onclick="if(confirm('Are you sure you want to delete this request?')) document.getElementById('delete-form-status-<?php echo $mealCustom['meal_custom_id']; ?>').submit(); return false;">Delete</button>
@@ -300,9 +300,7 @@ $conn = null;
             echo generatePagination($page, $totalPages, $url);
             ?>
             <br>
-            <div class="back-button-container">
-                <a href="dashboard.php" class="button">Back to Dashboard</a>
-            </div>
+
         </div>
     </div>
     <div id="form-overlay"></div>

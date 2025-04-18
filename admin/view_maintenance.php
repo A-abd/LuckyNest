@@ -105,11 +105,11 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
-        <div class="rooms-types-container">
+        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <div class="content-container">
             <h1>View Maintenance Requests</h1>
             <?php if ($feedback): ?>
-                <div class="maintenance-feedback" id="feedback_message"><?php echo $feedback; ?></div>
+                <div class="feedback-message" id="feedback_message"><?php echo $feedback; ?></div>
             <?php endif; ?>
 
             <div class="filter-section">
@@ -175,7 +175,7 @@ $conn = null;
                                         <label for="notes_<?php echo $request['request_id']; ?>">Admin Notes:</label>
                                         <textarea id="notes_<?php echo $request['request_id']; ?>" name="notes" rows="3"><?php echo isset($request['admin_notes']) ? $request['admin_notes'] : ''; ?></textarea>
                                         
-                                        <div class="maintenance-button-group">
+                                        <div class="button-group">
                                             <button type="submit" class="update-button">Update</button>
                                             <button type="button" class="update-button"
                                                 onclick="if(confirm('Are you sure you want to delete this request?')) document.getElementById('delete-form-<?php echo $request['request_id']; ?>').submit(); return false;">Delete</button>
@@ -207,9 +207,7 @@ $conn = null;
             echo generatePagination($page, $totalPages, $url);
             ?>
             <br>
-            <div class="back-button-container">
-                <a href="dashboard.php" class="button">Back to Dashboard</a>
-            </div>
+
         </div>
         <div id="form-overlay"></div>
     </div>

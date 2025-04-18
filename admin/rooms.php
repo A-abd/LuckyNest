@@ -152,13 +152,13 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
 <body>
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer"></div>
-    <h1><a href="dashboard.php" class="title">LuckyNest</a></h1>
+    <h1><a href="../admin/dashboard.php" class="title">LuckyNest</a></h1>
     
-    <div class="rooms-container">
+    <div class="content-container">
         <h1 class="rooms-title">Manage Rooms</h1>
         
         <?php if ($feedback): ?>
-            <div class="rooms-feedback" id="feedback_message"><?php echo $feedback; ?></div>
+            <div class="feedback-message" id="feedback_message"><?php echo $feedback; ?></div>
         <?php endif; ?>
 
         <!-- Add Room Button -->
@@ -238,7 +238,7 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
                             <td><?php echo implode(', ', $roomAmenities); ?></td>
                             <td>
                                 <button onclick="LuckyNest.toggleForm('edit-room-form-<?php echo $room['room_id']; ?>')" class="update-button">Edit</button>
-                                <div id="edit-room-form-<?php echo $room['room_id']; ?>" class="rooms-edit-form">
+                                <div id="edit-room-form-<?php echo $room['room_id']; ?>" class="edit-form">
                                     <button type="button" class="close-button" onclick="LuckyNest.toggleForm('edit-room-form-<?php echo $room['room_id']; ?>')">✕</button>
                                     <form method="POST" action="rooms.php">
                                         <h2>Edit Room</h2>
@@ -279,7 +279,7 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
                                             </div>
                                         <?php endforeach; ?>
                                         
-                                        <div class="rooms-button-group">
+                                        <div class="button-group">
                                             <button type="submit" class="update-button">Update</button>
                                             <button type="button" class="update-button" onclick="document.getElementById('delete-form-<?php echo $room['room_id']; ?>').submit(); return false;">Delete</button>
                                         </div>
@@ -300,9 +300,7 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
         $url = 'rooms.php';
         echo generatePagination($page, $totalPages, $url);
         ?>
-        <div class="back-button-container">
-            <a href="dashboard.php" class="button">Back to Dashboard</a>
-        </div>
+
     </div>
 
     <div id="form-overlay"></div>

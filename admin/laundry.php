@@ -215,11 +215,11 @@ $conn = null;
     <?php include '../include/admin_navbar.php'; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
-        <div class="rooms-types-container">
+        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <div class="content-container">
             <h1>Laundry Management</h1>
             <?php if ($feedback): ?>
-                <div class="rooms-feedback" id="feedback_message"><?php echo $feedback; ?></div>
+                <div class="feedback-message" id="feedback_message"><?php echo $feedback; ?></div>
             <?php endif; ?>
 
             <div class="button-center">
@@ -292,7 +292,7 @@ $conn = null;
 
                                     <!-- Edit Form -->
                                     <div id="edit-form-<?php echo $selectedDay; ?>-<?php echo str_replace(':', '', $startTime); ?>"
-                                        class="rooms-type-edit-form">
+                                        class="edit-form">
                                         <button type="button" class="close-button"
                                             onclick="LuckyNest.toggleForm('edit-form-<?php echo $selectedDay; ?>-<?php echo str_replace(':', '', $startTime); ?>')">✕</button>
                                         <form method="POST" action="laundry.php">
@@ -309,7 +309,7 @@ $conn = null;
                                                 name="start_time" min="08:00" max="22:00" step="3600"
                                                 value="<?php echo $startTime; ?>" required>
 
-                                            <div class="rooms-button-group">
+                                            <div class="button-group">
                                                 <button type="submit" class="update-button">Update</button>
                                                 <button type="button" class="update-button"
                                                     onclick="document.getElementById('delete-form-<?php echo $selectedDay; ?>-<?php echo str_replace(':', '', $startTime); ?>').submit(); return false;">Delete</button>
@@ -336,9 +336,7 @@ $conn = null;
             </table>
 
             <br>
-            <div class="back-button-container">
-                <a href="dashboard.php" class="button">Back to Dashboard</a>
-            </div>
+
         </div>
     </div>
     <div id="form-overlay"></div>

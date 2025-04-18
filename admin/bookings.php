@@ -304,11 +304,11 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
-        <div class="rooms-types-container">
+        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <div class="content-container">
             <h1>Manage Bookings</h1>
             <?php if ($feedback): ?>
-                <div class="rooms-feedback" id="feedback_message"><?php echo $feedback; ?></div>
+                <div class="feedback-message" id="feedback_message"><?php echo $feedback; ?></div>
             <?php endif; ?>
 
             <!-- Add Booking Button -->
@@ -398,7 +398,7 @@ $conn = null;
                             <td>
                                 <button onclick="LuckyNest.toggleForm('edit-form-<?php echo $booking['booking_id']; ?>')"
                                     class="update-button">Edit</button>
-                                <div id="edit-form-<?php echo $booking['booking_id']; ?>" class="rooms-type-edit-form">
+                                <div id="edit-form-<?php echo $booking['booking_id']; ?>" class="edit-form">
                                     <button type="button" class="close-button"
                                         onclick="LuckyNest.toggleForm('edit-form-<?php echo $booking['booking_id']; ?>')">✕</button>
                                     <form method="POST" action="bookings.php" style="display:inline;">
@@ -436,7 +436,7 @@ $conn = null;
                                             Paid
                                         </label>
 
-                                        <div class="rooms-button-group">
+                                        <div class="button-group">
                                             <button type="submit" class="update-button">Update</button>
                                             <button type="button" class="update-button"
                                                 onclick="document.getElementById('delete-form-<?php echo $booking['booking_id']; ?>').submit(); return false;">Delete</button>
@@ -460,9 +460,6 @@ $conn = null;
             echo generatePagination($page, $totalPages, $url);
             ?>
             <br>
-            <div class="back-button-container">
-                <a href="dashboard.php" class="button">Back to Dashboard</a>
-            </div>
         </div>
         <div id="form-overlay"></div>
     </div>

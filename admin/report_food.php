@@ -148,6 +148,7 @@ $conn = null;
 
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -159,12 +160,13 @@ $conn = null;
     <script src="../assets/scripts.js"></script>
     <title>Food Consumption Report</title>
 </head>
+
 <body>
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
-        <div class="rooms-types-container">
+        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <div class="content-container">
             <h1>Food Consumption Report</h1>
 
             <!-- Filters -->
@@ -176,8 +178,7 @@ $conn = null;
                         <select name="meal_plan" id="meal_plan">
                             <option value="">All Meal Plans</option>
                             <?php foreach ($mealPlans as $plan): ?>
-                                <option value="<?php echo htmlspecialchars($plan); ?>" 
-                                    <?php echo ($mealPlanFilter === $plan) ? 'selected' : ''; ?>>
+                                <option value="<?php echo htmlspecialchars($plan); ?>" <?php echo ($mealPlanFilter === $plan) ? 'selected' : ''; ?>>
                                     <?php echo htmlspecialchars($plan); ?>
                                 </option>
                             <?php endforeach; ?>
@@ -190,8 +191,7 @@ $conn = null;
                         <select name="meal_type" id="meal_type">
                             <option value="">All Meal Types</option>
                             <?php foreach ($mealTypes as $type): ?>
-                                <option value="<?php echo htmlspecialchars($type); ?>" 
-                                    <?php echo ($mealTypeFilter === $type) ? 'selected' : ''; ?>>
+                                <option value="<?php echo htmlspecialchars($type); ?>" <?php echo ($mealTypeFilter === $type) ? 'selected' : ''; ?>>
                                     <?php echo htmlspecialchars($type); ?>
                                 </option>
                             <?php endforeach; ?>
@@ -201,10 +201,12 @@ $conn = null;
                     <!-- Date Range -->
                     <div class="filter-group">
                         <label for="start_date">Start Date:</label>
-                        <input type="date" id="start_date" name="start_date" value="<?php echo htmlspecialchars($startDate); ?>">
-                        
+                        <input type="date" id="start_date" name="start_date"
+                            value="<?php echo htmlspecialchars($startDate); ?>">
+
                         <label for="end_date">End Date:</label>
-                        <input type="date" id="end_date" name="end_date" value="<?php echo htmlspecialchars($endDate); ?>">
+                        <input type="date" id="end_date" name="end_date"
+                            value="<?php echo htmlspecialchars($endDate); ?>">
                     </div>
 
                     <button type="submit" class="update-button">Apply Filters</button>
@@ -255,8 +257,8 @@ $conn = null;
 
             <?php
             $url = 'report_food.php';
-            $urlWithParams = $url . 
-                "?start_date=" . urlencode($startDate) . 
+            $urlWithParams = $url .
+                "?start_date=" . urlencode($startDate) .
                 "&end_date=" . urlencode($endDate) .
                 ($mealPlanFilter ? "&meal_plan=" . urlencode($mealPlanFilter) : '') .
                 ($mealTypeFilter ? "&meal_type=" . urlencode($mealTypeFilter) : '');
@@ -264,10 +266,9 @@ $conn = null;
             ?>
 
             <br>
-            <div class="back-button-container">
-                <a href="dashboard.php" class="button">Back to Dashboard</a>
-            </div>
+
         </div>
     </div>
 </body>
+
 </html>

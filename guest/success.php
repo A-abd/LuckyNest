@@ -468,7 +468,7 @@ try {
     <div class="blur-layer-2"></div>
     <div class="manage-default">
         <h1>Payment Successful!</h1>
-        <div class="rooms-types-container">
+        <div class="content-container">
 
             <p>Your payment has been processed successfully.</p>
 
@@ -500,7 +500,6 @@ try {
 
             <div>
                 <a href="../invoices/<?php echo $pdf_filename; ?>" class="btn" target="_blank">Download Invoice</a>
-                <a href="../guest/dashboard.php" class="btn btn-outline">Return to Dashboard</a>
             </div>
 
             <p>If you have any questions about your purchase, please contact our support team.</p>

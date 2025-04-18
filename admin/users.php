@@ -103,7 +103,7 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-2"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
 
         <div class="center-container">
             <h2 class="manage-profile">Manage Users</h2>
@@ -179,7 +179,7 @@ $conn = null;
                                                 <option value="owner" <?php echo $user['role'] === 'owner' ? 'selected' : ''; ?>>Owner
                                                 </option>
                                             </select>
-                                            <div class="rooms-button-group">
+                                            <div class="button-group">
                                                 <button type="submit" class="update-button">Update</button>
 
                                             </div>
@@ -205,9 +205,7 @@ $conn = null;
             echo generatePagination($page, $totalPages, $url);
             ?>
             <br>
-            <div class="back-button-container">
-                <a href="dashboard.php" class="button">Back to Dashboard</a>
-            </div>
+
         </div>
         <div id="form-overlay"></div>
 </body>

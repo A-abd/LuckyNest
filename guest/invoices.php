@@ -62,7 +62,7 @@ $deposit_invoices = array_filter($invoices, function ($invoice) {
 });
 ?>
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
@@ -81,8 +81,8 @@ $deposit_invoices = array_filter($invoices, function ($invoice) {
     <?php include "../include/guest_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
-        <div class="rooms-types-container">
+        <h1><a class="title" href="../guest/dashboard.php">LuckyNest</a></h1>
+        <div class="content-container">
             <h1>Rent Payments</h1>
             <?php if (empty($rent_invoices)): ?>
                 <p>No rent invoices found.</p>
@@ -213,9 +213,6 @@ $deposit_invoices = array_filter($invoices, function ($invoice) {
             ?>
 
             <br>
-            <div class="back-button-container">
-                <a href="dashboard.php" class="button">Back to Dashboard</a>
-            </div>
         </div>
     </div>
 </body>

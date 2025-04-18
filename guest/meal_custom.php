@@ -116,11 +116,11 @@ $conn = null;
     <?php include "../include/guest_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
-        <div class="rooms-types-container">
+        <h1><a class="title" href="../guest/dashboard.php">LuckyNest</a></h1>
+        <div class="content-container">
             <h1>Custom Meal Requests</h1>
             <?php if ($feedback): ?>
-                <div class="rooms-feedback" id="feedback_message"><?php echo $feedback; ?></div>
+                <div class="feedback-message" id="feedback_message"><?php echo $feedback; ?></div>
             <?php endif; ?>
 
             <div class="button-center">
@@ -183,8 +183,7 @@ $conn = null;
                                         class="update-button">Edit</button>
                                 <?php endif; ?>
 
-                                <div id='view-form-<?php echo $mealCustom['meal_custom_id']; ?>'
-                                    class="rooms-type-edit-form">
+                                <div id='view-form-<?php echo $mealCustom['meal_custom_id']; ?>' class="edit-form">
                                     <button type="button" class="close-button"
                                         onclick="LuckyNest.toggleForm('view-form-<?php echo $mealCustom['meal_custom_id']; ?>')">✕</button>
                                     <h2>View Custom Meal Request</h2>
@@ -235,8 +234,7 @@ $conn = null;
                                 </div>
 
                                 <?php if ($mealCustom['status'] === 'Pending'): ?>
-                                    <div id='edit-form-<?php echo $mealCustom['meal_custom_id']; ?>'
-                                        class="rooms-type-edit-form">
+                                    <div id='edit-form-<?php echo $mealCustom['meal_custom_id']; ?>' class="edit-form">
                                         <button type="button" class="close-button"
                                             onclick="LuckyNest.toggleForm('edit-form-<?php echo $mealCustom['meal_custom_id']; ?>')">✕</button>
                                         <h2>Edit Custom Meal Request</h2>
@@ -272,7 +270,7 @@ $conn = null;
                                                 <option value="Lunch" <?php echo $mealCustom['preferred_time'] === 'Lunch' ? 'selected' : ''; ?>>Lunch</option>
                                                 <option value="Dinner" <?php echo $mealCustom['preferred_time'] === 'Dinner' ? 'selected' : ''; ?>>Dinner</option>
                                             </select>
-                                            <div class="rooms-button-group">
+                                            <div class="button-group">
                                                 <button type="submit" class="update-button">Update</button>
                                                 <button type="button" class="update-button"
                                                     onclick="document.getElementById('delete-form-<?php echo $mealCustom['meal_custom_id']; ?>').submit(); return false;">Delete</button>
@@ -302,9 +300,6 @@ $conn = null;
             echo generatePagination($page, $totalPages, $url);
             ?>
             <br>
-            <div class="back-button-container">
-                <a href="guest_dashboard.php" class="button">Back to Dashboard</a>
-            </div>
         </div>
     </div>
     <div id="form-overlay"></div>
