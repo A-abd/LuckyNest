@@ -254,7 +254,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_code'])) {
 
     <div class="blur-layer"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../authentication/login.php">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Account Settings</h1>
 

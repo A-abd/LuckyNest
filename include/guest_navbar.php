@@ -77,7 +77,7 @@
                 <a href="../guest/settings.php"><i class="fas fa-cog"></i> Settings</a>
             </li>
             <li class="menu-item">
-                <a href="../logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                <a href="../authentication/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </li>
         </ul>
     </aside>
