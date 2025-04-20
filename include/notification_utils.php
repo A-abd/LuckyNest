@@ -49,17 +49,6 @@ function sendUserNotifications($conn, $user_id, $subject, $html_message, $sms_me
         $stmt->execute();
         $results['notification'] = true;
 
-        // output JavaScript to play notification sound if this is a web request
-        if (!empty($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'text/html') !== false) {
-            echo "<script>
-                const sound = new Audio('/LuckyNest/assets/sounds/notification.mp3');
-                sound.play().catch(error => {
-                    console.error('Failed to play notification sound:', error);
-                });
-            </script>";
-            flush();
-        }
-
         // send email if enabled
         if ($user['email_notifications'] && !empty($user['email'])) {
             try {

@@ -62,17 +62,5 @@ function getConfiguredMailer()
 
     $mail->isHTML(true);
 
-    $mail->action_function = function () {
-        if (!empty($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'text/html') !== false) {
-            echo "<script>
-                const sound = new Audio('/LuckyNest/assets/sounds/notification.mp3');
-                sound.play().catch(error => {
-                    console.error('Failed to play notification sound:', error);
-                });
-            </script>";
-            flush();
-        }
-    };
-
     return $mail;
 }

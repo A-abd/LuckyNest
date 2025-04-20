@@ -71,16 +71,6 @@ function sendSMS($to, $message)
 
         error_log("SMS sent successfully to {$to}. Message SID: {$message->sid}");
 
-        if (!empty($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'text/html') !== false) {
-            echo "<script>
-                const sound = new Audio('/LuckyNest/assets/sounds/notification.mp3');
-                sound.play().catch(error => {
-                    console.error('Failed to play notification sound:', error);
-                });
-            </script>";
-            flush();
-        }
-
         return true;
     } catch (Exception $e) {
         error_log("Failed to send SMS to {$to}: " . $e->getMessage());

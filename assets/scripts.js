@@ -54,13 +54,6 @@ const Utils = {
   formatCurrency(amount) {
     return `£${parseFloat(amount).toFixed(2)}`;
   },
-
-  playNotificationSound() {
-    const sound = new Audio('/LuckyNest/assets/sounds/notification.mp3');
-    sound.play().catch(error => {
-      console.error('Failed to play notification sound:', error);
-    });
-  }
 };
 
 // User Management Module
@@ -80,24 +73,6 @@ const UserManagementModule = {
 // Notification Module
 const NotificationModule = {
   init() {
-    this.setupNotificationListener();
-  },
-
-  setupNotificationListener() {
-    const eventSource = new EventSource('/LuckyNest/include/notification_listener.php');
-
-    eventSource.addEventListener('notification', (event) => {
-      const data = JSON.parse(event.data);
-      this.showNotification(data.message);
-      Utils.playNotificationSound();
-    });
-
-    eventSource.onerror = (error) => {
-      console.error('EventSource error:', error);
-      eventSource.close();
-
-      setTimeout(() => this.setupNotificationListener(), 5000);
-    };
   },
 
   showNotification(message) {
@@ -1198,7 +1173,6 @@ if (typeof LuckyNest === 'undefined') {
 
 window.LuckyNest = {
   toggleForm: Utils.toggleForm,
-  playNotificationSound: Utils.playNotificationSound,
 
   confirmRoleChange: UserManagementModule.confirmRoleChange,
 
