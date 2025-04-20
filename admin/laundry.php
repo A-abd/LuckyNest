@@ -285,9 +285,7 @@ $conn = null;
             <?php endif; ?>
 
             <div class="calendar-container">
-                <div class="selected-date-display">Selected date is: <?php echo $formattedSelectedDate; ?></div>
-                <input type="text" id="date-picker" name="date" value="<?php echo $selectedDate; ?>"
-                    placeholder="Select date">
+                <div id="date-picker" class="selected-date-display">Selected date is: <?php echo $formattedSelectedDate; ?></div>
             </div>
 
             <div class="button-center">
@@ -305,7 +303,8 @@ $conn = null;
                     <input type="time" id="start_time" name="start_time" min="08:00" max="22:00" step="3600" required>
 
                     <div>
-                        <input type="checkbox" id="recurring" name="recurring" onchange="toggleEndDateField()">
+                        <input type="checkbox" id="recurring" name="recurring"
+                            onchange="LuckyNest.toggleEndDateField()">
                         <label for="recurring">Make this a recurring weekly slot</label>
                     </div>
 
@@ -413,58 +412,13 @@ $conn = null;
     <div id="form-overlay"></div>
 
     <script>
+        window.datesWithSlots = <?php echo json_encode($datesWithSlots); ?>;
+        window.datesWithAvailableSlots = <?php echo json_encode($datesWithAvailableSlots); ?>;
+        window.datesWithOnlyBookedSlots = <?php echo json_encode($datesWithOnlyBookedSlots); ?>;
+
         document.addEventListener('DOMContentLoaded', function () {
-            const datesWithSlots = <?php echo json_encode($datesWithSlots); ?>;
-            const datesWithAvailableSlots = <?php echo json_encode($datesWithAvailableSlots); ?>;
-            const datesWithOnlyBookedSlots = <?php echo json_encode($datesWithOnlyBookedSlots); ?>;
-            const today = new Date();
-
-            today.setHours(0, 0, 0, 0);
-
-            const fp = flatpickr("#date-picker", {
-                dateFormat: "Y-m-d",
-                defaultDate: "<?php echo $selectedDate; ?>",
-                inline: true,
-                minDate: "today",
-                onChange: function (selectedDates, dateStr) {
-                    window.location.href = 'laundry.php?date=' + dateStr;
-                },
-                onDayCreate: function (dObj, dStr, fp, dayElem) {
-                    const year = dayElem.dateObj.getFullYear();
-                    const month = String(dayElem.dateObj.getMonth() + 1).padStart(2, '0');
-                    const day = String(dayElem.dateObj.getDate()).padStart(2, '0');
-                    const dateStr = `${year}-${month}-${day}`;
-
-                    if (dayElem.dateObj < today) {
-                        dayElem.className += " flatpickr-disabled";
-                    }
-                    else {
-                        if (datesWithAvailableSlots.includes(dateStr)) {
-                            dayElem.className += " available-slots";
-                        } else if (datesWithOnlyBookedSlots.includes(dateStr)) {
-                            dayElem.className += " no-available-slots";
-                        }
-                    }
-                }
-            });
-
-            document.querySelector('button[onclick="LuckyNest.toggleForm(\'add-form\')"]').addEventListener('click', function () {
-                document.getElementById('selected_date').value = document.getElementById('date-picker').value;
-            });
+            LuckyNest.initLaundryCalendar("<?php echo $selectedDate; ?>");
         });
-
-        function toggleEndDateField() {
-            const recurringCheckbox = document.getElementById('recurring');
-            const endDateContainer = document.getElementById('end_date_container');
-
-            if (recurringCheckbox.checked) {
-                endDateContainer.style.display = 'block';
-                document.getElementById('end_date').required = true;
-            } else {
-                endDateContainer.style.display = 'none';
-                document.getElementById('end_date').required = false;
-            }
-        }
     </script>
 </body>
 

@@ -390,12 +390,97 @@ const LaundryModule = {
         });
       }
     });
+
+    this.initEndDateToggle();
   },
 
   toggleDeleteLaundryForm(slotId) {
     const deleteOptions = document.getElementById(`delete-options-${slotId}`);
     if (deleteOptions) {
       deleteOptions.style.display = 'block';
+    }
+  },
+
+  initLaundryCalendar(selectedDate) {
+    const datePicker = document.getElementById('date-picker');
+    if (!datePicker || !window.flatpickr) return;
+
+    const datesWithSlots = window.datesWithSlots || [];
+    const datesWithAvailableSlots = window.datesWithAvailableSlots || [];
+    const datesWithOnlyBookedSlots = window.datesWithOnlyBookedSlots || [];
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    flatpickr(datePicker, {
+      dateFormat: "Y-m-d",
+      defaultDate: selectedDate,
+      inline: true,
+      minDate: "today",
+      onChange: function (selectedDates, dateStr) {
+        window.location.href = 'laundry.php?date=' + dateStr;
+      },
+      onDayCreate: function (dObj, dStr, fp, dayElem) {
+        const year = dayElem.dateObj.getFullYear();
+        const month = String(dayElem.dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dayElem.dateObj.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
+
+        if (dayElem.dateObj < today) {
+          dayElem.className += " flatpickr-disabled";
+        }
+        else {
+          if (datesWithAvailableSlots && datesWithAvailableSlots.includes(dateStr)) {
+            dayElem.className += " available-slots";
+          } else if (datesWithOnlyBookedSlots && datesWithOnlyBookedSlots.includes(dateStr)) {
+            dayElem.className += " no-available-slots";
+          }
+        }
+      }
+    });
+
+    const addButton = document.querySelector('button[onclick="LuckyNest.toggleForm(\'add-form\')"]');
+    if (addButton) {
+      addButton.addEventListener('click', function () {
+        const dateField = document.getElementById('selected_date');
+        const datePicker = document.getElementById('date-picker');
+        if (dateField && datePicker) {
+          dateField.value = datePicker.value;
+        }
+      });
+    }
+  },
+
+  initEndDateToggle() {
+    document.addEventListener('DOMContentLoaded', function () {
+      const recurringCheckbox = document.getElementById('recurring');
+      if (recurringCheckbox) {
+        recurringCheckbox.addEventListener('change', this.toggleEndDateField);
+      }
+    }.bind(this));
+  },
+
+  toggleEndDateField() {
+    const recurringCheckbox = document.getElementById('recurring');
+    const endDateContainer = document.getElementById('end_date_container');
+
+    if (recurringCheckbox && endDateContainer) {
+      if (recurringCheckbox.checked) {
+        endDateContainer.style.display = 'block';
+        document.getElementById('end_date').required = true;
+      } else {
+        endDateContainer.style.display = 'none';
+        document.getElementById('end_date').required = false;
+      }
+    }
+  },
+
+  getGlobalArray(arrayName) {
+    try {
+      return window[arrayName] || [];
+    } catch (e) {
+      console.error(`Failed to get global array ${arrayName}:`, e);
+      return [];
     }
   }
 };
@@ -932,5 +1017,7 @@ window.LuckyNest = {
   initFinancialCards: FinancialModule.initFinancialCards,
   updateDepositForm: DepositModule.updateDepositForm,
   playNotificationSound: Utils.playNotificationSound,
-  updateDayOptions: MealModule.updateDayOptions
+  updateDayOptions: MealModule.updateDayOptions,
+  toggleEndDateField: LaundryModule.toggleEndDateField,
+  initLaundryCalendar: LaundryModule.initLaundryCalendar
 };
