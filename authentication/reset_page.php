@@ -57,111 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['new_password'], $_POST
         href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="../assets/styles.css">
-    <script>
-        function showPasswordRequirements() {
-            const popup = document.getElementById('password-requirements');
-            popup.style.display = 'block';
-        }
-
-        function hidePasswordRequirements() {
-            const popup = document.getElementById('password-requirements');
-            popup.style.display = 'none';
-        }
-
-        function showConfirmPasswordTip() {
-            const popup = document.getElementById('confirm-password-tip');
-            popup.style.display = 'block';
-        }
-
-        function hideConfirmPasswordTip() {
-            const popup = document.getElementById('confirm-password-tip');
-            popup.style.display = 'none';
-        }
-
-        function validatePassword() {
-            const password = document.getElementById('new_password').value;
-            const confirmPassword = document.getElementById('confirm_password').value;
-            const minLength = document.getElementById('min-length');
-            const uppercase = document.getElementById('uppercase');
-            const lowercase = document.getElementById('lowercase');
-            const special = document.getElementById('special');
-            const passwordMatch = document.getElementById('password-match');
-            const confirmPasswordMatch = document.getElementById('confirm-password-match');
-
-            if (password.length >= 5) {
-                minLength.classList.add('valid');
-            } else {
-                minLength.classList.remove('valid');
-            }
-
-            if (/[A-Z]/.test(password)) {
-                uppercase.classList.add('valid');
-            } else {
-                uppercase.classList.remove('valid');
-            }
-
-            if (/[a-z]/.test(password)) {
-                lowercase.classList.add('valid');
-            } else {
-                lowercase.classList.remove('valid');
-            }
-
-            if (/[^a-zA-Z0-9]/.test(password)) {
-                special.classList.add('valid');
-            } else {
-                special.classList.remove('valid');
-            }
-
-            if (password === confirmPassword && password !== '') {
-                passwordMatch.classList.add('valid');
-                confirmPasswordMatch.classList.add('valid');
-            } else {
-                passwordMatch.classList.remove('valid');
-                confirmPasswordMatch.classList.remove('valid');
-            }
-        }
-
-        function validateForm() {
-            const password = document.getElementById('new_password').value;
-            const confirmPassword = document.getElementById('confirm_password').value;
-
-            let isValid = true;
-            const errors = [];
-
-            if (password.length < 5) {
-                errors.push("Password must be at least 5 characters long");
-                isValid = false;
-            }
-
-            if (!/[A-Z]/.test(password)) {
-                errors.push("Password must contain at least one uppercase letter");
-                isValid = false;
-            }
-
-            if (!/[a-z]/.test(password)) {
-                errors.push("Password must contain at least one lowercase letter");
-                isValid = false;
-            }
-
-            if (!/[^a-zA-Z0-9]/.test(password)) {
-                errors.push("Password must contain at least one special character");
-                isValid = false;
-            }
-
-            if (password !== confirmPassword) {
-                errors.push("Passwords do not match");
-                isValid = false;
-            }
-
-            if (!isValid) {
-                document.getElementById('form-errors').innerHTML = errors.join('<br>');
-                document.getElementById('form-errors').style.display = 'block';
-                return false;
-            }
-
-            return true;
-        }
-    </script>
+    <script src="../assets/scripts.js"></script>
     <style>
         .password-requirements,
         .confirm-password-tip {
@@ -226,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['new_password'], $_POST
                         to login</a> and
                     request a new password reset.</p>
             <?php else: ?>
-                <form id="reset-form" method="POST" action="reset_page.php" onsubmit="return validateForm()">
+                <form id="reset-form" method="POST" action="reset_page.php" onsubmit="return LuckyNest.validateResetForm()">
                     <h1>Reset Your Password</h1>
 
                     <?php if ($error): ?>
@@ -243,8 +139,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['new_password'], $_POST
                     <div class="input-box">
                         <label for="new_password">New Password:</label>
                         <input type="password" id="new_password" name="new_password" required
-                            onfocus="showPasswordRequirements()" onblur="hidePasswordRequirements()"
-                            onkeyup="validatePassword()">
+                            onfocus="LuckyNest.showPasswordRequirements()" onblur="LuckyNest.hidePasswordRequirements()"
+                            onkeyup="LuckyNest.validatePasswordStrength()">
                         <div id="password-requirements" class="password-requirements">
                             <div id="min-length" class="requirement">At least 5 characters</div>
                             <div id="uppercase" class="requirement">At least one uppercase letter</div>
@@ -257,8 +153,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['new_password'], $_POST
                     <div class="input-box">
                         <label for="confirm_password">Confirm New Password:</label>
                         <input type="password" id="confirm_password" name="confirm_password" required
-                            onfocus="showConfirmPasswordTip()" onblur="hideConfirmPasswordTip()"
-                            onkeyup="validatePassword()">
+                            onfocus="LuckyNest.showConfirmPasswordTip()" onblur="LuckyNest.hideConfirmPasswordTip()"
+                            onkeyup="LuckyNest.validatePasswordStrength()">
                         <div id="confirm-password-tip" class="confirm-password-tip">
                             <div id="confirm-password-match" class="requirement">Passwords match</div>
                         </div>

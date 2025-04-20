@@ -1009,9 +1009,124 @@ const LoginModule = {
   init() {
   },
 
-  toggleLoginForms(show2FA) {
+  toggleForms(show2FA) {
     document.getElementById('login-form').style.display = show2FA ? 'none' : 'block';
     document.getElementById('2fa-form').style.display = show2FA ? 'block' : 'none';
+  },
+
+  showPasswordRequirements() {
+    const popup = document.getElementById('password-requirements');
+    if (popup) popup.style.display = 'block';
+  },
+
+  hidePasswordRequirements() {
+    const popup = document.getElementById('password-requirements');
+    if (popup) popup.style.display = 'none';
+  },
+
+  showConfirmPasswordTip() {
+    const popup = document.getElementById('confirm-password-tip');
+    if (popup) popup.style.display = 'block';
+  },
+
+  hideConfirmPasswordTip() {
+    const popup = document.getElementById('confirm-password-tip');
+    if (popup) popup.style.display = 'none';
+  },
+
+  validatePasswordStrength() {
+    const password = document.getElementById('new_password')?.value || '';
+    const confirmPassword = document.getElementById('confirm_password')?.value || '';
+    const minLength = document.getElementById('min-length');
+    const uppercase = document.getElementById('uppercase');
+    const lowercase = document.getElementById('lowercase');
+    const special = document.getElementById('special');
+    const passwordMatch = document.getElementById('password-match');
+    const confirmPasswordMatch = document.getElementById('confirm-password-match');
+
+    if (minLength) {
+      if (password.length >= 5) {
+        minLength.classList.add('valid');
+      } else {
+        minLength.classList.remove('valid');
+      }
+    }
+
+    if (uppercase) {
+      if (/[A-Z]/.test(password)) {
+        uppercase.classList.add('valid');
+      } else {
+        uppercase.classList.remove('valid');
+      }
+    }
+
+    if (lowercase) {
+      if (/[a-z]/.test(password)) {
+        lowercase.classList.add('valid');
+      } else {
+        lowercase.classList.remove('valid');
+      }
+    }
+
+    if (special) {
+      if (/[^a-zA-Z0-9]/.test(password)) {
+        special.classList.add('valid');
+      } else {
+        special.classList.remove('valid');
+      }
+    }
+
+    if (passwordMatch && confirmPasswordMatch) {
+      if (password === confirmPassword && password !== '') {
+        passwordMatch.classList.add('valid');
+        confirmPasswordMatch.classList.add('valid');
+      } else {
+        passwordMatch.classList.remove('valid');
+        confirmPasswordMatch.classList.remove('valid');
+      }
+    }
+  },
+
+  validateResetForm() {
+    const password = document.getElementById('new_password')?.value || '';
+    const confirmPassword = document.getElementById('confirm_password')?.value || '';
+    const formErrors = document.getElementById('form-errors');
+
+    let isValid = true;
+    const errors = [];
+
+    if (password.length < 5) {
+      errors.push("Password must be at least 5 characters long");
+      isValid = false;
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      errors.push("Password must contain at least one uppercase letter");
+      isValid = false;
+    }
+
+    if (!/[a-z]/.test(password)) {
+      errors.push("Password must contain at least one lowercase letter");
+      isValid = false;
+    }
+
+    if (!/[^a-zA-Z0-9]/.test(password)) {
+      errors.push("Password must contain at least one special character");
+      isValid = false;
+    }
+
+    if (password !== confirmPassword) {
+      errors.push("Passwords do not match");
+      isValid = false;
+    }
+
+    if (!isValid && formErrors) {
+      formErrors.innerHTML = errors.join('<br>');
+      formErrors.style.display = 'block';
+      return false;
+    }
+
+    return true;
   }
 };
 
@@ -1067,5 +1182,11 @@ window.LuckyNest = {
   updateDayOptions: MealModule.updateDayOptions,
   toggleEndDateField: LaundryModule.toggleEndDateField,
   initLaundryCalendar: LaundryModule.initLaundryCalendar,
-  toggleLoginForm: LoginModule.toggleLoginForms
+  toggleForms: LoginModule.toggleForms,
+  showPasswordRequirements: LoginModule.showPasswordRequirements,
+  hidePasswordRequirements: LoginModule.hidePasswordRequirements,
+  showConfirmPasswordTip: LoginModule.showConfirmPasswordTip,
+  hideConfirmPasswordTip: LoginModule.hideConfirmPasswordTip,
+  validatePasswordStrength: LoginModule.validatePasswordStrength,
+  validateResetForm: LoginModule.validateResetForm
 };
