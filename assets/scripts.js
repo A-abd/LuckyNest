@@ -945,6 +945,9 @@ const FinancialModule = {
 // Deposit
 const DepositModule = {
   init() {
+    document.addEventListener('DOMContentLoaded', () => {
+      this.setupDepositStatusHandlers();
+    });
   },
 
   updateDepositForm(status, depositId, maxAmount) {
@@ -967,6 +970,37 @@ const DepositModule = {
     } else {
       withholdingFields.style.display = 'none';
     }
+
+    const form = document.getElementById(`form-${depositId}`);
+    if (form) {
+      if (status === 'partially_refunded' || status === 'fully_refunded') {
+        form.action = '../include/refund.php';
+      } else {
+        form.action = 'deposits.php';
+      }
+    }
+  },
+
+  setupDepositStatusHandlers() {
+    const statusDropdowns = document.querySelectorAll('select[id^="status_"]');
+    statusDropdowns.forEach(dropdown => {
+      const depositId = dropdown.id.replace('status_', '');
+
+      dropdown.addEventListener('change', () => {
+        const form = document.getElementById(`form-${depositId}`);
+        const status = dropdown.value;
+
+        if (status === 'partially_refunded' || status === 'fully_refunded') {
+          form.action = '../include/refund.php';
+        } else {
+          form.action = 'deposits.php';
+        }
+      });
+    });
+  },
+
+  initDepositFormHandlers() {
+    this.setupDepositStatusHandlers();
   }
 };
 
@@ -1016,6 +1050,7 @@ window.LuckyNest = {
   toggleFinancialCard: FinancialModule.toggleFinancialCard,
   initFinancialCards: FinancialModule.initFinancialCards,
   updateDepositForm: DepositModule.updateDepositForm,
+  initDepositFormHandlers: DepositModule.initDepositFormHandlers,
   playNotificationSound: Utils.playNotificationSound,
   updateDayOptions: MealModule.updateDayOptions,
   toggleEndDateField: LaundryModule.toggleEndDateField,

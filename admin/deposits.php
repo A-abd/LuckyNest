@@ -171,18 +171,6 @@ $conn = null;
                                         
                                         <button type="submit" class="update-button">Update Deposit</button>
                                     </form>
-                                    <script>
-                                        document.getElementById('status_<?php echo $deposit["deposit_id"]; ?>').addEventListener('change', function() {
-                                            const form = document.getElementById('form-<?php echo $deposit["deposit_id"]; ?>');
-                                            const status = this.value;
-                                            
-                                            if (status === 'partially_refunded' || status === 'fully_refunded') {
-                                                form.action = '../include/refund.php';
-                                            } else {
-                                                form.action = 'deposits.php';
-                                            }
-                                        });
-                                    </script>
                                 </div>
                             </td>
                         </tr>
@@ -197,6 +185,12 @@ $conn = null;
         </div>
         <div id="form-overlay"></div>
     </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            LuckyNest.initDepositFormHandlers();
+        });
+    </script>
 </body>
 
 </html>
