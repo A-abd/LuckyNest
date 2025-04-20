@@ -260,10 +260,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_code'])) {
                 <h3>Two-Factor Authentication</h3>
                 <?php if ($secret): ?>
                     <p class="status-enabled">2FA is currently enabled</p>
-                    <button onclick="showPasswordPrompt('disable')" class="update-button danger-button">Disable 2FA</button>
+                    <button onclick="LuckyNest.showPasswordPrompt('disable')" class="update-button danger-button">Disable 2FA</button>
                 <?php else: ?>
                     <p class="status-disabled">2FA is currently disabled</p>
-                    <button onclick="showPasswordPrompt('enable')" class="update-button">Enable 2FA</button>
+                    <button onclick="LuckyNest.showPasswordPrompt('enable')" class="update-button">Enable 2FA</button>
                 <?php endif; ?>
 
                 <div id="password-prompt" style="display: none;">
