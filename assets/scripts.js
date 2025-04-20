@@ -401,18 +401,18 @@ const LaundryModule = {
     }
   },
 
-  initLaundryCalendar(selectedDate) {
+  initLaundryCalendar(selectedDate, options = {}) {
     const datePicker = document.getElementById('date-picker');
     if (!datePicker || !window.flatpickr) return;
 
     const datesWithSlots = window.datesWithSlots || [];
     const datesWithAvailableSlots = window.datesWithAvailableSlots || [];
-    const datesWithOnlyBookedSlots = window.datesWithOnlyBookedSlots || [];
+    const datesWithNoAvailableSlots = window.datesWithNoAvailableSlots || [];
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    flatpickr(datePicker, {
+    const config = {
       dateFormat: "Y-m-d",
       defaultDate: selectedDate,
       inline: true,
@@ -432,12 +432,20 @@ const LaundryModule = {
         else {
           if (datesWithAvailableSlots && datesWithAvailableSlots.includes(dateStr)) {
             dayElem.className += " available-slots";
-          } else if (datesWithOnlyBookedSlots && datesWithOnlyBookedSlots.includes(dateStr)) {
+          } else if (datesWithNoAvailableSlots && datesWithNoAvailableSlots.includes(dateStr)) {
             dayElem.className += " no-available-slots";
           }
         }
       }
-    });
+    };
+
+    if (options) {
+      Object.keys(options).forEach(key => {
+        config[key] = options[key];
+      });
+    }
+
+    flatpickr(datePicker, config);
 
     const addButton = document.querySelector('button[onclick="LuckyNest.toggleForm(\'add-form\')"]');
     if (addButton) {
@@ -1014,6 +1022,7 @@ const LoginModule = {
     document.getElementById('2fa-form').style.display = show2FA ? 'block' : 'none';
   },
 
+  // Password Reset Functions
   showPasswordRequirements() {
     const popup = document.getElementById('password-requirements');
     if (popup) popup.style.display = 'block';
@@ -1183,6 +1192,8 @@ window.LuckyNest = {
   toggleEndDateField: LaundryModule.toggleEndDateField,
   initLaundryCalendar: LaundryModule.initLaundryCalendar,
   toggleForms: LoginModule.toggleForms,
+
+  // Password Reset Functions
   showPasswordRequirements: LoginModule.showPasswordRequirements,
   hidePasswordRequirements: LoginModule.hidePasswordRequirements,
   showConfirmPasswordTip: LoginModule.showConfirmPasswordTip,

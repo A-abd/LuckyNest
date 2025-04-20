@@ -15,6 +15,7 @@ $page = isset($_GET["page"]) ? (int) $_GET["page"] : 1;
 $offset = ($page - 1) * $recordsPerPage;
 
 $selectedDate = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+$formattedSelectedDate = date('d/m/Y', strtotime($selectedDate));
 $displayDate = date('j F, Y', strtotime($selectedDate));
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -54,18 +55,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Get dates with available slots for the calendar
-$availableDatesStmt = $conn->query("SELECT DISTINCT date FROM laundry_slots WHERE is_available = 1 ORDER BY date");
-$availableDates = $availableDatesStmt->fetchAll(PDO::FETCH_COLUMN);
-$availableDatesJson = json_encode($availableDates);
+$stmt = $conn->prepare("SELECT DISTINCT date FROM laundry_slots WHERE date >= :today ORDER BY date");
+$stmt->bindValue(':today', date('Y-m-d'), PDO::PARAM_STR);
+$stmt->execute();
+$datesWithSlots = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-// Get slots for the selected date
+$stmt = $conn->prepare("
+    SELECT 
+        ls.date
+    FROM 
+        laundry_slots ls
+    WHERE 
+        ls.date >= :today
+        AND ls.is_available = 1
+    GROUP BY 
+        ls.date
+");
+$stmt->bindValue(':today', date('Y-m-d'), PDO::PARAM_STR);
+$stmt->execute();
+$datesWithAvailableSlots = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+$stmt = $conn->prepare("
+    SELECT 
+        ls.date
+    FROM 
+        laundry_slots ls
+    WHERE 
+        ls.date >= :today
+        AND ls.date NOT IN (
+            SELECT date FROM laundry_slots WHERE date >= :today2 AND is_available = 1
+        )
+    GROUP BY 
+        ls.date
+");
+$stmt->bindValue(':today', date('Y-m-d'), PDO::PARAM_STR);
+$stmt->bindValue(':today2', date('Y-m-d'), PDO::PARAM_STR);
+$stmt->execute();
+$datesWithNoAvailableSlots = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
 $laundryStmt = $conn->prepare("SELECT * FROM laundry_slots WHERE is_available = 1 AND date = :selected_date ORDER BY start_time");
 $laundryStmt->bindParam(':selected_date', $selectedDate, PDO::PARAM_STR);
 $laundryStmt->execute();
 $laundrySlots = $laundryStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Count total available slots for the selected date
 $totalRecordsQuery = $conn->prepare("SELECT COUNT(*) As total FROM laundry_slots WHERE is_available = 1 AND date = :selected_date");
 $totalRecordsQuery->bindParam(':selected_date', $selectedDate, PDO::PARAM_STR);
 $totalRecordsQuery->execute();
@@ -91,25 +123,39 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
     <script src="../assets/scripts.js"></script>
     <title>Laundry Slots</title>
     <style>
-        .date-picker-container {
+        .calendar-container {
             margin-bottom: 20px;
+            text-align: center;
         }
 
-        #date-picker {
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            width: 200px;
+        .flatpickr-calendar {
+            margin: 0 auto;
         }
 
-        .no-slots-date {
-            background-color: #ffcccc !important;
-            color: #ff0000 !important;
+        .flatpickr-day.available-slots {
+            background-color: #c8e6c9 !important;
+            border-color: #c8e6c9 !important;
+            color: #000 !important;
         }
 
-        .has-slots-date {
-            background-color: #ccffcc !important;
-            color: #006600 !important;
+        .flatpickr-day.no-available-slots {
+            background-color: #ffcdd2 !important;
+            border-color: #ffcdd2 !important;
+            color: #000 !important;
+        }
+
+        .flatpickr-day.flatpickr-disabled {
+            color: rgba(64, 64, 64, 0.3) !important;
+            background-color: rgba(240, 240, 240, 0.5) !important;
+            cursor: not-allowed;
+            border-color: transparent !important;
+        }
+
+        .selected-date-display {
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -125,9 +171,9 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
                 <div class="feedback-message" id="feedback_message"><?php echo $feedback; ?></div>
             <?php endif; ?>
 
-            <div class="date-picker-container">
-                <h2>Select Date</h2>
-                <input type="text" id="date-picker" value="<?php echo $selectedDate; ?>" placeholder="Select a date">
+            <div class="calendar-container">
+                <div id="date-picker" class="selected-date-display">Selected date is:
+                    <?php echo $formattedSelectedDate; ?></div>
             </div>
 
             <h2>Available Slots for <?php echo date('j F, Y', strtotime($selectedDate)); ?></h2>
@@ -136,17 +182,23 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
                     <thead>
                         <tr>
                             <th>Start Time</th>
+                            <th>End Time</th>
                             <th>Recurring</th>
                             <th>Price</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($laundrySlots as $slot): ?>
+                        <?php foreach ($laundrySlots as $slot):
+                            $startTime = $slot['start_time'];
+                            $formattedStartTime = date("H:i", strtotime($startTime));
+                            $endTime = (new DateTime($startTime))->modify('+1 hour')->format('H:00');
+                            ?>
                             <tr>
-                                <td><?php echo substr($slot['start_time'], 0, 5); ?></td>
+                                <td><?php echo htmlspecialchars($formattedStartTime); ?></td>
+                                <td><?php echo htmlspecialchars($endTime); ?></td>
                                 <td><?php echo $slot['recurring'] ? 'Yes' : 'No'; ?></td>
-                                <td><?php echo number_format($slot['price'], 2); ?></td>
+                                <td>£<?php echo number_format($slot['price'], 2); ?></td>
                                 <td>
                                     <form method="POST" action="laundry.php?date=<?php echo $selectedDate; ?>"
                                         style="display:inline;">
@@ -172,34 +224,12 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
     </div>
 
     <script>
+        window.datesWithSlots = <?php echo json_encode($datesWithSlots); ?>;
+        window.datesWithAvailableSlots = <?php echo json_encode($datesWithAvailableSlots); ?>;
+        window.datesWithNoAvailableSlots = <?php echo json_encode($datesWithNoAvailableSlots); ?>;
+
         document.addEventListener('DOMContentLoaded', function () {
-            const availableDates = <?php echo $availableDatesJson; ?>;
-
-            const flatpickrInstance = flatpickr("#date-picker", {
-                dateFormat: "d/m/Y",
-                inline: false,
-                minDate: "today",
-                defaultDate: new Date(),
-                onChange: function (selectedDates, dateStr) {
-                    const dateParts = dateStr.split('/');
-                    const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
-                    window.location.href = 'laundry.php?date=' + formattedDate;
-                },
-                onDayCreate: function (dObj, dStr, fp, dayElem) {
-                    const year = dayElem.dateObj.getFullYear();
-                    const month = String(dayElem.dateObj.getMonth() + 1).padStart(2, '0');
-                    const day = String(dayElem.dateObj.getDate()).padStart(2, '0');
-                    const formattedDate = `${year}-${month}-${day}`;
-
-                    if (!availableDates.includes(formattedDate) && dayElem.dateObj >= new Date()) {
-                        dayElem.classList.add('no-slots-date');
-                    }
-
-                    if (availableDates.includes(formattedDate)) {
-                        dayElem.classList.add('has-slots-date');
-                    }
-                }
-            });
+            LuckyNest.initLaundryCalendar("<?php echo $selectedDate; ?>");
         });
     </script>
 </body>
