@@ -16,180 +16,190 @@ $stmt->bindValue(':userId', $userId, PDO::PARAM_INT);
 $stmt->execute();
 $userData = $stmt->fetch(PDO::FETCH_ASSOC);
 
-function getWeekDays()
-{
-    $days = [
-        1 => ['name' => 'Monday', 'short' => 'Mon'],
-        2 => ['name' => 'Tuesday', 'short' => 'Tue'],
-        3 => ['name' => 'Wednesday', 'short' => 'Wed'],
-        4 => ['name' => 'Thursday', 'short' => 'Thu'],
-        5 => ['name' => 'Friday', 'short' => 'Fri'],
-        6 => ['name' => 'Saturday', 'short' => 'Sat'],
-        7 => ['name' => 'Sunday', 'short' => 'Sun']
-    ];
-
-    $today = new DateTime();
-    $currentDayOfWeek = $today->format('N');
-    $monday = clone $today;
-    $monday->modify('-' . ($currentDayOfWeek - 1) . ' days');
-
-    for ($i = 1; $i <= 7; $i++) {
-        $day = clone $monday;
-        $day->modify('+' . ($i - 1) . ' days');
-        $days[$i]['date'] = $day->format('Y-m-d');
-        $days[$i]['formatted'] = $day->format('d/m/Y');
-    }
-
-    return $days;
-}
-
-$weekDays = getWeekDays();
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         $action = $_POST['action'];
 
         if ($action === 'create_timeslot') {
-            $dayOfWeek = $_POST['day_of_week'];
+            $selectedDate = $_POST['selected_date'];
             $startTime = $_POST['start_time'];
             $price = 5.0;
+            $recurring = isset($_POST['recurring']) ? 1 : 0;
+            $endDate = null;
 
-            $date = $weekDays[$dayOfWeek]['date'];
+            if ($recurring && isset($_POST['end_date'])) {
+                $endDate = $_POST['end_date'];
+            }
 
-            $startDateTime = new DateTime("$date $startTime");
-            $endDateTime = (new DateTime("$date $startTime"))->modify('+1 hour');
+            $startDateTime = new DateTime("$selectedDate $startTime");
+            $endDateTime = (new DateTime("$selectedDate $startTime"))->modify('+1 hour');
 
             if ($startDateTime->format('H') < 8 || $endDateTime->format('H') > 22) {
                 $feedback = 'Timeslot must be between 8 AM and 10 PM.';
             } else {
-                // Check if this timeslot already exists for this day of week
                 $checkStmt = $conn->prepare("SELECT COUNT(*) FROM laundry_slots 
-                              WHERE date LIKE :day_pattern AND start_time = :start_time");
-                $dayPattern = '____-__-' . sprintf('%02d', $dayOfWeek);
-                $checkStmt->bindValue(':day_pattern', $dayPattern, PDO::PARAM_STR);
+                              WHERE date = :date AND start_time = :start_time");
+                $checkStmt->bindValue(':date', $selectedDate, PDO::PARAM_STR);
                 $checkStmt->bindValue(':start_time', $startTime, PDO::PARAM_STR);
                 $checkStmt->execute();
 
                 if ($checkStmt->fetchColumn() > 0) {
-                    $feedback = 'This timeslot already exists for this day of the week.';
+                    $feedback = 'This timeslot already exists for this date.';
                 } else {
-                    // Create slots for next 6 months for this day of week
-                    $currentDate = new DateTime($date);
-                    $endDate = (clone $currentDate)->modify('+6 months');
+                    if ($recurring && $endDate) {
+                        $currentDate = new DateTime($selectedDate);
+                        $endDateObj = new DateTime($endDate);
+                        $dayOfWeek = $currentDate->format('N');
 
-                    while ($currentDate <= $endDate) {
-                        if ($currentDate->format('N') == $dayOfWeek) {
-                            $slotDate = $currentDate->format('Y-m-d');
+                        while ($currentDate <= $endDateObj) {
+                            if ($currentDate->format('N') == $dayOfWeek) {
+                                $slotDate = $currentDate->format('Y-m-d');
 
-                            $stmt = $conn->prepare("INSERT INTO laundry_slots 
-                                    (date, start_time, recurring, recurring_type, price) 
-                                    VALUES (:date, :start_time, 1, 'weekly', :price)");
-                            $stmt->bindValue(':date', $slotDate, PDO::PARAM_STR);
-                            $stmt->bindValue(':start_time', $startTime, PDO::PARAM_STR);
-                            $stmt->bindValue(':price', $price, PDO::PARAM_STR);
-                            $stmt->execute();
+                                $stmt = $conn->prepare("INSERT INTO laundry_slots 
+                                        (date, start_time, recurring, recurring_type, price) 
+                                        VALUES (:date, :start_time, 1, 'weekly', :price)");
+                                $stmt->bindValue(':date', $slotDate, PDO::PARAM_STR);
+                                $stmt->bindValue(':start_time', $startTime, PDO::PARAM_STR);
+                                $stmt->bindValue(':price', $price, PDO::PARAM_STR);
+                                $stmt->execute();
+                            }
+
+                            $currentDate->modify('+1 day');
                         }
 
-                        $currentDate->modify('+1 day');
-                    }
+                        $feedback = 'Recurring timeslots created successfully until ' . date('d/m/Y', strtotime($endDate)) . '!';
+                    } else {
+                        $stmt = $conn->prepare("INSERT INTO laundry_slots 
+                                (date, start_time, recurring, recurring_type, price) 
+                                VALUES (:date, :start_time, 0, 'weekly', :price)");
+                        $stmt->bindValue(':date', $selectedDate, PDO::PARAM_STR);
+                        $stmt->bindValue(':start_time', $startTime, PDO::PARAM_STR);
+                        $stmt->bindValue(':price', $price, PDO::PARAM_STR);
+                        $stmt->execute();
 
-                    $feedback = 'Timeslot created successfully for all ' . $weekDays[$dayOfWeek]['name'] . 's!';
+                        $feedback = 'Timeslot created successfully for ' . date('d/m/Y', strtotime($selectedDate)) . '!';
+                    }
                 }
             }
         } elseif ($action === 'update_timeslot') {
-            $dayOfWeek = $_POST['day_of_week'];
-            $oldStartTime = $_POST['old_start_time'];
+            $slotId = $_POST['slot_id'];
+            $selectedDate = $_POST['selected_date'];
             $newStartTime = $_POST['start_time'];
 
-            $date = $weekDays[$dayOfWeek]['date'];
-            $startDateTime = new DateTime("$date $newStartTime");
-            $endDateTime = (new DateTime("$date $newStartTime"))->modify('+1 hour');
+            $startDateTime = new DateTime("$selectedDate $newStartTime");
+            $endDateTime = (new DateTime("$selectedDate $newStartTime"))->modify('+1 hour');
 
             if ($startDateTime->format('H') < 8 || $endDateTime->format('H') > 22) {
                 $feedback = 'Timeslot must be between 8 AM and 10 PM.';
             } else {
-                // Check if new time already exists (if changing time)
-                if ($oldStartTime !== $newStartTime) {
-                    $checkStmt = $conn->prepare("SELECT COUNT(*) FROM laundry_slots 
-                                  WHERE date LIKE :day_pattern AND start_time = :start_time");
-                    $dayPattern = '____-__-' . sprintf('%02d', $dayOfWeek);
-                    $checkStmt->bindValue(':day_pattern', $dayPattern, PDO::PARAM_STR);
-                    $checkStmt->bindValue(':start_time', $newStartTime, PDO::PARAM_STR);
-                    $checkStmt->execute();
+                $checkStmt = $conn->prepare("SELECT COUNT(*) FROM laundry_slots 
+                              WHERE date = :date AND start_time = :start_time AND laundry_slot_id != :slot_id");
+                $checkStmt->bindValue(':date', $selectedDate, PDO::PARAM_STR);
+                $checkStmt->bindValue(':start_time', $newStartTime, PDO::PARAM_STR);
+                $checkStmt->bindValue(':slot_id', $slotId, PDO::PARAM_INT);
+                $checkStmt->execute();
 
-                    if ($checkStmt->fetchColumn() > 0) {
-                        $feedback = 'This timeslot already exists for this day of the week.';
-                        goto skipUpdate;
+                if ($checkStmt->fetchColumn() > 0) {
+                    $feedback = 'This timeslot already exists for this date.';
+                } else {
+                    $updateStmt = $conn->prepare("UPDATE laundry_slots 
+                                  SET start_time = :new_start_time 
+                                  WHERE laundry_slot_id = :slot_id");
+
+                    $updateStmt->bindValue(':new_start_time', $newStartTime, PDO::PARAM_STR);
+                    $updateStmt->bindValue(':slot_id', $slotId, PDO::PARAM_INT);
+
+                    if ($updateStmt->execute()) {
+                        $feedback = 'Timeslot updated successfully!';
+                    } else {
+                        $feedback = 'Error updating timeslot.';
                     }
                 }
-
-                // Update all the future slots for this day of week
-                $updateStmt = $conn->prepare("UPDATE laundry_slots 
-                              SET start_time = :new_start_time 
-                              WHERE date >= :today 
-                              AND date LIKE :day_pattern 
-                              AND start_time = :old_start_time");
-
-                $today = date('Y-m-d');
-                $dayPattern = '____-__-' . sprintf('%02d', $dayOfWeek);
-
-                $updateStmt->bindValue(':new_start_time', $newStartTime, PDO::PARAM_STR);
-                $updateStmt->bindValue(':today', $today, PDO::PARAM_STR);
-                $updateStmt->bindValue(':day_pattern', $dayPattern, PDO::PARAM_STR);
-                $updateStmt->bindValue(':old_start_time', $oldStartTime, PDO::PARAM_STR);
-
-                if ($updateStmt->execute()) {
-                    $feedback = 'All future ' . $weekDays[$dayOfWeek]['name'] . ' timeslots updated successfully!';
-                } else {
-                    $feedback = 'Error updating timeslots.';
-                }
             }
-
-            skipUpdate:
         } elseif ($action === 'delete_timeslot') {
-            $dayOfWeek = $_POST['day_of_week'];
-            $startTime = $_POST['start_time'];
+            $slotId = $_POST['slot_id'];
 
-            // Delete all the future slots for this day of the week and time
             $deleteStmt = $conn->prepare("DELETE FROM laundry_slots 
-                          WHERE date >= :today 
-                          AND date LIKE :day_pattern 
-                          AND start_time = :start_time");
-
-            $today = date('Y-m-d');
-            $dayPattern = '____-__-' . sprintf('%02d', $dayOfWeek);
-
-            $deleteStmt->bindValue(':today', $today, PDO::PARAM_STR);
-            $deleteStmt->bindValue(':day_pattern', $dayPattern, PDO::PARAM_STR);
-            $deleteStmt->bindValue(':start_time', $startTime, PDO::PARAM_STR);
+                          WHERE laundry_slot_id = :slot_id");
+            $deleteStmt->bindValue(':slot_id', $slotId, PDO::PARAM_INT);
 
             if ($deleteStmt->execute()) {
-                $feedback = 'All future ' . $weekDays[$dayOfWeek]['name'] . ' timeslots at ' . $startTime . ' deleted successfully!';
+                $feedback = 'Timeslot deleted successfully!';
             } else {
-                $feedback = 'Error deleting timeslots.';
+                $feedback = 'Error deleting timeslot.';
             }
         }
     }
 }
 
-// Get selected day
-$selectedDay = isset($_GET['day']) ? intval($_GET['day']) : intval(date('N'));
-if ($selectedDay < 1 || $selectedDay > 7) {
-    $selectedDay = intval(date('N'));
-}
+$selectedDate = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+$formattedSelectedDate = date('d/m/Y', strtotime($selectedDate));
 
-// Get all the time slots for this day of week
-$dayPattern = '____-__-' . sprintf('%02d', $selectedDay);
-$today = date('Y-m-d');
+$stmt = $conn->prepare("SELECT DISTINCT date FROM laundry_slots WHERE date >= :today ORDER BY date");
+$stmt->bindValue(':today', date('Y-m-d'), PDO::PARAM_STR);
+$stmt->execute();
+$datesWithSlots = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-$stmt = $conn->prepare("SELECT MIN(date) as min_date, start_time, price 
-                      FROM laundry_slots 
-                      WHERE date >= :today 
-                      AND date LIKE :day_pattern 
-                      GROUP BY start_time, price 
-                      ORDER BY start_time");
-$stmt->bindValue(':today', $today, PDO::PARAM_STR);
-$stmt->bindValue(':day_pattern', $dayPattern, PDO::PARAM_STR);
+$stmt = $conn->prepare("
+    SELECT 
+        ls.date,
+        COUNT(ls.laundry_slot_id) AS total_slots,
+        COUNT(lsul.laundry_slot_user_link_id) AS booked_slots
+    FROM 
+        laundry_slots ls
+    LEFT JOIN 
+        laundry_slot_user_link lsul ON ls.laundry_slot_id = lsul.laundry_slot_id AND lsul.is_cancelled = 0
+    WHERE 
+        ls.date >= :today
+    GROUP BY 
+        ls.date
+    HAVING 
+        COUNT(ls.laundry_slot_id) > COUNT(lsul.laundry_slot_user_link_id)
+");
+$stmt->bindValue(':today', date('Y-m-d'), PDO::PARAM_STR);
+$stmt->execute();
+$datesWithAvailableSlots = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+$stmt = $conn->prepare("
+    SELECT 
+        ls.date
+    FROM 
+        laundry_slots ls
+    LEFT JOIN 
+        laundry_slot_user_link lsul ON ls.laundry_slot_id = lsul.laundry_slot_id AND lsul.is_cancelled = 0
+    WHERE 
+        ls.date >= :today
+    GROUP BY 
+        ls.date
+    HAVING 
+        COUNT(ls.laundry_slot_id) = COUNT(lsul.laundry_slot_user_link_id) AND COUNT(ls.laundry_slot_id) > 0
+");
+$stmt->bindValue(':today', date('Y-m-d'), PDO::PARAM_STR);
+$stmt->execute();
+$datesWithOnlyBookedSlots = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+$stmt = $conn->prepare("
+    SELECT 
+        ls.laundry_slot_id, 
+        ls.date, 
+        ls.start_time, 
+        ls.price,
+        ls.recurring,
+        lsul.laundry_slot_user_link_id,
+        u.forename,
+        u.surname
+    FROM 
+        laundry_slots ls
+    LEFT JOIN 
+        laundry_slot_user_link lsul ON ls.laundry_slot_id = lsul.laundry_slot_id AND lsul.is_cancelled = 0
+    LEFT JOIN 
+        users u ON lsul.user_id = u.user_id
+    WHERE 
+        ls.date = :selected_date
+    ORDER BY 
+        ls.start_time
+");
+$stmt->bindValue(':selected_date', $selectedDate, PDO::PARAM_STR);
 $stmt->execute();
 $timeslots = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -207,8 +217,60 @@ $conn = null;
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap" />
     <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="../assets/scripts.js"></script>
     <title>Laundry Management</title>
+    <style>
+        .calendar-container {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .flatpickr-calendar {
+            margin: 0 auto;
+        }
+
+        .flatpickr-day.available-slots {
+            background-color: #c8e6c9 !important;
+            border-color: #c8e6c9 !important;
+        }
+
+        .flatpickr-day.no-available-slots {
+            background-color: #ffcdd2 !important;
+            border-color: #ffcdd2 !important;
+        }
+
+        .flatpickr-day.flatpickr-disabled {
+            color: rgba(64, 64, 64, 0.3) !important;
+            background-color: rgba(240, 240, 240, 0.5) !important;
+            cursor: not-allowed;
+            border-color: transparent !important;
+        }
+
+        .flatpickr-day.available-slots,
+        .flatpickr-day.no-available-slots {
+            color: #000 !important;
+            cursor: pointer;
+        }
+
+        .recurring-badge {
+            display: inline-block;
+            background-color: #2196F3;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        .selected-date-display {
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 
 <body>
@@ -222,46 +284,42 @@ $conn = null;
                 <div class="feedback-message" id="feedback_message"><?php echo $feedback; ?></div>
             <?php endif; ?>
 
+            <div class="calendar-container">
+                <div class="selected-date-display">Selected date is: <?php echo $formattedSelectedDate; ?></div>
+                <input type="text" id="date-picker" name="date" value="<?php echo $selectedDate; ?>"
+                    placeholder="Select date">
+            </div>
+
             <div class="button-center">
                 <button onclick="LuckyNest.toggleForm('add-form')" class="update-add-button">Add Timeslot</button>
             </div>
 
             <div id="add-form" class="add-form">
                 <button type="button" class="close-button" onclick="LuckyNest.toggleForm('add-form')">✕</button>
-                <h2>Create Weekly Timeslot</h2>
+                <h2>Create Timeslot</h2>
                 <form method="POST" action="laundry.php">
                     <input type="hidden" name="action" value="create_timeslot">
-
-                    <label for="day_of_week">Day of Week:</label>
-                    <select id="day_of_week" name="day_of_week" required>
-                        <?php foreach ($weekDays as $num => $day): ?>
-                            <option value="<?php echo $num; ?>">
-                                <?php echo $day['name']; ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="hidden" id="selected_date" name="selected_date" value="<?php echo $selectedDate; ?>">
 
                     <label for="start_time">Start Time:</label>
                     <input type="time" id="start_time" name="start_time" min="08:00" max="22:00" step="3600" required>
+
+                    <div>
+                        <input type="checkbox" id="recurring" name="recurring" onchange="toggleEndDateField()">
+                        <label for="recurring">Make this a recurring weekly slot</label>
+                    </div>
+
+                    <div id="end_date_container" style="display: none;">
+                        <label for="end_date">End Date (for recurring):</label>
+                        <input type="date" id="end_date" name="end_date" min="<?php echo $selectedDate; ?>">
+                    </div>
 
                     <input type="hidden" name="price" value="5.0">
                     <button type="submit" class="update-button">Create Timeslot</button>
                 </form>
             </div>
 
-            <h2>Weekly Timeslots</h2>
-            <form method="GET" action="laundry.php" class="button-center">
-                <label for="day_select">View day:</label>
-                <select id="day_select" name="day" onchange="this.form.submit()">
-                    <?php foreach ($weekDays as $num => $day): ?>
-                        <option value="<?php echo $num; ?>" <?php echo ($num == $selectedDay) ? 'selected' : ''; ?>>
-                            <?php echo $day['name']; ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </form>
-
-            <h3>Timeslots for <?php echo $weekDays[$selectedDay]['name']; ?></h3>
+            <h2>Timeslots for <?php echo date('l, d/m/Y', strtotime($selectedDate)); ?></h2>
 
             <table border="1">
                 <thead>
@@ -269,6 +327,8 @@ $conn = null;
                         <th>Start Time</th>
                         <th>End Time</th>
                         <th>Price (£)</th>
+                        <th>Status</th>
+                        <th>Recurring</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -276,60 +336,71 @@ $conn = null;
                     <?php if (count($timeslots) > 0): ?>
                         <?php foreach ($timeslots as $timeslot):
                             $startTime = $timeslot['start_time'];
-
                             $formattedStartTime = date("H:i", strtotime($startTime));
-                            
                             $endTime = (new DateTime($startTime))->modify('+1 hour')->format('H:00');
+                            $isBooked = !empty($timeslot['laundry_slot_user_link_id']);
                             ?>
                             <tr>
                                 <td><?php echo htmlspecialchars($formattedStartTime); ?></td>
                                 <td><?php echo htmlspecialchars($endTime); ?></td>
                                 <td>£<?php echo htmlspecialchars($timeslot['price']); ?></td>
                                 <td>
+                                    <?php if ($isBooked): ?>
+                                        Booked by
+                                        <?php echo htmlspecialchars($timeslot['forename'] . ' ' . $timeslot['surname']); ?>
+                                    <?php else: ?>
+                                        Available
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if ($timeslot['recurring']): ?>
+                                        <span class="recurring-badge">Yes</span>
+                                    <?php else: ?>
+                                        No
+                                    <?php endif; ?>
+                                </td>
+                                <td>
                                     <button
-                                        onclick="LuckyNest.toggleForm('edit-form-<?php echo $selectedDay; ?>-<?php echo str_replace(':', '', $startTime); ?>')"
+                                        onclick="LuckyNest.toggleForm('edit-form-<?php echo $timeslot['laundry_slot_id']; ?>')"
                                         class="update-button">Edit</button>
 
-                                    <!-- Edit Form -->
-                                    <div id="edit-form-<?php echo $selectedDay; ?>-<?php echo str_replace(':', '', $startTime); ?>"
-                                        class="edit-form">
+                                    <div id="edit-form-<?php echo $timeslot['laundry_slot_id']; ?>" class="edit-form">
                                         <button type="button" class="close-button"
-                                            onclick="LuckyNest.toggleForm('edit-form-<?php echo $selectedDay; ?>-<?php echo str_replace(':', '', $startTime); ?>')">✕</button>
+                                            onclick="LuckyNest.toggleForm('edit-form-<?php echo $timeslot['laundry_slot_id']; ?>')">✕</button>
                                         <form method="POST" action="laundry.php">
                                             <h2>Edit Timeslot</h2>
                                             <input type="hidden" name="action" value="update_timeslot">
-                                            <input type="hidden" name="day_of_week" value="<?php echo $selectedDay; ?>">
-                                            <input type="hidden" name="old_start_time" value="<?php echo $startTime; ?>">
+                                            <input type="hidden" name="slot_id"
+                                                value="<?php echo $timeslot['laundry_slot_id']; ?>">
+                                            <input type="hidden" name="selected_date" value="<?php echo $selectedDate; ?>">
 
-                                            <label
-                                                for="new_time-<?php echo $selectedDay; ?>-<?php echo str_replace(':', '', $startTime); ?>">New
-                                                Start Time:</label>
-                                            <input type="time"
-                                                id="new_time-<?php echo $selectedDay; ?>-<?php echo str_replace(':', '', $startTime); ?>"
+                                            <label for="new_time-<?php echo $timeslot['laundry_slot_id']; ?>">New Start
+                                                Time:</label>
+                                            <input type="time" id="new_time-<?php echo $timeslot['laundry_slot_id']; ?>"
                                                 name="start_time" min="08:00" max="22:00" step="3600"
                                                 value="<?php echo $startTime; ?>" required>
 
                                             <div class="button-group">
                                                 <button type="submit" class="update-button">Update</button>
                                                 <button type="button" class="update-button"
-                                                    onclick="document.getElementById('delete-form-<?php echo $selectedDay; ?>-<?php echo str_replace(':', '', $startTime); ?>').submit(); return false;">Delete</button>
+                                                    onclick="document.getElementById('delete-form-<?php echo $timeslot['laundry_slot_id']; ?>').submit(); return false;">Delete</button>
                                             </div>
                                         </form>
 
-                                        <form
-                                            id="delete-form-<?php echo $selectedDay; ?>-<?php echo str_replace(':', '', $startTime); ?>"
-                                            method="POST" action="laundry.php" style="display:none;">
+                                        <form id="delete-form-<?php echo $timeslot['laundry_slot_id']; ?>" method="POST"
+                                            action="laundry.php" style="display:none;">
                                             <input type="hidden" name="action" value="delete_timeslot">
-                                            <input type="hidden" name="day_of_week" value="<?php echo $selectedDay; ?>">
-                                            <input type="hidden" name="start_time" value="<?php echo $startTime; ?>">
+                                            <input type="hidden" name="slot_id"
+                                                value="<?php echo $timeslot['laundry_slot_id']; ?>">
                                         </form>
                                     </div>
+
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="4">No timeslots available for this day.</td>
+                            <td colspan="6">No timeslots available for this date.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -340,6 +411,61 @@ $conn = null;
         </div>
     </div>
     <div id="form-overlay"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const datesWithSlots = <?php echo json_encode($datesWithSlots); ?>;
+            const datesWithAvailableSlots = <?php echo json_encode($datesWithAvailableSlots); ?>;
+            const datesWithOnlyBookedSlots = <?php echo json_encode($datesWithOnlyBookedSlots); ?>;
+            const today = new Date();
+
+            today.setHours(0, 0, 0, 0);
+
+            const fp = flatpickr("#date-picker", {
+                dateFormat: "Y-m-d",
+                defaultDate: "<?php echo $selectedDate; ?>",
+                inline: true,
+                minDate: "today",
+                onChange: function (selectedDates, dateStr) {
+                    window.location.href = 'laundry.php?date=' + dateStr;
+                },
+                onDayCreate: function (dObj, dStr, fp, dayElem) {
+                    const year = dayElem.dateObj.getFullYear();
+                    const month = String(dayElem.dateObj.getMonth() + 1).padStart(2, '0');
+                    const day = String(dayElem.dateObj.getDate()).padStart(2, '0');
+                    const dateStr = `${year}-${month}-${day}`;
+
+                    if (dayElem.dateObj < today) {
+                        dayElem.className += " flatpickr-disabled";
+                    }
+                    else {
+                        if (datesWithAvailableSlots.includes(dateStr)) {
+                            dayElem.className += " available-slots";
+                        } else if (datesWithOnlyBookedSlots.includes(dateStr)) {
+                            dayElem.className += " no-available-slots";
+                        }
+                    }
+                }
+            });
+
+            document.querySelector('button[onclick="LuckyNest.toggleForm(\'add-form\')"]').addEventListener('click', function () {
+                document.getElementById('selected_date').value = document.getElementById('date-picker').value;
+            });
+        });
+
+        function toggleEndDateField() {
+            const recurringCheckbox = document.getElementById('recurring');
+            const endDateContainer = document.getElementById('end_date_container');
+
+            if (recurringCheckbox.checked) {
+                endDateContainer.style.display = 'block';
+                document.getElementById('end_date').required = true;
+            } else {
+                endDateContainer.style.display = 'none';
+                document.getElementById('end_date').required = false;
+            }
+        }
+    </script>
 </body>
 
 </html>
