@@ -1139,6 +1139,31 @@ const LoginModule = {
   }
 };
 
+// settings
+const SettingsModule = {
+  init() {
+    this.initializeEventListeners();
+  },
+
+  initializeEventListeners() {
+    document.addEventListener('DOMContentLoaded', function () {
+    });
+  },
+
+  showPasswordPrompt(action) {
+    document.getElementById('action-type').value = action;
+    document.getElementById('password-prompt').style.display = 'block';
+  },
+
+  confirmDisable2FA() {
+    if (confirm("Are you sure you want to disable 2FA?")) {
+      document.getElementById('disable-2fa-form').submit();
+      return true;
+    }
+    return false;
+  }
+};
+
 // Main
 document.addEventListener('DOMContentLoaded', function () {
   console.log("LuckyNest initializing...");
@@ -1156,6 +1181,7 @@ document.addEventListener('DOMContentLoaded', function () {
   DepositModule.init();
   NotificationModule.init();
   LoginModule.init();
+  SettingsModule.init();
 
   PaymentModule.init({
     roomRates: window.roomRates || {},
@@ -1172,32 +1198,42 @@ if (typeof LuckyNest === 'undefined') {
 
 window.LuckyNest = {
   toggleForm: Utils.toggleForm,
+  playNotificationSound: Utils.playNotificationSound,
+
   confirmRoleChange: UserManagementModule.confirmRoleChange,
-  toggleDeleteLaundryForm: LaundryModule.toggleDeleteLaundryForm,
+
   updateBookingDetails: PaymentModule.updateBookingDetails,
   showPaymentForm: PaymentModule.showPaymentForm,
   calculateAmount: PaymentModule.calculateAmount,
+
   showRoomRatingForm: RatingModule.showRoomRatingForm,
   showMealRatingForm: RatingModule.showMealRatingForm,
   hideRatingForm: RatingModule.hideRatingForm,
+
   toggleNav: NavModule.toggleNav,
   toggleSubmenu: NavModule.toggleSubmenu,
   initSidebar: NavModule.initSidebar,
+
   toggleFinancialCard: FinancialModule.toggleFinancialCard,
   initFinancialCards: FinancialModule.initFinancialCards,
+
   updateDepositForm: DepositModule.updateDepositForm,
   initDepositFormHandlers: DepositModule.initDepositFormHandlers,
-  playNotificationSound: Utils.playNotificationSound,
+
   updateDayOptions: MealModule.updateDayOptions,
+
+  toggleDeleteLaundryForm: LaundryModule.toggleDeleteLaundryForm,
   toggleEndDateField: LaundryModule.toggleEndDateField,
   initLaundryCalendar: LaundryModule.initLaundryCalendar,
-  toggleForms: LoginModule.toggleForms,
 
-  // Password Reset Functions
+  toggleForms: LoginModule.toggleForms,
   showPasswordRequirements: LoginModule.showPasswordRequirements,
   hidePasswordRequirements: LoginModule.hidePasswordRequirements,
   showConfirmPasswordTip: LoginModule.showConfirmPasswordTip,
   hideConfirmPasswordTip: LoginModule.hideConfirmPasswordTip,
   validatePasswordStrength: LoginModule.validatePasswordStrength,
-  validateResetForm: LoginModule.validateResetForm
+  validateResetForm: LoginModule.validateResetForm,
+
+  showPasswordPrompt: SettingsModule.showPasswordPrompt,
+  confirmDisable2FA: SettingsModule.confirmDisable2FA
 };

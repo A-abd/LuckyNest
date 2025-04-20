@@ -233,18 +233,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_code'])) {
             color: white;
         }
     </style>
-    <script>
-        function showPasswordPrompt(action) {
-            document.getElementById('action-type').value = action;
-            document.getElementById('password-prompt').style.display = 'block';
-        }
-
-        function confirmDisable2FA() {
-            if (confirm("Are you sure you want to disable 2FA?")) {
-                document.getElementById('disable-2fa-form').submit();
-            }
-        }
-    </script>
     <title>Account Settings</title>
     <script src="../assets/scripts.js"></script>
 </head>
