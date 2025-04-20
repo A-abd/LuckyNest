@@ -1004,6 +1004,17 @@ const DepositModule = {
   }
 };
 
+// Login
+const LoginModule = {
+  init() {
+  },
+
+  toggleLoginForms(show2FA) {
+    document.getElementById('login-form').style.display = show2FA ? 'none' : 'block';
+    document.getElementById('2fa-form').style.display = show2FA ? 'block' : 'none';
+  }
+};
+
 // Main
 document.addEventListener('DOMContentLoaded', function () {
   console.log("LuckyNest initializing...");
@@ -1020,6 +1031,7 @@ document.addEventListener('DOMContentLoaded', function () {
   FinancialModule.init();
   DepositModule.init();
   NotificationModule.init();
+  LoginModule.init();
 
   PaymentModule.init({
     roomRates: window.roomRates || {},
@@ -1054,5 +1066,6 @@ window.LuckyNest = {
   playNotificationSound: Utils.playNotificationSound,
   updateDayOptions: MealModule.updateDayOptions,
   toggleEndDateField: LaundryModule.toggleEndDateField,
-  initLaundryCalendar: LaundryModule.initLaundryCalendar
+  initLaundryCalendar: LaundryModule.initLaundryCalendar,
+  toggleLoginForm: LoginModule.toggleLoginForms
 };

@@ -59,12 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['email'], $_POST['passw
         href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="../assets/styles.css">
-    <script>
-        function toggleForms(show2FA) {
-            document.getElementById('login-form').style.display = show2FA ? 'none' : 'block';
-            document.getElementById('2fa-form').style.display = show2FA ? 'block' : 'none';
-        }
-    </script>
+    <script src="../assets/scripts.js"></script>
 </head>
 
 <body class="login">
@@ -72,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['email'], $_POST['passw
         <h1 class="title">LuckyNest</h1>
         <div class="wrapper">
             <?php if (isset($_SESSION['2fa_pending'])): ?>
-                <script>toggleForms(true);</script>
+                <script>LuckyNest.toggleForms(true);</script>
                 <form id="2fa-form" method="POST" action="login.php">
                     <h1>Two-Factor Authentication</h1>
                     <p>Enter the authentication code from your app:</p>
@@ -82,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['email'], $_POST['passw
                     <button type="submit" class="btn">Verify</button>
                 </form>
             <?php else: ?>
-                <script>toggleForms(false);</script>
+                <script>LuckyNest.toggleForms(false);</script>
                 <form id="login-form" method="POST" action="login.php">
                     <h1>Login</h1>
                     <?php if (isset($error)): ?>
