@@ -20,6 +20,67 @@ body {
   height: 100vh;
 }
 
+/* LOGIN PAGE */
+
+body.login{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+  align-items: center;
+  height: 100vh;
+  color: #ecf0f0;
+  background: #507878;
+  margin: 0;
+  padding: 0;
+}
+
+.title-login {
+  font-size: 62px;
+  color: #fed7ca;
+  position: absolute;
+  top: 40px;
+  left: 40px;
+}
+
+.right-img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  height: 100%;
+}
+
+.wrapper {
+  width: 420px;
+  background-color: #fed7ca;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  color: #2b4949;
+  border-radius: 2px;
+  padding: 30px 40px;
+}
+
+/* Adjust these specific elements */
+.remember-forgot {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14.5px;
+  margin: -16px 0 16px;
+}
+
+.register-link {
+  margin-top: 20px;
+}
+
+.input-box {
+  margin: 30px 0;
+}
+
 /*LAYOUT & BACKGROUND*/
 .blur-layer {
   position: fixed;
@@ -1312,4 +1373,5 @@ tbody {
 
 .has-dropdown.open i.fa-chevron-down {
   transform: rotate(180deg);
+}
 }
