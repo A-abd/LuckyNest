@@ -32,3 +32,10 @@ How to setup the automated notifications:
      9. Create a notification_logs.php file in the logs folder (although not necessary as the scripts should automatically create it)
 
      Note: you can manually run it via "C:\xampp\php\php.exe C:\xampp\htdocs\LuckyNest\notification_scheduler.php" (you may have to adjust the path to the file)
+
+
+Two Factor Authentication (2FA):
+Technical Note: While the Sonata Google Authenticator Library that is used in this project has been officially deprecated, we made deliberate engineering decision
+to continue using Sonata for LuckyNest 2FA. The library remains functional and meets our extra requirement to add 2FA, while at the same time providing a much simpler
+implementation. While newer alternatives exist, we believe that the Sonata implementation has satisfied the project's extra requirement and has resulted in a seamless
+production quality version of 2FA for the users of LuckyNest.
