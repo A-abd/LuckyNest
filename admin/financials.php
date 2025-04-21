@@ -164,50 +164,6 @@ $conn = null;
     <link rel="stylesheet" href="../assets/styles.css">
     <script src="../assets/scripts.js"></script>
     <title>Financial Reports</title>
-    <style>
-        .financial-card {
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            overflow: hidden;
-        }
-
-        .financial-card-header {
-            padding: 10px 15px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: bold;
-        }
-
-        .financial-card-header:hover {
-            background-color: #e9e9e9;
-        }
-
-        .financial-card-body {
-            display: none;
-            padding: 15px;
-            border-top: 1px solid #ddd;
-        }
-
-        .financial-card-body.active {
-            display: block;
-        }
-
-        .financial-card-value {
-            font-weight: bold;
-            color: #333;
-        }
-
-        .positive {
-            color: #28a745;
-        }
-
-        .negative {
-            color: #dc3545;
-        }
-    </style>
 </head>
 
 <body>
