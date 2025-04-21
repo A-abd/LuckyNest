@@ -23,10 +23,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (isset($_POST['cancel_meal_plan'])) {
-        $mealPlanUserLink = $_POST['meal_plan_user_link'];
+        $mealPlanUserLinkId = $_POST['meal_plan_user_link_id'];
         $stmt = $conn->prepare("UPDATE meal_plan_user_link SET is_cancelled = 1 
-                               WHERE meal_plan_user_link = ? AND user_id = ?");
-        $stmt->execute([$mealPlanUserLink, $_SESSION['user_id']]);
+                               WHERE meal_plan_user_link_id = ? AND user_id = ?");
+        $stmt->execute([$mealPlanUserLinkId, $_SESSION['user_id']]);
 
         $message = "Your meal plan has been cancelled.";
         $notifStmt = $conn->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)");
@@ -97,7 +97,7 @@ try {
 
     $mealPlansQuery = $conn->prepare("
         SELECT mp.name, mp.meal_plan_type, mp.duration_days, mpul.is_paid, 
-               mp.meal_plan_id, mpul.meal_plan_user_link, mpul.start_date,
+               mp.meal_plan_id, mpul.meal_plan_user_link_id, mpul.start_date,
                (SELECT COUNT(*) FROM meal_plan_ratings 
                 WHERE meal_plan_id = mp.meal_plan_id AND user_id = ?) as has_rating,
                (SELECT SUM(m.price) FROM meal_plan_items_link mpil 
@@ -339,8 +339,8 @@ try {
                                 <td>
                                     <?php if (!$plan['is_paid']): ?>
                                         <form method="post" style="display: inline;">
-                                            <input type="hidden" name="meal_plan_user_link"
-                                                value="<?php echo $plan['meal_plan_user_link']; ?>">
+                                            <input type="hidden" name="meal_plan_user_link_id"
+                                                value="<?php echo $plan['meal_plan_user_link_id']; ?>">
                                             <button type="submit" name="cancel_meal_plan"
                                                 class="button cancel-button">Cancel</button>
                                         </form>

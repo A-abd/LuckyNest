@@ -59,7 +59,7 @@ try {
 }
 
 try {
-    $stmt = $conn->prepare("SELECT mpl.meal_plan_user_link, mp.meal_plan_id, mp.name, mp.meal_plan_type
+    $stmt = $conn->prepare("SELECT mpl.meal_plan_user_link_id, mp.meal_plan_id, mp.name, mp.meal_plan_type
                            FROM meal_plan_user_link mpl
                            JOIN meal_plans mp ON mpl.meal_plan_id = mp.meal_plan_id
                            WHERE mpl.user_id = :user_id
