@@ -248,11 +248,11 @@ try {
                                 <td>$<?php echo number_format($booking['total_price'], 2); ?></td>
                                 <td><?php echo $booking['booking_is_paid'] ? 'Paid' : 'Unpaid'; ?></td>
                                 <td>
-                                    <form method="post" style="display: inline;">
-                                        <input type="hidden" name="booking_id" value="<?php echo $booking['booking_id']; ?>">
-                                        <button type="submit" name="cancel_booking" class="button cancel-button">Cancel</button>
-                                    </form>
                                     <?php if (!$booking['booking_is_paid']): ?>
+                                        <form method="post" style="display: inline;">
+                                            <input type="hidden" name="booking_id" value="<?php echo $booking['booking_id']; ?>">
+                                            <button type="submit" name="cancel_booking" class="button cancel-button">Cancel</button>
+                                        </form>
                                         <form method="post" action="../include/checkout.php" style="display: inline;">
                                             <input type="hidden" name="payment_type" value="rent">
                                             <input type="hidden" name="booking_id" value="<?php echo $booking['booking_id']; ?>">
@@ -337,13 +337,13 @@ try {
                                 <td><?php echo formatDate($plan['start_date']); ?></td>
                                 <td><?php echo $plan['is_paid'] ? 'Paid' : 'Unpaid'; ?></td>
                                 <td>
-                                    <form method="post" style="display: inline;">
-                                        <input type="hidden" name="meal_plan_user_link"
-                                            value="<?php echo $plan['meal_plan_user_link']; ?>">
-                                        <button type="submit" name="cancel_meal_plan"
-                                            class="button cancel-button">Cancel</button>
-                                    </form>
                                     <?php if (!$plan['is_paid']): ?>
+                                        <form method="post" style="display: inline;">
+                                            <input type="hidden" name="meal_plan_user_link"
+                                                value="<?php echo $plan['meal_plan_user_link']; ?>">
+                                            <button type="submit" name="cancel_meal_plan"
+                                                class="button cancel-button">Cancel</button>
+                                        </form>
                                         <form method="post" action="../include/checkout.php" style="display: inline;">
                                             <input type="hidden" name="payment_type" value="meal_plan">
                                             <input type="hidden" name="meal_plan_id" value="<?php echo $plan['meal_plan_id']; ?>">
@@ -421,12 +421,12 @@ try {
                                 <td>$<?php echo number_format($slot['price'], 2); ?></td>
                                 <td><?php echo $slot['is_paid'] ? 'Paid' : 'Unpaid'; ?></td>
                                 <td>
-                                    <form method="post" style="display: inline;">
-                                        <input type="hidden" name="laundry_slot_user_link_id"
-                                            value="<?php echo $slot['laundry_slot_user_link_id']; ?>">
-                                        <button type="submit" name="cancel_laundry" class="button cancel-button">Cancel</button>
-                                    </form>
                                     <?php if (!$slot['is_paid']): ?>
+                                        <form method="post" style="display: inline;">
+                                            <input type="hidden" name="laundry_slot_user_link_id"
+                                                value="<?php echo $slot['laundry_slot_user_link_id']; ?>">
+                                            <button type="submit" name="cancel_laundry" class="button cancel-button">Cancel</button>
+                                        </form>
                                         <form method="post" action="../include/checkout.php" style="display: inline;">
                                             <input type="hidden" name="payment_type" value="laundry">
                                             <input type="hidden" name="laundry_slot_id"
