@@ -19,216 +19,233 @@ $user_id = null;
 $amount = 0;
 $description = '';
 $item_details = [];
+$already_processed = false;
 
 $vat_rate = 0.20;
 
 try {
-    // Different queries based on payment type
-    if ($payment_type == 'rent') {
-        $stmt = $conn->prepare("SELECT b.*, u.forename, u.surname, u.email, u.address, u.phone, r.room_number, 
-                               rt.rate_monthly, rt.room_type_name 
-                               FROM bookings b 
-                               JOIN users u ON b.guest_id = u.user_id 
-                               JOIN rooms r ON b.room_id = r.room_id 
-                               JOIN room_types rt ON r.room_type_id = rt.room_type_id 
-                               WHERE b.booking_id = :reference_id");
-        $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$data) {
-            die("Booking not found.");
-        }
-
-        $user_id = $data['guest_id'];
-        $check_in_date = $data['check_in_date'];
-        $check_out_date = $data['check_out_date'];
-        $guest_name = $data['forename'] . ' ' . $data['surname'];
-        $guest_email = $data['email'];
-        $guest_address = $data['address'];
-        $guest_phone = $data['phone'];
-        $room_number = $data['room_number'];
-        $room_type = $data['room_type_name'];
-        $amount = floatval($data['rate_monthly']);
-
-        $date1 = new DateTime($check_in_date);
-        $date2 = new DateTime($check_out_date);
-        $interval = $date1->diff($date2);
-        $days = $interval->days;
-
-        $description = "Accommodation: {$room_type} - Room {$room_number} - {$days} days stay";
-        $item_details = [
-            'item' => $room_type . ' - ' . $days . ' days stay',
-            'room_number' => $room_number,
-            'start_date' => $check_in_date,
-            'end_date' => $check_out_date
-        ];
-
-    } elseif ($payment_type == 'meal_plan') {
-        $stmt = $conn->prepare("SELECT mpl.*, mp.name AS meal_plan_name, mp.price, 
-                               u.forename, u.surname, u.email, u.address, u.phone 
-                               FROM meal_plan_user_link mpl 
-                               JOIN meal_plans mp ON mpl.meal_plan_id = mp.meal_plan_id 
-                               JOIN users u ON mpl.user_id = u.user_id 
-                               WHERE mpl.meal_plan_user_link = :reference_id");
-        $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$data) {
-            die("Meal plan not found.");
-        }
-
-        $user_id = $data['user_id'];
-        $guest_name = $data['forename'] . ' ' . $data['surname'];
-        $guest_email = $data['email'];
-        $guest_address = $data['address'];
-        $guest_phone = $data['phone'];
-        $meal_plan_name = $data['meal_plan_name'];
-        $amount = floatval($data['price']);
-
-        $description = "Meal Plan: {$meal_plan_name}";
-        $item_details = [
-            'item' => $meal_plan_name,
-            'room_number' => 'N/A',
-            'start_date' => date('Y-m-d'),
-            'end_date' => date('Y-m-d', strtotime('+30 days'))
-        ];
-
-    } elseif ($payment_type == 'laundry') {
-        $stmt = $conn->prepare("SELECT lsl.*, ls.date, ls.start_time, ls.price, 
-                               u.forename, u.surname, u.email, u.address, u.phone 
-                               FROM laundry_slot_user_link lsl 
-                               JOIN laundry_slots ls ON lsl.laundry_slot_id = ls.laundry_slot_id 
-                               JOIN users u ON lsl.user_id = u.user_id 
-                               WHERE lsl.laundry_slot_user_link_id = :reference_id");
-        $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$data) {
-            die("Laundry slot not found.");
-        }
-
-        $user_id = $data['user_id'];
-        $guest_name = $data['forename'] . ' ' . $data['surname'];
-        $guest_email = $data['email'];
-        $guest_address = $data['address'];
-        $guest_phone = $data['phone'];
-        $laundry_date = $data['date'];
-        $laundry_time = $data['start_time'];
-        $amount = floatval($data['price']);
-
-        $description = "Laundry Service: {$laundry_date} at {$laundry_time}";
-        $item_details = [
-            'item' => 'Laundry Slot',
-            'room_number' => 'N/A',
-            'start_date' => $laundry_date,
-            'end_date' => $laundry_date
-        ];
-    } elseif ($payment_type == 'deposit') {
-        $stmt = $conn->prepare("SELECT b.*, u.forename, u.surname, u.email, u.address, u.phone, r.room_number, 
-                               rt.room_type_name, rt.deposit_amount 
-                               FROM bookings b 
-                               JOIN users u ON b.guest_id = u.user_id 
-                               JOIN rooms r ON b.room_id = r.room_id 
-                               JOIN room_types rt ON r.room_type_id = rt.room_type_id 
-                               WHERE b.booking_id = :reference_id");
-        $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$data) {
-            die("Booking not found for deposit.");
-        }
-
-        $user_id = $data['guest_id'];
-        $check_in_date = $data['check_in_date'];
-        $check_out_date = $data['check_out_date'];
-        $guest_name = $data['forename'] . ' ' . $data['surname'];
-        $guest_email = $data['email'];
-        $guest_address = $data['address'];
-        $guest_phone = $data['phone'];
-        $room_number = $data['room_number'];
-        $room_type = $data['room_type_name'];
-        $amount = floatval($data['deposit_amount']);
-
-        $description = "Security Deposit: {$room_type} - Room {$room_number}";
-        $item_details = [
-            'item' => 'Security Deposit - ' . $room_type,
-            'room_number' => $room_number,
-            'start_date' => $check_in_date,
-            'end_date' => $check_out_date
-        ];
-    } else {
-        die("Invalid payment type.");
-    }
-} catch (PDOException $e) {
-    die("Database error: " . $e->getMessage());
-}
-
-try {
-    // Update the relevant table based on payment type
-    if ($payment_type == 'rent') {
-        $stmt = $conn->prepare("SELECT booking_is_paid FROM bookings WHERE booking_id = :reference_id");
-        $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $isPaid = $stmt->fetchColumn();
-
-        if (!$isPaid) {
-            $stmt = $conn->prepare("UPDATE bookings SET booking_is_paid = 1 WHERE booking_id = :reference_id");
-            $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
-            $stmt->execute();
-        }
-    } elseif ($payment_type == 'meal_plan') {
-        $stmt = $conn->prepare("SELECT is_paid FROM meal_plan_user_link WHERE meal_plan_user_link = :reference_id");
-        $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $isPaid = $stmt->fetchColumn();
-
-        if (!$isPaid) {
-            $stmt = $conn->prepare("UPDATE meal_plan_user_link SET is_paid = 1 WHERE meal_plan_user_link = :reference_id");
-            $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
-            $stmt->execute();
-        }
-    } elseif ($payment_type == 'laundry') {
-        $stmt = $conn->prepare("SELECT is_paid FROM laundry_slot_user_link WHERE laundry_slot_user_link_id = :reference_id");
-        $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $isPaid = $stmt->fetchColumn();
-
-        if (!$isPaid) {
-            $stmt = $conn->prepare("UPDATE laundry_slot_user_link SET is_paid = 1 WHERE laundry_slot_user_link_id = :reference_id");
-            $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
-            $stmt->execute();
-        }
-    } elseif ($payment_type == 'deposit') {
-        $stmt = $conn->prepare("SELECT deposit_id FROM deposits WHERE booking_id = :booking_id");
-        $stmt->bindValue(':booking_id', $reference_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $depositExists = $stmt->fetchColumn();
-
-        if (!$depositExists) {
-            $stmt = $conn->prepare("INSERT INTO deposits (booking_id, amount, status, date_paid) 
-                                 VALUES (:booking_id, :amount, 'paid', NOW())");
-            $stmt->bindValue(':booking_id', $reference_id, PDO::PARAM_INT);
-            $stmt->bindValue(':amount', $amount, PDO::PARAM_STR);
-            $stmt->execute();
-        } else {
-            $stmt = $conn->prepare("UPDATE deposits SET status = 'paid', date_paid = NOW() WHERE booking_id = :booking_id");
-            $stmt->bindValue(':booking_id', $reference_id, PDO::PARAM_INT);
-            $stmt->execute();   
-        }
-    }
-
-    // Check if payment already exists
-    $stmt = $conn->prepare("SELECT payment_id FROM payments WHERE stripe_payment_id = :stripe_payment_id");
+    $stmt = $conn->prepare("SELECT payment_id, user_id FROM payments WHERE stripe_payment_id = :stripe_payment_id");
     $stmt->bindValue(':stripe_payment_id', $session_id, PDO::PARAM_STR);
     $stmt->execute();
-    $paymentExists = $stmt->fetchColumn();
+    $payment_data = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($payment_data) {
+        $payment_id = $payment_data['payment_id'];
+        $user_id = $payment_data['user_id'];
+        $already_processed = true;
+        
+        $stmt = $conn->prepare("SELECT invoice_id, filename FROM invoices WHERE payment_id = :payment_id");
+        $stmt->bindValue(':payment_id', $payment_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $invoice_data = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($invoice_data) {
+            $pdf_filename = $invoice_data['filename'];
+            $pdf_generated = true;
+        }
+    }
+} catch (PDOException $e) {
+    die("Database error checking payment status: " . $e->getMessage());
+}
 
-    if (!$paymentExists) {
-        // Insert into payments table
+if (!$already_processed) {
+    try {
+        if ($payment_type == 'rent') {
+            $stmt = $conn->prepare("SELECT b.*, u.forename, u.surname, u.email, u.address, u.phone, r.room_number, 
+                                   rt.rate_monthly, rt.room_type_name 
+                                   FROM bookings b 
+                                   JOIN users u ON b.guest_id = u.user_id 
+                                   JOIN rooms r ON b.room_id = r.room_id 
+                                   JOIN room_types rt ON r.room_type_id = rt.room_type_id 
+                                   WHERE b.booking_id = :reference_id");
+            $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
+            $stmt->execute();
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$data) {
+                die("Booking not found.");
+            }
+
+            $user_id = $data['guest_id'];
+            $check_in_date = $data['check_in_date'];
+            $check_out_date = $data['check_out_date'];
+            $guest_name = $data['forename'] . ' ' . $data['surname'];
+            $guest_email = $data['email'];
+            $guest_address = $data['address'];
+            $guest_phone = $data['phone'];
+            $room_number = $data['room_number'];
+            $room_type = $data['room_type_name'];
+            $amount = floatval($data['rate_monthly']);
+
+            $date1 = new DateTime($check_in_date);
+            $date2 = new DateTime($check_out_date);
+            $interval = $date1->diff($date2);
+            $days = $interval->days;
+
+            $description = "Accommodation: {$room_type} - Room {$room_number} - {$days} days stay";
+            $item_details = [
+                'item' => $room_type . ' - ' . $days . ' days stay',
+                'room_number' => $room_number,
+                'start_date' => $check_in_date,
+                'end_date' => $check_out_date
+            ];
+
+        } elseif ($payment_type == 'meal_plan') {
+            $stmt = $conn->prepare("SELECT mpl.*, mp.name AS meal_plan_name, mp.price, 
+                                   u.forename, u.surname, u.email, u.address, u.phone 
+                                   FROM meal_plan_user_link mpl 
+                                   JOIN meal_plans mp ON mpl.meal_plan_id = mp.meal_plan_id 
+                                   JOIN users u ON mpl.user_id = u.user_id 
+                                   WHERE mpl.meal_plan_user_link = :reference_id");
+            $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
+            $stmt->execute();
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$data) {
+                die("Meal plan not found.");
+            }
+
+            $user_id = $data['user_id'];
+            $guest_name = $data['forename'] . ' ' . $data['surname'];
+            $guest_email = $data['email'];
+            $guest_address = $data['address'];
+            $guest_phone = $data['phone'];
+            $meal_plan_name = $data['meal_plan_name'];
+            $amount = floatval($data['price']);
+
+            $description = "Meal Plan: {$meal_plan_name}";
+            $item_details = [
+                'item' => $meal_plan_name,
+                'room_number' => 'N/A',
+                'start_date' => date('Y-m-d'),
+                'end_date' => date('Y-m-d', strtotime('+30 days'))
+            ];
+
+        } elseif ($payment_type == 'laundry') {
+            $stmt = $conn->prepare("SELECT lsl.*, ls.date, ls.start_time, ls.price, 
+                                   u.forename, u.surname, u.email, u.address, u.phone 
+                                   FROM laundry_slot_user_link lsl 
+                                   JOIN laundry_slots ls ON lsl.laundry_slot_id = ls.laundry_slot_id 
+                                   JOIN users u ON lsl.user_id = u.user_id 
+                                   WHERE lsl.laundry_slot_user_link_id = :reference_id");
+            $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
+            $stmt->execute();
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$data) {
+                die("Laundry slot not found.");
+            }
+
+            $user_id = $data['user_id'];
+            $guest_name = $data['forename'] . ' ' . $data['surname'];
+            $guest_email = $data['email'];
+            $guest_address = $data['address'];
+            $guest_phone = $data['phone'];
+            $laundry_date = $data['date'];
+            $laundry_time = $data['start_time'];
+            $amount = floatval($data['price']);
+
+            $description = "Laundry Service: {$laundry_date} at {$laundry_time}";
+            $item_details = [
+                'item' => 'Laundry Slot',
+                'room_number' => 'N/A',
+                'start_date' => $laundry_date,
+                'end_date' => $laundry_date
+            ];
+        } elseif ($payment_type == 'deposit') {
+            $stmt = $conn->prepare("SELECT b.*, u.forename, u.surname, u.email, u.address, u.phone, r.room_number, 
+                                   rt.room_type_name, rt.deposit_amount 
+                                   FROM bookings b 
+                                   JOIN users u ON b.guest_id = u.user_id 
+                                   JOIN rooms r ON b.room_id = r.room_id 
+                                   JOIN room_types rt ON r.room_type_id = rt.room_type_id 
+                                   WHERE b.booking_id = :reference_id");
+            $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
+            $stmt->execute();
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$data) {
+                die("Booking not found for deposit.");
+            }
+
+            $user_id = $data['guest_id'];
+            $check_in_date = $data['check_in_date'];
+            $check_out_date = $data['check_out_date'];
+            $guest_name = $data['forename'] . ' ' . $data['surname'];
+            $guest_email = $data['email'];
+            $guest_address = $data['address'];
+            $guest_phone = $data['phone'];
+            $room_number = $data['room_number'];
+            $room_type = $data['room_type_name'];
+            $amount = floatval($data['deposit_amount']);
+
+            $description = "Security Deposit: {$room_type} - Room {$room_number}";
+            $item_details = [
+                'item' => 'Security Deposit - ' . $room_type,
+                'room_number' => $room_number,
+                'start_date' => $check_in_date,
+                'end_date' => $check_out_date
+            ];
+        } else {
+            die("Invalid payment type.");
+        }
+    } catch (PDOException $e) {
+        die("Database error: " . $e->getMessage());
+    }
+
+    try {
+        if ($payment_type == 'rent') {
+            $stmt = $conn->prepare("SELECT booking_is_paid FROM bookings WHERE booking_id = :reference_id");
+            $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
+            $stmt->execute();
+            $isPaid = $stmt->fetchColumn();
+
+            if (!$isPaid) {
+                $stmt = $conn->prepare("UPDATE bookings SET booking_is_paid = 1 WHERE booking_id = :reference_id");
+                $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
+                $stmt->execute();
+            }
+        } elseif ($payment_type == 'meal_plan') {
+            $stmt = $conn->prepare("SELECT is_paid FROM meal_plan_user_link WHERE meal_plan_user_link = :reference_id");
+            $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
+            $stmt->execute();
+            $isPaid = $stmt->fetchColumn();
+
+            if (!$isPaid) {
+                $stmt = $conn->prepare("UPDATE meal_plan_user_link SET is_paid = 1 WHERE meal_plan_user_link = :reference_id");
+                $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
+                $stmt->execute();
+            }
+        } elseif ($payment_type == 'laundry') {
+            $stmt = $conn->prepare("SELECT is_paid FROM laundry_slot_user_link WHERE laundry_slot_user_link_id = :reference_id");
+            $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
+            $stmt->execute();
+            $isPaid = $stmt->fetchColumn();
+
+            if (!$isPaid) {
+                $stmt = $conn->prepare("UPDATE laundry_slot_user_link SET is_paid = 1 WHERE laundry_slot_user_link_id = :reference_id");
+                $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
+                $stmt->execute();
+            }
+        } elseif ($payment_type == 'deposit') {
+            $stmt = $conn->prepare("SELECT deposit_id FROM deposits WHERE booking_id = :booking_id");
+            $stmt->bindValue(':booking_id', $reference_id, PDO::PARAM_INT);
+            $stmt->execute();
+            $depositExists = $stmt->fetchColumn();
+
+            if (!$depositExists) {
+                $stmt = $conn->prepare("INSERT INTO deposits (booking_id, amount, status, date_paid) 
+                                     VALUES (:booking_id, :amount, 'paid', NOW())");
+                $stmt->bindValue(':booking_id', $reference_id, PDO::PARAM_INT);
+                $stmt->bindValue(':amount', $amount, PDO::PARAM_STR);
+                $stmt->execute();
+            } else {
+                $stmt = $conn->prepare("UPDATE deposits SET status = 'paid', date_paid = NOW() WHERE booking_id = :booking_id");
+                $stmt->bindValue(':booking_id', $reference_id, PDO::PARAM_INT);
+                $stmt->execute();   
+            }
+        }
+
         $stmt = $conn->prepare("INSERT INTO payments (user_id, reference_id, payment_type, amount, payment_date, stripe_payment_id) 
                                VALUES (:user_id, :reference_id, :payment_type, :amount, :payment_date, :stripe_payment_id)");
         $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
@@ -240,30 +257,91 @@ try {
         $stmt->execute();
         $payment_id = $conn->lastInsertId();
 
-        // Insert notification
         $message = "Your payment for " . ucfirst($payment_type) . " has been successfully processed.";
         $stmt = $conn->prepare("INSERT INTO notifications (user_id, message) VALUES (:user_id, :message)");
         $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
         $stmt->bindValue(':message', $message, PDO::PARAM_STR);
         $stmt->execute();
-    } else {
-        $stmt = $conn->prepare("SELECT payment_id FROM payments WHERE stripe_payment_id = :stripe_payment_id");
-        $stmt->bindValue(':stripe_payment_id', $session_id, PDO::PARAM_STR);
-        $stmt->execute();
-        $payment_id = $stmt->fetchColumn();
+    } catch (PDOException $e) {
+        die("Database error: " . $e->getMessage());
     }
-} catch (PDOException $e) {
-    die("Database error: " . $e->getMessage());
+} else {
+    try {
+        if ($payment_type == 'rent') {
+            $stmt = $conn->prepare("SELECT b.*, u.forename, u.surname, u.email, r.room_number, rt.room_type_name
+                                   FROM bookings b 
+                                   JOIN users u ON b.guest_id = u.user_id 
+                                   JOIN rooms r ON b.room_id = r.room_id 
+                                   JOIN room_types rt ON r.room_type_id = rt.room_type_id 
+                                   WHERE b.booking_id = :reference_id");
+        } elseif ($payment_type == 'meal_plan') {
+            $stmt = $conn->prepare("SELECT mpl.*, mp.name AS meal_plan_name, mp.price, u.forename, u.surname, u.email
+                                   FROM meal_plan_user_link mpl 
+                                   JOIN meal_plans mp ON mpl.meal_plan_id = mp.meal_plan_id 
+                                   JOIN users u ON mpl.user_id = u.user_id 
+                                   WHERE mpl.meal_plan_user_link = :reference_id");
+        } elseif ($payment_type == 'laundry') {
+            $stmt = $conn->prepare("SELECT lsl.*, ls.date, ls.start_time, ls.price, u.forename, u.surname, u.email
+                                   FROM laundry_slot_user_link lsl 
+                                   JOIN laundry_slots ls ON lsl.laundry_slot_id = ls.laundry_slot_id 
+                                   JOIN users u ON lsl.user_id = u.user_id 
+                                   WHERE lsl.laundry_slot_user_link_id = :reference_id");
+        } elseif ($payment_type == 'deposit') {
+            $stmt = $conn->prepare("SELECT b.*, u.forename, u.surname, u.email, r.room_number, rt.room_type_name, rt.deposit_amount
+                                   FROM bookings b 
+                                   JOIN users u ON b.guest_id = u.user_id 
+                                   JOIN rooms r ON b.room_id = r.room_id 
+                                   JOIN room_types rt ON r.room_type_id = rt.room_type_id 
+                                   WHERE b.booking_id = :reference_id");
+        }
+        
+        $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($data) {
+            $guest_name = $data['forename'] . ' ' . $data['surname'];
+            $guest_email = $data['email'];
+            
+            if ($payment_type == 'rent' || $payment_type == 'deposit') {
+                $room_number = $data['room_number'];
+                $room_type = $data['room_type_name'];
+                $check_in_date = $data['check_in_date'];
+                $check_out_date = $data['check_out_date'];
+                
+                if ($payment_type == 'deposit') {
+                    $amount = floatval($data['deposit_amount']);
+                } else {
+                    $amount = floatval($data['total_price']);
+                }
+            } elseif ($payment_type == 'meal_plan') {
+                $meal_plan_name = $data['meal_plan_name'];
+                $amount = floatval($data['price']);
+            } elseif ($payment_type == 'laundry') {
+                $laundry_date = $data['date'];
+                $laundry_time = $data['start_time'];
+                $amount = floatval($data['price']);
+            }
+        }
+        
+        if (!$amount) {
+            $stmt = $conn->prepare("SELECT amount FROM payments WHERE payment_id = :payment_id");
+            $stmt->bindValue(':payment_id', $payment_id, PDO::PARAM_INT);
+            $stmt->execute();
+            $amount = floatval($stmt->fetchColumn());
+        }
+    } catch (PDOException $e) {
+        error_log("Error fetching details for already processed payment: " . $e->getMessage());
+    }
 }
+
+$net_amount = $amount / (1 + $vat_rate);
+$vat_amount = $amount - $net_amount;
 
 $pdf_filename = 'invoice_' . $invoice_number . '.pdf';
 $pdf_path = __DIR__ . '/../invoices/' . $pdf_filename;
 
-// Calculate the inclusvie tax
-$net_amount = $amount / (1 + $vat_rate);
-$vat_amount = $amount - $net_amount;
-
-if (!file_exists($pdf_path)) {
+if (!$pdf_generated && !$already_processed) {
     if (!file_exists(__DIR__ . '/../invoices/')) {
         mkdir(__DIR__ . '/../invoices/', 0755, true);
     }
@@ -364,86 +442,78 @@ if (!file_exists($pdf_path)) {
     $pdf_generated = true;
 
     try {
-        $stmt = $conn->prepare("SELECT COUNT(*) FROM invoices WHERE payment_id = :payment_id AND user_id = :user_id");
-        $stmt->bindValue(':payment_id', $payment_id, PDO::PARAM_INT);
+        $stmt = $conn->prepare("INSERT INTO invoices (user_id, payment_id, invoice_number, amount, filename, created_at) 
+                               VALUES (:user_id, :payment_id, :invoice_number, :amount, :filename, :created_at)");
         $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
+        $stmt->bindValue(':payment_id', $payment_id, PDO::PARAM_INT);
+        $stmt->bindValue(':invoice_number', $invoice_number, PDO::PARAM_STR);
+        $stmt->bindValue(':amount', $amount, PDO::PARAM_STR);
+        $stmt->bindValue(':filename', $pdf_filename, PDO::PARAM_STR);
+        $stmt->bindValue(':created_at', date('Y-m-d H:i:s'), PDO::PARAM_STR);
         $stmt->execute();
-        $invoiceExists = $stmt->fetchColumn();
-
-        if (!$invoiceExists) {
-            $stmt = $conn->prepare("INSERT INTO invoices (user_id, payment_id, invoice_number, amount, filename, created_at) 
-            VALUES (:user_id, :payment_id, :invoice_number, :amount, :filename, :created_at)");
-            $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
-            $stmt->bindValue(':payment_id', $payment_id, PDO::PARAM_INT);
-            $stmt->bindValue(':invoice_number', $invoice_number, PDO::PARAM_STR);
-            $stmt->bindValue(':amount', $amount, PDO::PARAM_STR);
-            $stmt->bindValue(':filename', $pdf_filename, PDO::PARAM_STR);
-            $stmt->bindValue(':created_at', date('Y-m-d H:i:s'), PDO::PARAM_STR);
-            $stmt->execute();
-        }
     } catch (PDOException $e) {
+        error_log("Error inserting invoice record: " . $e->getMessage());
     }
-}
 
-try {
-    $mail = getConfiguredMailer();
+    try {
+        $mail = getConfiguredMailer();
 
-    $mail->addAddress($guest_email, $guest_name);
+        $mail->addAddress($guest_email, $guest_name);
 
-    $mail->Subject = 'Your LuckyNest Invoice #' . $invoice_number;
+        $mail->Subject = 'Your LuckyNest Invoice #' . $invoice_number;
 
-    // Calculate zaa tax values for zaa email
-    $net_amount_email = number_format($net_amount, 2);
-    $vat_amount_email = number_format($vat_amount, 2);
-    $total_amount_email = number_format($amount, 2);
+        $net_amount_email = number_format($net_amount, 2);
+        $vat_amount_email = number_format($vat_amount, 2);
+        $total_amount_email = number_format($amount, 2);
 
-    $email_body = "
-        <html>
-        <head>
-            <style>
-                body { font-family: Arial, sans-serif; line-height: 1.6; }
-                .header { color: #2c3e50; }
-                .details { background-color: #f9f9f9; padding: 15px; border-radius: 5px; }
-                .footer { margin-top: 20px; font-size: 0.9em; color: #7f8c8d; }
-                .tax-info { margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
-            </style>
-        </head>
-        <body>
-            <h1 class='header'>Payment Confirmation</h1>
-            <p>Dear {$guest_name},</p>
-            <p>Thank you for your payment. Your transaction has been completed successfully.</p>
-            
-            <div class='details'>
-                <h3>Payment Details</h3>
-                <p><strong>Invoice Number:</strong> {$invoice_number}</p>
-                <p><strong>Payment Type:</strong> " . ucfirst($payment_type) . "</p>
+        $email_body = "
+            <html>
+            <head>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; }
+                    .header { color: #2c3e50; }
+                    .details { background-color: #f9f9f9; padding: 15px; border-radius: 5px; }
+                    .footer { margin-top: 20px; font-size: 0.9em; color: #7f8c8d; }
+                    .tax-info { margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
+                </style>
+            </head>
+            <body>
+                <h1 class='header'>Payment Confirmation</h1>
+                <p>Dear {$guest_name},</p>
+                <p>Thank you for your payment. Your transaction has been completed successfully.</p>
                 
-                <div class='tax-info'>
-                    <p><strong>Net Amount:</strong> £{$net_amount_email}</p>
-                    <p><strong>VAT (20%):</strong> £{$vat_amount_email}</p>
-                    <p><strong>Total Amount (Inc. VAT):</strong> £{$total_amount_email}</p>
+                <div class='details'>
+                    <h3>Payment Details</h3>
+                    <p><strong>Invoice Number:</strong> {$invoice_number}</p>
+                    <p><strong>Payment Type:</strong> " . ucfirst($payment_type) . "</p>
+                    
+                    <div class='tax-info'>
+                        <p><strong>Net Amount:</strong> £{$net_amount_email}</p>
+                        <p><strong>VAT (20%):</strong> £{$vat_amount_email}</p>
+                        <p><strong>Total Amount (Inc. VAT):</strong> £{$total_amount_email}</p>
+                    </div>
+                    
+                    <p><strong>Payment Date:</strong> " . date('d/m/Y H:i:s') . "</p>
                 </div>
                 
-                <p><strong>Payment Date:</strong> " . date('d/m/Y H:i:s') . "</p>
-            </div>
-            
-            <p>Please find your invoice attached to this email for your records.</p>
-            
-            <div class='footer'>
-                <p>If you have any questions about this invoice, please contact our support team.</p>
-                <p>Thank you for choosing LuckyNest!</p>
-            </div>
-        </body>
-        </html>
-    ";
+                <p>Please find your invoice attached to this email for your records.</p>
+                
+                <div class='footer'>
+                    <p>If you have any questions about this invoice, please contact our support team.</p>
+                    <p>Thank you for choosing LuckyNest!</p>
+                </div>
+            </body>
+            </html>
+        ";
 
-    $mail->Body = $email_body;
+        $mail->Body = $email_body;
 
-    $mail->addAttachment($pdf_path, 'Invoice_' . $invoice_number . '.pdf');
+        $mail->addAttachment($pdf_path, 'Invoice_' . $invoice_number . '.pdf');
 
-    $mail->send();
-} catch (Exception $e) {
-    error_log("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
+        $mail->send();
+    } catch (Exception $e) {
+        error_log("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
+    }
 }
 ?>
 
