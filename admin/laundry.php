@@ -221,56 +221,6 @@ $conn = null;
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="../assets/scripts.js"></script>
     <title>Laundry Management</title>
-    <style>
-        .calendar-container {
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .flatpickr-calendar {
-            margin: 0 auto;
-        }
-
-        .flatpickr-day.available-slots {
-            background-color: #c8e6c9 !important;
-            border-color: #c8e6c9 !important;
-        }
-
-        .flatpickr-day.no-available-slots {
-            background-color: #ffcdd2 !important;
-            border-color: #ffcdd2 !important;
-        }
-
-        .flatpickr-day.flatpickr-disabled {
-            color: rgba(64, 64, 64, 0.3) !important;
-            background-color: rgba(240, 240, 240, 0.5) !important;
-            cursor: not-allowed;
-            border-color: transparent !important;
-        }
-
-        .flatpickr-day.available-slots,
-        .flatpickr-day.no-available-slots {
-            color: #000 !important;
-            cursor: pointer;
-        }
-
-        .recurring-badge {
-            display: inline-block;
-            background-color: #2196F3;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-left: 8px;
-        }
-
-        .selected-date-display {
-            text-align: center;
-            font-size: 1.2em;
-            margin-bottom: 15px;
-            font-weight: bold;
-        }
-    </style>
 </head>
 
 <body>
