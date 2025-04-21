@@ -11,6 +11,7 @@ include __DIR__ . '/../include/pagination.php';
 
 $feedback = '';
 $visitorData = [];
+$errors = [];
 
 $recordsPerPage = 10;
 $page = isset($_GET["page"]) ? (int) $_GET["page"] : 1;
@@ -28,18 +29,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $visit_time = $_POST['visit_time'];
             $leave_time = $_POST['leave_time'];
 
-            $stmt = $conn->prepare("INSERT INTO visitors (forename, surname, email, phone, visit_time, leave_time) VALUES (:forename, :surname, :email, :phone, :visit_time, :leave_time)");
-            $stmt->bindParam(':forename', $forename, PDO::PARAM_STR);
-            $stmt->bindParam(':surname', $surname, PDO::PARAM_STR);
-            $stmt->bindParam(':email', $email, PDO::PARAM_STR);
-            $stmt->bindParam(':phone', $phone, PDO::PARAM_STR);
-            $stmt->bindParam(':visit_time', $visit_time, PDO::PARAM_STR);
-            $stmt->bindParam(':leave_time', $leave_time, PDO::PARAM_STR);
+            if (strtotime($leave_time) <= strtotime($visit_time)) {
+                $errors['leave_time'] = 'Leave time must be after visit time';
+                $isValid = false;
+            }
 
-            if ($stmt->execute()) {
-                $feedback = 'Visitor added successfully!';
+            if (strtotime($leave_time) <= strtotime($visit_time)) {
+                $errors['leave_time'] = 'Leave time must be after visit time';
+                $isValid = false;
+            }
+
+            $isValid = true;
+
+            if (empty($phone)) {
+                $errors['phone'] = 'Phone number is required';
+                $isValid = false;
+            } elseif (!preg_match('/^\+[0-9]{1,4}[0-9]{9,11}$/', $phone)) {
+                $errors['phone'] = 'Phone number must include country code (+) followed by 9-11 digits';
+                $isValid = false;
+            }
+
+            if ($isValid) {
+                $stmt = $conn->prepare("INSERT INTO visitors (forename, surname, email, phone, visit_time, leave_time) VALUES (:forename, :surname, :email, :phone, :visit_time, :leave_time)");
+                $stmt->bindParam(':forename', $forename, PDO::PARAM_STR);
+                $stmt->bindParam(':surname', $surname, PDO::PARAM_STR);
+                $stmt->bindParam(':email', $email, PDO::PARAM_STR);
+                $stmt->bindParam(':phone', $phone, PDO::PARAM_STR);
+                $stmt->bindParam(':visit_time', $visit_time, PDO::PARAM_STR);
+                $stmt->bindParam(':leave_time', $leave_time, PDO::PARAM_STR);
+
+                if ($stmt->execute()) {
+                    $_SESSION['feedback'] = 'Visitor added successfully!';
+                    header("Location: visitors.php");
+                    exit();
+                } else {
+                    $feedback = 'Error adding visitor.';
+                }
             } else {
-                $feedback = 'Error adding visitor.';
+                $feedback = 'Please correct the errors.';
             }
         } elseif ($action === 'edit') {
             $visitor_id = $_POST['visitor_id'];
@@ -50,19 +77,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $visit_time = $_POST['visit_time'];
             $leave_time = $_POST['leave_time'];
 
-            $stmt = $conn->prepare("UPDATE visitors SET forename = :forename, surname = :surname, email = :email, phone = :phone, visit_time = :visit_time, leave_time = :leave_time WHERE visitor_id = :visitor_id");
-            $stmt->bindParam(':visitor_id', $visitor_id, PDO::PARAM_INT);
-            $stmt->bindParam(':forename', $forename, PDO::PARAM_STR);
-            $stmt->bindParam(':surname', $surname, PDO::PARAM_STR);
-            $stmt->bindParam(':email', $email, PDO::PARAM_STR);
-            $stmt->bindParam(':phone', $phone, PDO::PARAM_STR);
-            $stmt->bindParam(':visit_time', $visit_time, PDO::PARAM_STR);
-            $stmt->bindParam(':leave_time', $leave_time, PDO::PARAM_STR);
+            $isValid = true;
 
-            if ($stmt->execute()) {
-                $feedback = 'Visitor updated successfully!';
+            if (empty($phone)) {
+                $errors['phone'] = 'Phone number is required';
+                $isValid = false;
+            } elseif (!preg_match('/^\+[0-9]{1,4}[0-9]{9,11}$/', $phone)) {
+                $errors['phone'] = 'Phone number must include country code (+) followed by 9-11 digits';
+                $isValid = false;
+            }
+
+            if ($isValid) {
+                $stmt = $conn->prepare("UPDATE visitors SET forename = :forename, surname = :surname, email = :email, phone = :phone, visit_time = :visit_time, leave_time = :leave_time WHERE visitor_id = :visitor_id");
+                $stmt->bindParam(':visitor_id', $visitor_id, PDO::PARAM_INT);
+                $stmt->bindParam(':forename', $forename, PDO::PARAM_STR);
+                $stmt->bindParam(':surname', $surname, PDO::PARAM_STR);
+                $stmt->bindParam(':email', $email, PDO::PARAM_STR);
+                $stmt->bindParam(':phone', $phone, PDO::PARAM_STR);
+                $stmt->bindParam(':visit_time', $visit_time, PDO::PARAM_STR);
+                $stmt->bindParam(':leave_time', $leave_time, PDO::PARAM_STR);
+
+                if ($stmt->execute()) {
+                    $_SESSION['feedback'] = 'Visitor updated successfully!';
+                    header("Location: visitors.php");
+                    exit();
+                } else {
+                    $feedback = 'Error updating the visitor.';
+                }
             } else {
-                $feedback = 'Error updating the visitor.';
+                $feedback = 'Please correct the errors.';
             }
         } elseif ($action === 'delete') {
             $visitor_id = $_POST['visitor_id'];
@@ -71,12 +114,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bindParam(':visitor_id', $visitor_id, PDO::PARAM_INT);
 
             if ($stmt->execute()) {
-                $feedback = 'Visitor deleted successfully!';
+                $_SESSION['feedback'] = 'Visitor deleted successfully!';
+                header("Location: visitors.php");
+                exit();
             } else {
                 $feedback = 'Error deleting the visitor.';
             }
         }
     }
+}
+
+if (isset($_SESSION['feedback'])) {
+    $feedback = $_SESSION['feedback'];
+    unset($_SESSION['feedback']);
 }
 
 $stmt = $conn->prepare("SELECT * FROM visitors LIMIT :limit OFFSET :offset");
@@ -135,12 +185,20 @@ $conn = null;
                     <input type="text" id="surname" name="surname" required>
                     <label for="email">Email:</label>
                     <input type="email" id="email" name="email" required>
-                    <label for="phone">Phone:</label>
-                    <input type="text" id="phone" name="phone" required>
+                    <label for="phone">Phone (with country code):</label>
+                    <input type="text" id="phone" name="phone" required pattern="^\+[0-9]{1,4}[0-9]{9,11}$"
+                        placeholder="+441234567890">
+                    <small>Phone number must include country code (e.g., +44 for UK, +1 for US)</small>
+                    <?php if (isset($errors['phone'])): ?>
+                        <small class="error-text"><?php echo $errors['phone']; ?></small>
+                    <?php endif; ?>
                     <label for="visit_time">Visit Time:</label>
                     <input type="datetime-local" id="visit_time" name="visit_time" required>
                     <label for="leave_time">Leave Time:</label>
                     <input type="datetime-local" id="leave_time" name="leave_time" required>
+                    <?php if (isset($errors['leave_time'])): ?>
+                        <small class="error-text"><?php echo $errors['leave_time']; ?></small>
+                    <?php endif; ?>
                     <button type="submit" class="update-button">Add Visitor</button>
                 </form>
             </div>
@@ -168,8 +226,8 @@ $conn = null;
                             <td><?php echo $visitor['surname']; ?></td>
                             <td><?php echo $visitor['email']; ?></td>
                             <td><?php echo $visitor['phone']; ?></td>
-                            <td><?php echo $visitor['visit_time']; ?></td>
-                            <td><?php echo $visitor['leave_time']; ?></td>
+                            <td><?php echo date('H:i d/m/Y', strtotime($visitor['visit_time'])); ?></td>
+                            <td><?php echo date('H:i d/m/Y', strtotime($visitor['leave_time'])); ?></td>
                             <td>
                                 <button onclick="LuckyNest.toggleForm('edit-form-<?php echo $visitor['visitor_id']; ?>')"
                                     class="update-button">Edit</button>
@@ -190,9 +248,15 @@ $conn = null;
                                         <label for="email_<?php echo $visitor['visitor_id']; ?>">Email:</label>
                                         <input type="email" id="email_<?php echo $visitor['visitor_id']; ?>" name="email"
                                             value="<?php echo $visitor['email']; ?>" required>
-                                        <label for="phone_<?php echo $visitor['visitor_id']; ?>">Phone:</label>
+                                        <label for="phone_<?php echo $visitor['visitor_id']; ?>">Phone (with country
+                                            code):</label>
                                         <input type="text" id="phone_<?php echo $visitor['visitor_id']; ?>" name="phone"
-                                            value="<?php echo $visitor['phone']; ?>" required>
+                                            value="<?php echo $visitor['phone']; ?>" required
+                                            pattern="^\+[0-9]{1,4}[0-9]{9,11}$" placeholder="+441234567890">
+                                        <small>Phone number must include country code (e.g., +44 for UK, +1 for US)</small>
+                                        <?php if (isset($errors['phone'])): ?>
+                                            <small class="error-text"><?php echo $errors['phone']; ?></small>
+                                        <?php endif; ?>
                                         <label for="visit_time_<?php echo $visitor['visitor_id']; ?>">Visit Time:</label>
                                         <input type="datetime-local" id="visit_time_<?php echo $visitor['visitor_id']; ?>"
                                             name="visit_time"
@@ -203,6 +267,9 @@ $conn = null;
                                             name="leave_time"
                                             value="<?php echo date('Y-m-d\TH:i', strtotime($visitor['leave_time'])); ?>"
                                             required>
+                                        <?php if (isset($errors['leave_time'])): ?>
+                                            <small class="error-text"><?php echo $errors['leave_time']; ?></small>
+                                        <?php endif; ?>
                                         <div class="button-group">
                                             <button type="submit" class="update-button">Update</button>
                                             <button type="button" class="update-button"
