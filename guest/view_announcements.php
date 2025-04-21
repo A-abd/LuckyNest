@@ -45,65 +45,6 @@ $conn = null;
     <link rel="stylesheet" href="../assets/styles.css">
     <script src="../assets/scripts.js"></script>
     <title>Announcements</title>
-    <style>
-        .announcements-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .announcement {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            background-color: #f9f9f9;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            position: relative;
-        }
-
-        .announcement.important {
-            border-left: 5px solid #ff4444;
-            background-color: #fff8f8;
-        }
-
-        .announcement-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #333;
-        }
-
-        .announcement-meta {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 10px;
-        }
-
-        .announcement-message {
-            line-height: 1.5;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-right: 5px;
-        }
-
-        .badge-important {
-            background-color: #ff4444;
-            color: white;
-        }
-
-        .no-announcements {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-        }
-    </style>
 </head>
 
 <body>

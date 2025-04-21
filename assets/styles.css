@@ -1582,3 +1582,59 @@ tbody {
   color: #0066cc;
   text-decoration: underline;
 }
+
+/* Announcements Styling */
+.announcement {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 15px;
+  background-color: white;
+}
+
+.announcement.important {
+  border-left: 4px solid #4B5FD4;
+}
+
+.announcement-title {
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #333;
+  font-family: 'Inter', sans-serif;
+}
+
+.announcement-meta {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 8px;
+  font-family: 'Inter', sans-serif;
+}
+
+.announcement-message {
+  line-height: 1.4;
+  font-family: 'Inter', sans-serif;
+  color: #333;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  margin-left: 5px;
+}
+
+.badge-important {
+  background-color: #4B5FD4;
+  color: white;
+}
+
+.no-announcements {
+  text-align: center;
+  padding: 30px;
+  color: #666;
+  background-color: white;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+}
