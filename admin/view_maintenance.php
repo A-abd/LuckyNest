@@ -152,12 +152,13 @@ $conn = null;
                             <td><?php echo $request['guest_email']; ?></td>
                             <td><?php echo isset($request['admin_notes']) ? $request['admin_notes'] : ''; ?></td>
                             <td>
-                                <button onclick="LuckyNest.toggleForm('update-form-<?php echo $request['request_id']; ?>')"
-                                    class="update-button">Update</button>
-                                <div id='update-form-<?php echo $request['request_id']; ?>'
-                                    class="maintenance-edit-form">
+                                <button onclick="LuckyNest.toggleForm('edit-form-<?php echo $request['request_id']; ?>')"
+                                    class="update-button">Edit</button>
+                                <!-- Edit Form -->
+                                <div id='edit-form-<?php echo $request['request_id']; ?>'
+                                    class="edit-form">
                                     <button type="button" class="close-button"
-                                        onclick="LuckyNest.toggleForm('update-form-<?php echo $request['request_id']; ?>')">✕</button>
+                                        onclick="LuckyNest.toggleForm('edit-form-<?php echo $request['request_id']; ?>')">✕</button>
                                     <form method="POST" action="view_maintenance.php<?php echo !empty($statusFilter) ? '?status=' . urlencode($statusFilter) : ''; ?>" style="display:inline;">
                                         <h2>Update Maintenance Request</h2>
                                         <input type="hidden" name="action" value="update_status">

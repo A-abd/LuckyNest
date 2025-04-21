@@ -7,6 +7,12 @@ $feedback = '';
 $userRooms = [];
 $userName = '';
 $userEmail = '';
+$userMaintenanceRequests = [];
+
+if (isset($_SESSION['feedback'])) {
+    $feedback = $_SESSION['feedback'];
+    unset($_SESSION['feedback']);
+}
 
 if (isset($_SESSION['user_id'])) {
     $userId = $_SESSION['user_id'];
@@ -32,6 +38,16 @@ if (isset($_SESSION['user_id'])) {
     $roomStmt->bindParam(':userId', $userId, PDO::PARAM_INT);
     $roomStmt->execute();
     $userRooms = $roomStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $requestStmt = $conn->prepare("
+        SELECT request_id, room_number, description, report_date, status
+        FROM maintenance_requests
+        WHERE guest_email = :userEmail
+        ORDER BY report_date DESC
+    ");
+    $requestStmt->bindParam(':userEmail', $userEmail, PDO::PARAM_STR);
+    $requestStmt->execute();
+    $userMaintenanceRequests = $requestStmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -52,10 +68,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bindParam(':guestEmail', $guestEmail, PDO::PARAM_STR);
 
         if ($stmt->execute()) {
-            $feedback = 'Maintenance request submitted successfully! Our team will address your issue as soon as possible.';
+            $_SESSION['feedback'] = 'Maintenance request submitted successfully! Our team will address your issue as soon as possible.';
         } else {
-            $feedback = 'Error submitting maintenance request. Please try again.';
+            $_SESSION['feedback'] = 'Error submitting maintenance request. Please try again.';
         }
+
+        header('Location: maintenance.php');
+        exit;
     }
 }
 
@@ -88,7 +107,15 @@ $conn = null;
                 <div class="feedback-message" id="feedback_message"><?php echo $feedback; ?></div>
             <?php endif; ?>
 
-            <div id="maintenance-form" class="maintenance-form">
+            <!-- Submit Maintenance Request Button -->
+            <div class="button-center">
+                <button onclick="LuckyNest.toggleForm('add-form')" class="update-add-button">Submit
+                    Request</button>
+            </div>
+
+            <!-- Maintenance Request Form -->
+            <div id="add-form" class="add-form">
+                <button type="button" class="close-button" onclick="LuckyNest.toggleForm('add-form')">✕</button>
                 <h2>Submit a Maintenance Request</h2>
                 <form method="POST" action="maintenance.php">
                     <input type="hidden" name="action" value="add">
@@ -120,17 +147,60 @@ $conn = null;
                     <input type="email" id="guest_email" name="guest_email"
                         value="<?php echo htmlspecialchars($userEmail); ?>" required>
 
-                    <button type="submit" class="submit-button">Submit Request</button>
+                    <button type="submit" class="update-button">Submit Request</button>
                 </form>
             </div>
 
+            <!-- Submitted Maintenance Requests Section -->
+            <?php if (!empty($userMaintenanceRequests)): ?>
+                <div class="maintenance-history">
+                    <h2>Your Submitted Requests</h2>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Room</th>
+                                    <th>Description</th>
+                                    <th>Date Submitted</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($userMaintenanceRequests as $request): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($request['room_number']); ?></td>
+                                        <td><?php echo htmlspecialchars($request['description']); ?></td>
+                                        <td><?php echo date('M d, Y h:i A', strtotime($request['report_date'])); ?></td>
+                                        <td>
+                                            <span class="status-badge status-<?php echo strtolower($request['status']); ?>">
+                                                <?php echo htmlspecialchars($request['status']); ?>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            <?php endif; ?>
+
             <?php if (isset($_SESSION['role']) && $_SESSION['role'] != 'guest'): ?>
-                <div class="admin-link">
-                    <a href="view_maintenance.php" class="button">View & Manage Maintenance Requests</a>
+                <div class="button-center">
+                    <a href="view_maintenance.php" class="update-add-button">View & Manage Maintenance Requests</a>
                 </div>
             <?php endif; ?>
         </div>
     </div>
+    <div id="form-overlay"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (document.getElementById('feedback_message') === null &&
+                document.querySelector('.maintenance-history') === null) {
+                LuckyNest.toggleForm('add-form');
+            }
+        });
+    </script>
 </body>
 
 </html>
