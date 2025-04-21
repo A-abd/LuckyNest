@@ -58,49 +58,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['new_password'], $_POST
         rel="stylesheet">
     <link rel="stylesheet" href="../assets/styles.css">
     <script src="../assets/scripts.js"></script>
-    <style>
-        .password-requirements,
-        .confirm-password-tip {
-            display: none;
-            position: absolute;
-            background-color: white;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            padding: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            z-index: 100;
-            width: 300px;
-            margin-top: 5px;
-        }
-
-        .requirement {
-            margin-bottom: 5px;
-        }
-
-        .requirement:before {
-            content: "❌ ";
-        }
-
-        .requirement.valid:before {
-            content: "✅ ";
-        }
-
-        .form-errors {
-            color: red;
-            margin-bottom: 15px;
-            display: none;
-        }
-
-        .success-message {
-            color: green;
-            margin-bottom: 15px;
-        }
-
-        .error-message {
-            color: red;
-            margin-bottom: 15px;
-        }
-    </style>
 </head>
 
 <body class="login">
@@ -109,12 +66,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['new_password'], $_POST
     <div class="login-container">
         <div class="wrapper">
             <?php if ($success): ?>
-                <div class="success-message">
+                <div class="success-message-reset">
                     <?php echo $success; ?>
                 </div>
             <?php elseif (!$user_id): ?>
                 <?php if ($error): ?>
-                    <div class="error-message">
+                    <div class="error-message-reset">
                         <?php echo $error; ?>
                     </div>
                 <?php endif; ?>
@@ -126,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['new_password'], $_POST
                     <h1>Reset Your Password</h1>
 
                     <?php if ($error): ?>
-                        <div class="error-message">
+                        <div class="error-message-reset">
                             <?php echo $error; ?>
                         </div>
                     <?php endif; ?>

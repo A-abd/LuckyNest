@@ -34,9 +34,52 @@ body {
   margin-right: 5px;
 }
 
+/* RESET PAGE */
+.password-requirements,
+.confirm-password-tip {
+  display: none;
+  position: absolute;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  width: 300px;
+  margin-top: 5px;
+}
+
+.requirement {
+  margin-bottom: 5px;
+}
+
+.requirement:before {
+  content: "❌ ";
+}
+
+.requirement.valid:before {
+  content: "✅ ";
+}
+
+.form-errors {
+  color: red;
+  margin-bottom: 15px;
+  display: none;
+}
+
+.success-message-reset {
+  color: green;
+  margin-bottom: 15px;
+}
+
+.error-message-reset {
+  color: red;
+  margin-bottom: 15px;
+}
+
 /* LOGIN PAGE */
 
-body.login{
+body.login {
   display: grid;
   grid-template-columns: 1fr 1fr;
   overflow: hidden;
@@ -1436,50 +1479,50 @@ tbody {
 
 /* Laundry */
 .calendar-container {
-    margin-bottom: 20px;
-    text-align: center;
+  margin-bottom: 20px;
+  text-align: center;
 }
 
 .flatpickr-calendar {
-    margin: 0 auto;
+  margin: 0 auto;
 }
 
 .flatpickr-day.available-slots {
-    background-color: #c8e6c9 !important;
-    border-color: #c8e6c9 !important;
+  background-color: #c8e6c9 !important;
+  border-color: #c8e6c9 !important;
 }
 
 .flatpickr-day.no-available-slots {
-    background-color: #ffcdd2 !important;
-    border-color: #ffcdd2 !important;
+  background-color: #ffcdd2 !important;
+  border-color: #ffcdd2 !important;
 }
 
 .flatpickr-day.flatpickr-disabled {
-    color: rgba(64, 64, 64, 0.3) !important;
-    background-color: rgba(240, 240, 240, 0.5) !important;
-    cursor: not-allowed;
-    border-color: transparent !important;
+  color: rgba(64, 64, 64, 0.3) !important;
+  background-color: rgba(240, 240, 240, 0.5) !important;
+  cursor: not-allowed;
+  border-color: transparent !important;
 }
 
 .flatpickr-day.available-slots,
 .flatpickr-day.no-available-slots {
-    color: #000 !important;
-    cursor: pointer;
+  color: #000 !important;
+  cursor: pointer;
 }
 
 .recurring-badge {
-    display: inline-block;
-    background-color: #2196F3;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 12px;
-    margin-left: 8px;
+  display: inline-block;
+  background-color: #2196F3;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-left: 8px;
 }
 
 .selected-date-display {
-    text-align: center;
-    font-size: 1.2em;
-    margin-bottom: 15px;
-    font-weight: bold;
+  text-align: center;
+  font-size: 1.2em;
+  margin-bottom: 15px;
+  font-weight: bold;
 }
