@@ -20,6 +20,20 @@ body {
   height: 100vh;
 }
 
+/* FORGOT PAGE */
+.notification-options {
+  margin-bottom: 15px;
+}
+
+.notification-option {
+  display: block;
+  margin: 5px 0;
+}
+
+.notification-option input {
+  margin-right: 5px;
+}
+
 /* LOGIN PAGE */
 
 body.login{

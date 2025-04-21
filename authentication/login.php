@@ -90,7 +90,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['email'], $_POST['passw
                         <input type="password" id="password" name="password" placeholder="Password" required>
                     </div>
                     <div class="remember-forgot">
-                        <label><input type="checkbox"> Remember me</label>
                         <a href="forgot.php">Forgot your password?</a>
                     </div>
                     <button type="submit" class="btn">Login</button>

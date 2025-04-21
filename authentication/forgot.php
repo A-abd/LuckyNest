@@ -42,26 +42,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['email']) && isset($_PO
         href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="../assets/styles.css">
-    <style>
-        .notification-options {
-            margin-bottom: 15px;
-        }
-
-        .notification-option {
-            display: block;
-            margin: 5px 0;
-        }
-
-        .notification-option input {
-            margin-right: 5px;
-        }
-    </style>
 </head>
 
 <body class="login">
     <div class="blur-layer-4"></div>
     <h1 class="title">LuckyNest</h1>
-    <div class="login-container">
         <div class="wrapper">
             <form method="POST" action="forgot.php">
                 <h1>Forgot Password</h1>
@@ -94,7 +79,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['email']) && isset($_PO
                 </div>
             </form>
         </div>
-    </div>
 </body>
 
 </html>
