@@ -16,6 +16,7 @@ $recordsPerPage = 10;
 $page = isset($_GET["page"]) ? (int) $_GET["page"] : 1;
 $offset = ($page - 1) * $recordsPerPage;
 
+// Process form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         $action = $_POST['action'];
@@ -33,9 +34,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
 
             if ($stmt->execute()) {
-                $feedback = 'Announcement added successfully!';
+                $_SESSION['feedback'] = 'Announcement added successfully!';
             } else {
-                $feedback = 'Error adding announcement.';
+                $_SESSION['feedback'] = 'Error adding announcement.';
             }
         } elseif ($action === 'edit') {
             $id = $_POST['announcement_id'];
@@ -50,9 +51,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bindParam(':important', $important, PDO::PARAM_INT);
 
             if ($stmt->execute()) {
-                $feedback = 'Announcement updated successfully!';
+                $_SESSION['feedback'] = 'Announcement updated successfully!';
             } else {
-                $feedback = 'Error updating announcement.';
+                $_SESSION['feedback'] = 'Error updating announcement.';
             }
         } elseif ($action === 'delete') {
             $id = $_POST['announcement_id'];
@@ -61,14 +62,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 
             if ($stmt->execute()) {
-                $feedback = 'Announcement deleted successfully!';
+                $_SESSION['feedback'] = 'Announcement deleted successfully!';
             } else {
-                $feedback = 'Error deleting announcement.';
+                $_SESSION['feedback'] = 'Error deleting announcement.';
             }
         }
+
+        // Redirect after POST to prevent form resubmission
+        header('Location: announcements.php' . (isset($_GET['page']) ? '?page=' . $_GET['page'] : ''));
+        exit();
     }
 }
 
+// Check for feedback in session
+if (isset($_SESSION['feedback'])) {
+    $feedback = $_SESSION['feedback'];
+    unset($_SESSION['feedback']); // Clear the feedback message
+}
+
+// Fetch announcements
 $stmt = $conn->prepare("SELECT a.*, u.forename, u.surname 
                        FROM announcements a
                        LEFT JOIN users u ON a.created_by = u.user_id
@@ -110,6 +122,12 @@ $conn = null;
             <h1>Manage Announcements</h1>
             <?php if ($feedback): ?>
                 <div class="feedback-message" id="feedback_message"><?php echo $feedback; ?></div>
+                <script>
+                    // Auto-hide feedback message after 5 seconds
+                    setTimeout(function () {
+                        document.getElementById('feedback_message').style.display = 'none';
+                    }, 5000);
+                </script>
             <?php endif; ?>
 
             <div class="button-center">
@@ -119,7 +137,8 @@ $conn = null;
             <div id="add-form" class="add-form">
                 <button type="button" class="close-button" onclick="LuckyNest.toggleForm('add-form')">✕</button>
                 <h2>Add New Announcement</h2>
-                <form method="POST" action="announcements.php">
+                <form method="POST"
+                    action="announcements.php<?php echo isset($_GET['page']) ? '?page=' . $_GET['page'] : ''; ?>">
                     <input type="hidden" name="action" value="add">
                     <label for="title">Title:</label>
                     <input type="text" id="title" name="title" required>
@@ -164,19 +183,22 @@ $conn = null;
                                 <div id="edit-form-<?php echo $announcement['announcement_id']; ?>" class="edit-form">
                                     <button type="button" class="close-button"
                                         onclick="LuckyNest.toggleForm('edit-form-<?php echo $announcement['announcement_id']; ?>')">✕</button>
-                                    <form method="POST" action="announcements.php" style="display:inline;">
+                                    <form method="POST"
+                                        action="announcements.php<?php echo isset($_GET['page']) ? '?page=' . $_GET['page'] : ''; ?>"
+                                        style="display:inline;">
                                         <h2>Edit Announcement</h2>
                                         <input type="hidden" name="action" value="edit">
                                         <input type="hidden" name="announcement_id"
                                             value="<?php echo $announcement['announcement_id']; ?>">
                                         <label for="title_<?php echo $announcement['announcement_id']; ?>">Title:</label>
                                         <input type="text" id="title_<?php echo $announcement['announcement_id']; ?>"
-                                            name="title" value="<?php echo $announcement['title']; ?>" required>
+                                            name="title" value="<?php echo htmlspecialchars($announcement['title']); ?>"
+                                            required>
                                         <label
                                             for="message_<?php echo $announcement['announcement_id']; ?>">Message:</label>
                                         <textarea id="message_<?php echo $announcement['announcement_id']; ?>"
                                             name="message" rows="5"
-                                            required><?php echo $announcement['message']; ?></textarea>
+                                            required><?php echo htmlspecialchars($announcement['message']); ?></textarea>
                                         <div class="checkbox-container">
                                             <input type="checkbox"
                                                 id="important_<?php echo $announcement['announcement_id']; ?>"
@@ -187,12 +209,13 @@ $conn = null;
                                         <div class="button-group">
                                             <button type="submit" class="update-button">Update</button>
                                             <button type="button" class="update-button"
-                                                onclick="document.getElementById('delete-form-<?php echo $announcement['announcement_id']; ?>').submit(); return false;">Delete</button>
+                                                onclick="if(confirm('Are you sure you want to delete this announcement?')) document.getElementById('delete-form-<?php echo $announcement['announcement_id']; ?>').submit(); return false;">Delete</button>
                                         </div>
                                     </form>
 
                                     <form id="delete-form-<?php echo $announcement['announcement_id']; ?>" method="POST"
-                                        action="announcements.php" style="display:none;">
+                                        action="announcements.php<?php echo isset($_GET['page']) ? '?page=' . $_GET['page'] : ''; ?>"
+                                        style="display:none;">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="announcement_id"
                                             value="<?php echo $announcement['announcement_id']; ?>">
@@ -210,6 +233,7 @@ $conn = null;
             <br>
         </div>
         <div id="form-overlay"></div>
+    </div>
 </body>
 
 </html>
