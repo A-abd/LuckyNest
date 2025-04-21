@@ -177,12 +177,6 @@ $conn = null;
 
             <div class="report-filters">
                 <form method="GET" action="">
-                    <select name="report_type" onchange="this.form.submit()">
-                        <option value="revenue" <?php echo $reportType == 'revenue' ? 'selected' : ''; ?>>Revenue Report
-                        </option>
-                        <option value="expense" <?php echo $reportType == 'expense' ? 'selected' : ''; ?>>Expense Report
-                        </option>
-                    </select>
                     <select name="time_period" onchange="this.form.submit()">
                         <option value="monthly" <?php echo $timePeriod == 'monthly' ? 'selected' : ''; ?>>Monthly</option>
                         <option value="yearly" <?php echo $timePeriod == 'yearly' ? 'selected' : ''; ?>>Yearly</option>
