@@ -131,7 +131,7 @@ function sendPaymentReminder($conn, $user_id, $payment_type, $amount, $due_date,
             
             <p>Please ensure your payment is made on time to avoid any late fees.</p>
             
-            <p><a href='https://your-website.com/payment.php?type={$payment_type}&ref={$reference_id}' class='button'>Make Payment Now</a></p>
+            <p><a href='localhost/LuckyNest/guest/payments_page.php?type={$payment_type}&ref={$reference_id}' class='button'>Make Payment Now</a></p>
             
             <div class='footer'>
                 <p>If you have already made this payment, please disregard this message.</p>
@@ -195,7 +195,7 @@ function sendLatePaymentNotice($conn, $user_id, $payment_type, $amount, $due_dat
             
             <p>Please make your payment as soon as possible to avoid any additional late fees or service interruptions.</p>
             
-            <p><a href='https://your-website.com/payment.php?type={$payment_type}&ref={$reference_id}' class='button'>Make Payment Now</a></p>
+            <p><a href='localhost/LuckyNest/guest/payments_page.php?type={$payment_type}&ref={$reference_id}' class='button'>Make Payment Now</a></p>
             
             <div class='footer'>
                 <p>If you have already made this payment, please disregard this message.</p>
@@ -264,7 +264,7 @@ function sendBookingDepositReminder($conn, $user_id, $amount, $check_in_date, $b
             
             <p>Please ensure your deposit is paid promptly to secure your booking.</p>
             
-            <p><a href='https://your-website.com/payment.php?type=deposit&ref={$booking_id}' class='button'>Pay Deposit Now</a></p>
+            <p><a href='localhost/LuckyNest/guest/payments_page.php?type=deposit&ref={$booking_id}' class='button'>Pay Deposit Now</a></p>
             
             <div class='footer'>
                 <p>If you have already made this payment, please disregard this message.</p>
@@ -332,7 +332,7 @@ function sendLateBookingDepositNotice($conn, $user_id, $amount, $check_in_date, 
             <p>Please make your payment <span class='overdue'>immediately</span> to avoid potential booking cancellation 
                or additional late fees.</p>
             
-            <p><a href='https://your-website.com/payment.php?type=deposit&ref={$booking_id}' class='button'>Pay Deposit Now</a></p>
+            <p><a href='localhost/LuckyNest/guest/payments_page.php?type=deposit&ref={$booking_id}' class='button'>Pay Deposit Now</a></p>
             
             <div class='footer'>
                 <p>If you have already made this payment, please disregard this message.</p>
@@ -407,7 +407,7 @@ function sendLaundryReminder($conn, $user_id, $amount, $slot_datetime, $referenc
             
             <p>Please note that payment is required before using the laundry facilities.</p>
             
-            <p><a href='https://your-website.com/payment.php?type=laundry&ref={$reference_id}' class='button'>Make Payment Now</a></p>
+            <p><a href='localhost/LuckyNest/guest/payments_page.php?type=laundry&ref={$reference_id}' class='button'>Make Payment Now</a></p>
             
             <div class='footer'>
                 <p>If you have already made this payment, please disregard the payment reminder.</p>
