@@ -143,96 +143,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_code'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/styles.css">
-    <style>
-        .settings-section {
-            margin-bottom: 40px;
-            border: 1px solid #ddd;
-            padding: 20px;
-            border-radius: 5px;
-            background-color: #f9f9f9;
-        }
-
-        .notification-option {
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .notification-description {
-            color: #666;
-            font-size: 0.9em;
-            margin-top: 5px;
-            margin-left: 25px;
-        }
-
-        .status-enabled {
-            color: #27ae60;
-            font-weight: bold;
-        }
-
-        .status-disabled {
-            color: #e74c3c;
-            font-weight: bold;
-        }
-
-        .danger-button {
-            background-color: #e74c3c;
-        }
-
-        .success-message {
-            padding: 10px;
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-
-        .error-message {
-            padding: 10px;
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-
-        .test-section {
-            background-color: #fffde7;
-            border: 1px dashed #ffc107;
-            padding: 15px;
-            margin-top: 20px;
-            border-radius: 5px;
-        }
-
-        .test-section h3 {
-            color: #ff9800;
-        }
-
-        .test-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .test-button {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .test-button.payment-reminder {
-            background-color: #3498db;
-            color: white;
-        }
-
-        .test-button.late-payment {
-            background-color: #e74c3c;
-            color: white;
-        }
-    </style>
     <title>Account Settings</title>
     <script src="../assets/scripts.js"></script>
 </head>
@@ -260,7 +170,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_code'])) {
                 <h3>Two-Factor Authentication</h3>
                 <?php if ($secret): ?>
                     <p class="status-enabled">2FA is currently enabled</p>
-                    <button onclick="LuckyNest.showPasswordPrompt('disable')" class="update-button danger-button">Disable 2FA</button>
+                    <button onclick="LuckyNest.showPasswordPrompt('disable')" class="update-button danger-button">Disable
+                        2FA</button>
                 <?php else: ?>
                     <p class="status-disabled">2FA is currently disabled</p>
                     <button onclick="LuckyNest.showPasswordPrompt('enable')" class="update-button">Enable 2FA</button>
@@ -298,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_code'])) {
                 <h2>Notification Preferences</h2>
 
                 <form method="POST" action="">
-                    <div class="notification-option">
+                    <div class="notification-option-settings">
                         <label for="email_notifications">
                             <input type="checkbox" id="email_notifications" name="email_notifications" <?php echo $user['email_notifications'] ? 'checked' : ''; ?>>
                             <span>Email Notifications</span>
@@ -310,7 +221,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_code'])) {
                         </p>
                     </div>
 
-                    <div class="notification-option">
+                    <div class="notification-option-settings">
                         <label for="sms_notifications">
                             <input type="checkbox" id="sms_notifications" name="sms_notifications" <?php echo $user['sms_notifications'] ? 'checked' : ''; ?>>
                             <span>SMS Notifications</span>
