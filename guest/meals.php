@@ -151,62 +151,6 @@ $conn = null;
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
     <script src="../assets/scripts.js"></script>
     <title>Meal Plans</title>
-    <style>
-        .meal-modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.7);
-        }
-
-        .meal-modal-content {
-            background-color: #fefefe;
-            margin: 10% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 800px;
-            border-radius: 8px;
-            position: relative;
-        }
-
-        .meal-image {
-            width: 100%;
-            max-height: 500px;
-            object-fit: contain;
-            display: block;
-            margin: 0 auto;
-        }
-
-        .meal-details {
-            margin-top: 15px;
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-        }
-
-        .meal-name-link {
-            cursor: pointer;
-            color: #0066cc;
-            text-decoration: underline;
-        }
-    </style>
 </head>
 
 <body>

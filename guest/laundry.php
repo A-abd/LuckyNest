@@ -122,42 +122,6 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="../assets/scripts.js"></script>
     <title>Laundry Slots</title>
-    <style>
-        .calendar-container {
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .flatpickr-calendar {
-            margin: 0 auto;
-        }
-
-        .flatpickr-day.available-slots {
-            background-color: #c8e6c9 !important;
-            border-color: #c8e6c9 !important;
-            color: #000 !important;
-        }
-
-        .flatpickr-day.no-available-slots {
-            background-color: #ffcdd2 !important;
-            border-color: #ffcdd2 !important;
-            color: #000 !important;
-        }
-
-        .flatpickr-day.flatpickr-disabled {
-            color: rgba(64, 64, 64, 0.3) !important;
-            background-color: rgba(240, 240, 240, 0.5) !important;
-            cursor: not-allowed;
-            border-color: transparent !important;
-        }
-
-        .selected-date-display {
-            text-align: center;
-            font-size: 1.2em;
-            margin-bottom: 15px;
-            font-weight: bold;
-        }
-    </style>
 </head>
 
 <body>
