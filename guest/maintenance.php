@@ -40,7 +40,7 @@ if (isset($_SESSION['user_id'])) {
     $userRooms = $roomStmt->fetchAll(PDO::FETCH_ASSOC);
 
     $requestStmt = $conn->prepare("
-        SELECT request_id, room_number, description, report_date, status
+        SELECT request_id, room_number, description, report_date, status, admin_notes
         FROM maintenance_requests
         WHERE guest_email = :userEmail
         ORDER BY report_date DESC
@@ -163,6 +163,7 @@ $conn = null;
                                     <th>Description</th>
                                     <th>Date Submitted</th>
                                     <th>Status</th>
+                                    <th>Admin Notes</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -175,6 +176,8 @@ $conn = null;
                                             <span class="status-badge status-<?php echo strtolower($request['status']); ?>">
                                                 <?php echo htmlspecialchars($request['status']); ?>
                                             </span>
+                                        </td>
+                                        <td><?php echo !empty($request['admin_notes']) ? htmlspecialchars($request['admin_notes']) : ''; ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
