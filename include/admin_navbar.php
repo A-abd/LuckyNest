@@ -110,6 +110,15 @@
                 <a href="../admin/announcements.php"><i class="fas fa-bullhorn"></i> Announcements</a>
             </li>
 
+            <!-- New Ratings Section -->
+            <li class="menu-category">Ratings & Reviews</li>
+            <li class="menu-item">
+                <a href="../admin/ratings.php"><i class="fas fa-comment"></i> Individual Reviews</a>
+            </li>
+            <li class="menu-item">
+                <a href="../admin/ratings_overall.php"><i class="fas fa-star"></i> Overall Rating</a>
+            </li>
+
             <li class="menu-category">Reports</li>
             <li class="menu-item has-dropdown" onclick="window.LuckyNest.toggleSubmenu(this)">
                 <span><i class="fas fa-chart-bar"></i> Reports & Analytics</span>
