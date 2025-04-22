@@ -207,17 +207,51 @@ if (!$already_processed) {
                 $stmt->execute();
             }
         } elseif ($payment_type == 'meal_plan') {
-            $stmt = $conn->prepare("SELECT is_paid FROM meal_plan_user_link WHERE meal_plan_id = :reference_id AND user_id = :user_id");
-            $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
-            $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
-            $stmt->execute();
-            $isPaid = $stmt->fetchColumn();
+            $meal_plan_id = $reference_id;
 
-            if (!$isPaid) {
-                $stmt = $conn->prepare("UPDATE meal_plan_user_link SET is_paid = 1 WHERE meal_plan_id = :reference_id AND user_id = :user_id");
-                $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
+            try {
+                $stmt = $conn->prepare("SELECT meal_plan_user_link_id 
+                                       FROM meal_plan_user_link 
+                                       WHERE meal_plan_id = :meal_plan_id 
+                                       AND user_id = :user_id 
+                                       AND is_paid = 0 
+                                       AND is_cancelled = 0
+                                       LIMIT 1");
+                $stmt->bindValue(':meal_plan_id', $meal_plan_id, PDO::PARAM_INT);
                 $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
                 $stmt->execute();
+                $link_id = $stmt->fetchColumn();
+
+                if ($link_id) {
+                    error_log("Found unpaid meal plan link: $link_id for user $user_id, meal plan $meal_plan_id");
+
+                    $update_stmt = $conn->prepare("UPDATE meal_plan_user_link 
+                                                  SET is_paid = 1 
+                                                  WHERE meal_plan_user_link_id = :link_id");
+                    $update_stmt->bindValue(':link_id', $link_id, PDO::PARAM_INT);
+                    if ($update_stmt->execute()) {
+                        error_log("Successfully updated meal plan link $link_id to paid");
+                    } else {
+                        error_log("Failed to update meal plan link $link_id to paid");
+                    }
+                } else {
+                    error_log("No unpaid meal plan links found for user $user_id, meal plan $meal_plan_id");
+
+                    $update_stmt = $conn->prepare("UPDATE meal_plan_user_link 
+                                                  SET is_paid = 1 
+                                                  WHERE meal_plan_id = :meal_plan_id 
+                                                  AND is_paid = 0 
+                                                  AND is_cancelled = 0 
+                                                  LIMIT 1");
+                    $update_stmt->bindValue(':meal_plan_id', $meal_plan_id, PDO::PARAM_INT);
+                    if ($update_stmt->execute() && $update_stmt->rowCount() > 0) {
+                        error_log("Updated an unpaid meal plan link for meal plan $meal_plan_id");
+                    } else {
+                        error_log("No unpaid meal plan links found or failed to update for meal plan $meal_plan_id");
+                    }
+                }
+            } catch (PDOException $e) {
+                error_log("Error updating meal plan payment status: " . $e->getMessage());
             }
         } elseif ($payment_type == 'laundry') {
             $stmt = $conn->prepare("SELECT is_paid FROM laundry_slot_user_link WHERE laundry_slot_user_link_id = :reference_id");

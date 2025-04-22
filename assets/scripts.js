@@ -125,6 +125,16 @@ const MealModule = {
     this.initMealModal();
     this.initMealPlanDatePickers();
     this.initMealAssignmentModule();
+    this.handleMealPlanDropdownChange();
+  },
+
+  handleMealPlanDropdownChange() {
+    const dropdown = document.getElementById('meal_plan_selector');
+    if (dropdown) {
+      dropdown.addEventListener('change', function() {
+        window.location.href = 'meals.php?plan_id=' + this.value;
+      });
+    }
   },
 
   showMealPlanDetails(planId) {
@@ -276,12 +286,13 @@ const MealModule = {
 
   // Meal Assignment Module
   initMealAssignmentModule() {
-    document.addEventListener('DOMContentLoaded', function () {
-      const planSelect = document.getElementById('plan_id');
-      if (planSelect) {
-        updateDayOptions(planSelect.value);
-      }
-    });
+    const planSelect = document.getElementById('plan_id');
+    if (planSelect) {
+      this.updateDayOptions(planSelect.value);
+      planSelect.addEventListener('change', () => {
+        this.updateDayOptions(planSelect.value);
+      });
+    }
   },
 
   updateDayOptions(planId) {
@@ -289,10 +300,14 @@ const MealModule = {
     if (!planSelect) return;
 
     const selectedOption = planSelect.options[planSelect.selectedIndex];
+    if (!selectedOption) return;
+    
     const planType = selectedOption.getAttribute('data-plan-type');
     const daySelect = document.getElementById('day_number');
     const dayContainer = document.getElementById('day_selection_container');
     const defaultDayInput = document.getElementById('default_day_number');
+    
+    if (!daySelect || !dayContainer || !defaultDayInput) return;
 
     if (planType === 'Daily') {
       // Hide day selection for daily plans and use default value
