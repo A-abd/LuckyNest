@@ -175,7 +175,7 @@ $conn = null;
         <div class="content-container">
             <h1>Financial Reports</h1>
 
-            <div class="report-filters">
+            <div class="center-only">
                 <form method="GET" action="">
                     <select name="time_period" onchange="this.form.submit()">
                         <option value="monthly" <?php echo $timePeriod == 'monthly' ? 'selected' : ''; ?>>Monthly</option>

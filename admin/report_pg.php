@@ -117,7 +117,7 @@ $conn = null;
             <h1>Guest Booking Report</h1>
 
 
-            <form method="GET" action="report_pg.php">
+            <form method="GET" action="report_pg.php" class="center-only">
                 <label for="guest_id">Select Guest:</label>
                 <select name="guest_id" id="guest_id" onchange="this.form.submit()">
                     <option value="">All Guests</option>
@@ -129,7 +129,7 @@ $conn = null;
                 </select>
             </form>
 
-            <div>
+            <div class="center-only">
                 <h2>Summary</h2>
                 <p>Total Bookings: <?php echo $summary['total_bookings']; ?></p>
                 <p>Cancelled Bookings: <?php echo $summary['cancelled_bookings']; ?></p>

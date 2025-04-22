@@ -171,7 +171,7 @@ $conn = null;
 
             <!-- Filters -->
             <form method="GET" action="report_food.php">
-                <div class="filter-container">
+                <div class="center-only">
                     <!-- Meal Plan Filter -->
                     <div class="filter-group">
                         <label for="meal_plan">Meal Plan:</label>
@@ -214,7 +214,7 @@ $conn = null;
             </form>
 
             <!-- Summary Statistics -->
-            <div class="summary-stats">
+            <div class="center-only">
                 <h2>Summary</h2>
                 <p>Total Meal Plan Users: <?php echo $summary['total_meal_plan_users']; ?></p>
                 <p>Average Meal Price: $<?php echo number_format($summary['average_meal_price'], 2); ?></p>
