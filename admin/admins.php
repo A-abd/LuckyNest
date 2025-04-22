@@ -322,7 +322,7 @@ $conn = null;
                                             <div class="button-group">
                                                 <button type="submit" class="update-button">Update</button>
                                                 <?php if ($admin['role'] === 'admin' && $admin['user_id'] !== $_SESSION['user_id']): ?>
-                                                    <button type="button" class="delete-button"
+                                                    <button type="button" class="button"
                                                         onclick="if(confirm('Are you sure you want to delete this admin user?')) document.getElementById('delete-form-<?php echo $admin['user_id']; ?>').submit(); return false;">Delete</button>
                                                 <?php endif; ?>
                                             </div>
