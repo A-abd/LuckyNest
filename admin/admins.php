@@ -2,7 +2,7 @@
 session_start();
 
 if ($_SESSION['role'] != 'owner') {
-    header('Location: unauthorized.php');
+    header('Location: ../authentication/unauthorized.php');
     exit();
 }
 

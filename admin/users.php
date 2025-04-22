@@ -6,7 +6,7 @@
 session_start();
 
 if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
-    header('Location: unauthorized.php');
+    header('Location: ../authentication/unauthorized.php');
     exit();
 }
 

@@ -11,7 +11,7 @@ include __DIR__ . '/../include/pagination.php';
 
 $feedback = '';
 $ratingsData = [];
-$ratingType = isset($_GET['type']) ? $_GET['type'] : 'all'; // Default to 'all' instead of 'meal_plan'
+$ratingType = isset($_GET['type']) ? $_GET['type'] : 'all';
 $userId = isset($_GET['user_id']) ? (int) $_GET['user_id'] : null;
 $mealPlanId = isset($_GET['meal_plan_id']) ? (int) $_GET['meal_plan_id'] : null;
 $roomId = isset($_GET['room_id']) ? (int) $_GET['room_id'] : null;
@@ -20,7 +20,6 @@ $recordsPerPage = 10;
 $page = isset($_GET["page"]) ? (int) $_GET["page"] : 1;
 $offset = ($page - 1) * $recordsPerPage;
 
-// Build the query with potential filters
 if ($ratingType === 'meal_plan') {
     $query = "
         SELECT mpr.rating_id, mpr.rating, mpr.review, 
@@ -73,7 +72,6 @@ if ($ratingType === 'meal_plan') {
 
     $stmt = $conn->prepare($query);
 } else {
-    // Show both types of ratings when 'all' is selected
     $query = "
         (SELECT mpr.rating_id, mpr.rating, mpr.review, 
                 DATE_FORMAT(mpr.created_at, '%H:%i') AS formatted_time,
@@ -123,7 +121,6 @@ if ($ratingType === 'meal_plan') {
     $stmt = $conn->prepare($query);
 }
 
-// Bind parameters
 if ($userId) {
     $stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
 }
@@ -139,7 +136,6 @@ $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 $stmt->execute();
 $ratingsData = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Get total records for pagination with filters
 if ($ratingType === 'meal_plan') {
     $countQuery = "SELECT COUNT(*) As total FROM meal_plan_ratings mpr 
                   JOIN meal_plans mp ON mpr.meal_plan_id = mp.meal_plan_id
@@ -168,7 +164,6 @@ if ($ratingType === 'meal_plan') {
 
     $countStmt = $conn->prepare($countQuery);
 } else {
-    // Count for both types
     $countQuery = "
         SELECT (
             (SELECT COUNT(*) FROM meal_plan_ratings mpr 
@@ -201,7 +196,6 @@ if ($ratingType === 'meal_plan') {
     $countStmt = $conn->prepare($countQuery);
 }
 
-// Bind parameters for count query
 if ($userId) {
     if ($ratingType === 'all') {
         $countStmt->bindParam(':userId1', $userId, PDO::PARAM_INT);
@@ -221,18 +215,15 @@ $countStmt->execute();
 $totalRecords = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
 $totalPages = ceil($totalRecords / $recordsPerPage);
 
-// Get only guest users for filter dropdown
 $userStmt = $conn->query("SELECT user_id, CONCAT(forename, ' ', surname, ' (', email, ')') AS user_name 
                          FROM users 
                          WHERE role = 'guest' 
                          ORDER BY surname, forename");
 $users = $userStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Get meal plans for filter dropdown
 $mealPlanStmt = $conn->query("SELECT meal_plan_id, name FROM meal_plans ORDER BY name");
 $mealPlans = $mealPlanStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Get rooms for filter dropdown
 $roomStmt = $conn->query("SELECT r.room_id, r.room_number, rt.room_type_name 
                          FROM rooms r 
                          JOIN room_types rt ON r.room_type_id = rt.room_type_id 
@@ -376,7 +367,6 @@ $conn = null;
                             </td>
                             <td>
                                 <?php
-                                // Display stars for rating
                                 for ($i = 1; $i <= 5; $i++) {
                                     echo $i <= $rating['rating'] ? '★' : '☆';
                                 }
@@ -394,7 +384,6 @@ $conn = null;
                 </tbody>
             </table>
             <?php
-            // Build pagination URL with all filters
             $urlParams = [];
             if ($ratingType !== 'all')
                 $urlParams[] = "type=$ratingType";
