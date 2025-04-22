@@ -362,7 +362,7 @@ function sendMealPlanReminders($conn, $days_before = 1)
 
     try {
         $stmt = $conn->prepare("
-            SELECT mpl.meal_plan_user_link as reference_id, 
+            SELECT mpl.meal_plan_user_link_id as reference_id, 
                    mpl.user_id, 
                    mp.price,
                    mp.meal_plan_id,
