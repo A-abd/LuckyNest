@@ -141,6 +141,9 @@
 
             <li class="menu-category">Settings</li>
             <li class="menu-item">
+                <a href="../admin/admin_settings.php"><i class="fas fa-shield-alt"></i> Security Settings</a>
+            </li>
+            <li class="menu-item">
                 <a href="../authentication/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </li>
         </ul>

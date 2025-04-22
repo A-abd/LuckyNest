@@ -280,7 +280,7 @@ try {
                                     <?php if ($booking['booking_is_paid']): ?>
                                         <?php if ($booking['has_rating'] > 0): ?>
                                             <button class="button"
-                                                onclick="window.LuckyNest.toggleForm('roomRatingForm'); document.getElementById('ratingBookingId').value=<?php echo $booking['booking_id']; ?>">Edit
+                                                onclick="window.LuckyNest.toggleForm('roomRatingForm'); document.getElementById('ratingBookingId').value=<?php echo $booking['booking_id']; ?>">Add
                                                 Rating</button>
                                         <?php else: ?>
                                             <button class="button"

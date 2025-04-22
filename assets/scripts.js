@@ -642,6 +642,24 @@ const PaymentModule = {
     }
   },
 
+  hidePaymentForm() {
+    const forms = document.querySelectorAll('.add-form');
+    forms.forEach(form => {
+      form.classList.remove('active');
+      setTimeout(() => {
+        form.style.display = 'none';
+      }, 300);
+    });
+  
+    const overlay = document.getElementById('form-overlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+      setTimeout(() => {
+        overlay.style.display = 'none';
+      }, 300);
+    }
+  },
+
   updateBookingDetails() {
     const select = document.getElementById('booking_selection');
     if (!select) return;
@@ -1194,6 +1212,7 @@ window.LuckyNest = {
   updateBookingDetails: PaymentModule.updateBookingDetails,
   showPaymentForm: PaymentModule.showPaymentForm,
   calculateAmount: PaymentModule.calculateAmount,
+  hidePaymentForm: PaymentModule.hidePaymentForm,
 
   showRoomRatingForm: RatingModule.showRoomRatingForm,
   showMealRatingForm: RatingModule.showMealRatingForm,

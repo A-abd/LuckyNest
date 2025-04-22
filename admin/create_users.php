@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $mail->isHTML(true);
                             $mail->Subject = 'Invitation to Register at LuckyNest';
 
-                            $registrationLink = 'http://' . $_SERVER['HTTP_HOST'] . '/LuckyNest/registration.php?token=' . $token;
+                            $registrationLink = 'http://' . $_SERVER['HTTP_HOST'] . '/LuckyNest/authentication/registration.php?token=' . $token;
 
                             $mail->Body = "
                             <html>

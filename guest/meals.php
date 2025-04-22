@@ -54,6 +54,12 @@ if ($selectedPlanId) {
                 $tags[] = $tagRow['name'];
             }
 
+            if (empty($mealRow['image_path'])) {
+                $mealRow['image_path'] = 'assets/meal_images/default.jpg';
+            } else {
+                $mealRow['image_path'] = 'assets/meal_images/' . basename($mealRow['image_path']);
+            }
+
             $mealRow['tags'] = $tags;
             $meals[] = $mealRow;
         }
@@ -116,7 +122,18 @@ $conn = null;
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
     <script src="../assets/scripts.js"></script>
     <title>Meal Plans</title>
-
+    <style>
+        .meal-image {
+            max-width: 300px;
+            max-height: 300px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        #modalImageContainer {
+            text-align: center;
+            margin: 15px 0;
+        }
+    </style>
 </head>
 
 <body>
@@ -189,7 +206,7 @@ $conn = null;
                                                 data-meal-type="<?php echo htmlspecialchars($meal['meal_type']); ?>"
                                                 data-meal-price="<?php echo number_format($meal['price'], 2); ?>"
                                                 data-meal-tags="<?php echo htmlspecialchars(implode(', ', $meal['tags'])); ?>"
-                                                data-meal-image="<?php echo htmlspecialchars($meal['image_path'] ?? ''); ?>">
+                                                data-meal-image="<?php echo htmlspecialchars($meal['image_path']); ?>">
                                                 <?php echo $meal['name']; ?>
                                             </span>
                                         </td>
@@ -222,7 +239,58 @@ $conn = null;
         </div>
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('mealModal');
+            const modalImage = document.getElementById('modalMealImage');
+            const modalMealName = document.getElementById('modalMealName');
+            const modalMealType = document.getElementById('modalMealType');
+            const modalMealPrice = document.getElementById('modalMealPrice');
+            const modalMealTags = document.getElementById('modalMealTags');
+            const closeBtn = document.querySelector('.close');
+            const mealLinks = document.querySelectorAll('.meal-name-link');
 
+            mealLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    const mealId = this.getAttribute('data-meal-id');
+                    const mealName = this.getAttribute('data-meal-name');
+                    const mealType = this.getAttribute('data-meal-type');
+                    const mealPrice = this.getAttribute('data-meal-price');
+                    const mealTags = this.getAttribute('data-meal-tags');
+                    const mealImage = this.getAttribute('data-meal-image');
+
+                    modalMealName.textContent = mealName;
+                    modalMealType.textContent = mealType;
+                    modalMealPrice.textContent = mealPrice;
+                    modalMealTags.textContent = mealTags;
+                    
+                    // Set the image source - prepend '../' to the path to go up one directory level
+                    modalImage.src = '../' + mealImage;
+                    modalImage.alt = mealName;
+
+                    modal.style.display = 'block';
+                });
+            });
+
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+
+            const mealPlanSelector = document.getElementById('meal_plan_selector');
+            if (mealPlanSelector) {
+                mealPlanSelector.addEventListener('change', function() {
+                    const selectedPlanId = this.value;
+                    window.location.href = `meals.php?plan_id=${selectedPlanId}`;
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

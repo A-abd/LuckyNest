@@ -142,7 +142,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['deposit_id'])) {
                 $net_amount = $refund_amount / (1 + $vat_rate);
                 $vat_amount = $refund_amount - $net_amount;
 
-                require_once(__DIR__ . '/../vendor/fpdf/fpdf.php');
 
                 class PDF extends \FPDF
                 {

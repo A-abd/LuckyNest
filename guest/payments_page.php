@@ -181,6 +181,7 @@ if (isset($_GET['deposit']) && isset($_GET['booking_id'])) {
             </div>
 
             <div id="rent_form" class="add-form">
+                <button type="button" class="close-button" onclick="LuckyNest.hidePaymentForm()">✕</button>
                 <h2>Pay for Accommodation</h2>
                 <?php if (empty($bookings)): ?>
                     <?php if (!empty($bookingsNeedingDeposit)): ?>
@@ -192,7 +193,7 @@ if (isset($_GET['deposit']) && isset($_GET['booking_id'])) {
                                     <th>Room Number</th>
                                     <th>Room Type</th>
                                     <th>Check-in Date</th>
-                                    <th>Action</th>
+                                    <th class="update-button">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -211,7 +212,7 @@ if (isset($_GET['deposit']) && isset($_GET['booking_id'])) {
                             </tbody>
                         </table>
                     <?php else: ?>
-                        <p>No unpaid bookings found for this guest.</p>
+                        <p class="center-only">No unpaid bookings found for this guest.</p>
                     <?php endif; ?>
                 <?php else: ?>
                     <form action="../include/checkout.php" method="POST">
@@ -249,9 +250,10 @@ if (isset($_GET['deposit']) && isset($_GET['booking_id'])) {
             </div>
 
             <div id="meal_plan_form" class="add-form" style="display: none;">
+                <button type="button" class="close-button" onclick="LuckyNest.hidePaymentForm()">✕</button>
                 <h2>Pay for Meal Plans</h2>
                 <?php if (empty($mealPlans)): ?>
-                    <p>No unpaid meal plans found for this guest.</p>
+                    <p class="center-only">No unpaid meal plans found for this guest.</p>
                 <?php else: ?>
                     <form action="../include/checkout.php" method="POST">
                         <label for="meal_plan_selection">Select Meal Plan:</label>
@@ -283,9 +285,10 @@ if (isset($_GET['deposit']) && isset($_GET['booking_id'])) {
             </div>
 
             <div id="laundry_form" class="add-form" style="display: none;">
+                <button type="button" class="close-button" onclick="LuckyNest.hidePaymentForm()">✕</button>
                 <h2>Pay for Laundry</h2>
                 <?php if (empty($laundrySlots)): ?>
-                    <p>No unpaid laundry slots found for this guest.</p>
+                    <p class="center-only">No unpaid laundry slots found for this guest.</p>
                 <?php else: ?>
                     <form action="../include/checkout.php" method="POST">
                         <label for="laundry_selection">Select Laundry Slot:</label>
@@ -319,6 +322,7 @@ if (isset($_GET['deposit']) && isset($_GET['booking_id'])) {
 
             <div id="deposit_form" class="add-form"
                 style="display: <?php echo ($depositBooking || count($unpaidDeposits) > 0) ? 'block' : 'none'; ?>;">
+                <button type="button" class="close-button" onclick="LuckyNest.hidePaymentForm()">✕</button>
                 <h2>Pay Security Deposit</h2>
                 <?php if ($depositBooking): ?>
                     <form action="../include/checkout.php" method="POST">
@@ -377,7 +381,7 @@ if (isset($_GET['deposit']) && isset($_GET['booking_id'])) {
                         </tbody>
                     </table>
                 <?php else: ?>
-                    <p>No security deposits pending payment. You can view your deposits on the <a
+                    <p class="center-only">No security deposits pending payment. You can view your deposits on the <a
                             href="deposits.php">deposits page</a>.</p>
                 <?php endif; ?>
             </div>

@@ -115,7 +115,7 @@ $conn = null;
         href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap" />
     <link rel="stylesheet" href="../assets/styles.css">
     <script src="../assets/scripts.js"></script>
-    <title>Guest Occupancy Report</title>
+    <title>Occupancy Report</title>
 </head>
 
 <body>
@@ -124,7 +124,7 @@ $conn = null;
     <div class="manage-default">
         <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
         <div class="content-container">
-            <h1>Guest Occupancy Report</h1>
+            <h1>Room Occupancy Report</h1>
 
             <div class="center-container">
                 <!-- Date Range Filter -->
