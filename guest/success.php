@@ -28,12 +28,12 @@ try {
     $stmt->bindValue(':stripe_payment_id', $session_id, PDO::PARAM_STR);
     $stmt->execute();
     $payment_data = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if ($payment_data) {
         $payment_id = $payment_data['payment_id'];
         $user_id = $payment_data['user_id'];
         $already_processed = true;
-        
+
         $stmt = $conn->prepare("SELECT invoice_id, filename FROM invoices WHERE payment_id = :payment_id");
         $stmt->bindValue(':payment_id', $payment_id, PDO::PARAM_INT);
         $stmt->execute();
@@ -92,11 +92,12 @@ if (!$already_processed) {
 
         } elseif ($payment_type == 'meal_plan') {
             $stmt = $conn->prepare("SELECT mpl.*, mp.name AS meal_plan_name, mp.price, 
-                                   u.forename, u.surname, u.email, u.address, u.phone 
-                                   FROM meal_plan_user_link mpl 
-                                   JOIN meal_plans mp ON mpl.meal_plan_id = mp.meal_plan_id 
-                                   JOIN users u ON mpl.user_id = u.user_id 
-                                   WHERE mpl.meal_plan_user_link = :reference_id");
+            u.forename, u.surname, u.email, u.address, u.phone, u.user_id 
+            FROM meal_plan_user_link mpl 
+            JOIN meal_plans mp ON mpl.meal_plan_id = mp.meal_plan_id 
+            JOIN users u ON mpl.user_id = u.user_id 
+            WHERE mpl.meal_plan_id = :reference_id AND mpl.is_paid = 0
+            LIMIT 1");
             $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
             $stmt->execute();
             $data = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -206,14 +207,16 @@ if (!$already_processed) {
                 $stmt->execute();
             }
         } elseif ($payment_type == 'meal_plan') {
-            $stmt = $conn->prepare("SELECT is_paid FROM meal_plan_user_link WHERE meal_plan_user_link = :reference_id");
+            $stmt = $conn->prepare("SELECT is_paid FROM meal_plan_user_link WHERE meal_plan_id = :reference_id AND user_id = :user_id");
             $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
+            $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
             $stmt->execute();
             $isPaid = $stmt->fetchColumn();
 
             if (!$isPaid) {
-                $stmt = $conn->prepare("UPDATE meal_plan_user_link SET is_paid = 1 WHERE meal_plan_user_link = :reference_id");
+                $stmt = $conn->prepare("UPDATE meal_plan_user_link SET is_paid = 1 WHERE meal_plan_id = :reference_id AND user_id = :user_id");
                 $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
+                $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
                 $stmt->execute();
             }
         } elseif ($payment_type == 'laundry') {
@@ -242,7 +245,7 @@ if (!$already_processed) {
             } else {
                 $stmt = $conn->prepare("UPDATE deposits SET status = 'paid', date_paid = NOW() WHERE booking_id = :booking_id");
                 $stmt->bindValue(':booking_id', $reference_id, PDO::PARAM_INT);
-                $stmt->execute();   
+                $stmt->execute();
             }
         }
 
@@ -279,7 +282,7 @@ if (!$already_processed) {
                                    FROM meal_plan_user_link mpl 
                                    JOIN meal_plans mp ON mpl.meal_plan_id = mp.meal_plan_id 
                                    JOIN users u ON mpl.user_id = u.user_id 
-                                   WHERE mpl.meal_plan_user_link = :reference_id");
+                                   WHERE mpl.meal_plan_id = :reference_id");
         } elseif ($payment_type == 'laundry') {
             $stmt = $conn->prepare("SELECT lsl.*, ls.date, ls.start_time, ls.price, u.forename, u.surname, u.email
                                    FROM laundry_slot_user_link lsl 
@@ -294,21 +297,21 @@ if (!$already_processed) {
                                    JOIN room_types rt ON r.room_type_id = rt.room_type_id 
                                    WHERE b.booking_id = :reference_id");
         }
-        
+
         $stmt->bindValue(':reference_id', $reference_id, PDO::PARAM_INT);
         $stmt->execute();
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if ($data) {
             $guest_name = $data['forename'] . ' ' . $data['surname'];
             $guest_email = $data['email'];
-            
+
             if ($payment_type == 'rent' || $payment_type == 'deposit') {
                 $room_number = $data['room_number'];
                 $room_type = $data['room_type_name'];
                 $check_in_date = $data['check_in_date'];
                 $check_out_date = $data['check_out_date'];
-                
+
                 if ($payment_type == 'deposit') {
                     $amount = floatval($data['deposit_amount']);
                 } else {
@@ -323,7 +326,7 @@ if (!$already_processed) {
                 $amount = floatval($data['price']);
             }
         }
-        
+
         if (!$amount) {
             $stmt = $conn->prepare("SELECT amount FROM payments WHERE payment_id = :payment_id");
             $stmt->bindValue(':payment_id', $payment_id, PDO::PARAM_INT);
