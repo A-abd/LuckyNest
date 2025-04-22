@@ -1,8 +1,4 @@
 <?php
-// TODO Add the following:
-// 1. A search function
-// 2. A filter function
-
 session_start();
 
 if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {

@@ -1,8 +1,4 @@
 <?php
-// TODO Add the following:
-// 1. A search function
-// 2. A filter function
-
 session_start();
 
 if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
@@ -143,11 +139,11 @@ $conn = null;
                                         class="update-button">Edit</button>
 
                                     <!-- Edit Form -->
-                                    <div id="edit-form-<?php echo $user['user_id']; ?>" class="rooms-edit-form">
+                                    <div id="edit-form-<?php echo $user['user_id']; ?>" class="edit-form">
                                         <button type="button" class="close-button"
                                             onclick="LuckyNest.toggleForm('edit-form-<?php echo $user['user_id']; ?>')">✕</button>
-                                        <h2 class="edit-title">Edit User</h2>
-                                        <form method="POST" action="users.php">
+                                        <h2>Edit User</h2>
+                                        <form method="POST" action="users.php" style="display:inline;">
                                             <input type="hidden" name="action" value="edit">
                                             <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
                                             <label for="forename_<?php echo $user['user_id']; ?>">Forename:</label>
@@ -181,17 +177,15 @@ $conn = null;
                                             </select>
                                             <div class="button-group">
                                                 <button type="submit" class="update-button">Update</button>
-
+                                                <button type="button" class="update-button"
+                                                    onclick="document.getElementById('delete-form-<?php echo $user['user_id']; ?>').submit(); return false;">Delete</button>
                                             </div>
                                         </form>
 
-                                        <!-- Delete Form -->
-                                        <form method="POST" action="users.php" style="margin-top: 10px;">
+                                        <form id="delete-form-<?php echo $user['user_id']; ?>" method="POST"
+                                            action="users.php" style="display:none;">
                                             <input type="hidden" name="action" value="delete">
                                             <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
-                                            <button type="submit" class="update-button"
-                                                onclick="return confirm('Are you sure you want to delete this user?')">Delete
-                                                User</button>
                                         </form>
                                     </div>
                                 </td>
