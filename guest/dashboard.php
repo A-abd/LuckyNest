@@ -91,6 +91,7 @@ try {
         JOIN rooms r ON b.room_id = r.room_id 
         WHERE b.guest_id = ? AND b.booking_is_cancelled = 0 
         ORDER BY b.check_in_date DESC
+        LIMIT 3
     ");
     $bookingsQuery->execute([$userId, $userId]);
     $bookings = $bookingsQuery->fetchAll();
@@ -106,6 +107,8 @@ try {
         FROM meal_plan_user_link mpul
         JOIN meal_plans mp ON mpul.meal_plan_id = mp.meal_plan_id
         WHERE mpul.user_id = ? AND mpul.is_cancelled = 0
+        ORDER BY mpul.start_date DESC
+        LIMIT 3
     ");
     $mealPlansQuery->execute([$userId, $userId]);
     $mealPlans = $mealPlansQuery->fetchAll();
@@ -115,6 +118,8 @@ try {
         FROM laundry_slot_user_link lsul
         JOIN laundry_slots ls ON lsul.laundry_slot_id = ls.laundry_slot_id
         WHERE lsul.user_id = ? AND lsul.is_cancelled = 0
+        ORDER BY ls.date DESC, ls.start_time DESC
+        LIMIT 3
     ");
     $laundryQuery->execute([$userId]);
     $laundrySlots = $laundryQuery->fetchAll();
@@ -127,6 +132,7 @@ try {
         JOIN rooms r ON b.room_id = r.room_id
         WHERE b.guest_id = ? AND b.booking_is_cancelled = 0
         ORDER BY d.deposit_id DESC
+        LIMIT 3
     ");
     $depositsQuery->execute([$userId]);
     $deposits = $depositsQuery->fetchAll();
@@ -141,6 +147,8 @@ try {
         AND b.booking_is_cancelled = 0
         AND rt.deposit_amount > 0
         AND (d.deposit_id IS NULL OR d.status = 'pending')
+        ORDER BY b.check_in_date DESC
+        LIMIT 3
     ");
     $pendingDepositsQuery->execute([$userId]);
     $pendingDeposits = $pendingDepositsQuery->fetchAll();
@@ -150,7 +158,7 @@ try {
         FROM notifications 
         WHERE user_id = ? 
         ORDER BY created_at DESC 
-        LIMIT 5
+        LIMIT 3
     ");
     $notificationsQuery->execute([$userId]);
     $notifications = $notificationsQuery->fetchAll();
@@ -160,7 +168,7 @@ try {
         FROM payments 
         WHERE user_id = ? 
         ORDER BY payment_date DESC 
-        LIMIT 5
+        LIMIT 3
     ");
     $paymentsQuery->execute([$userId]);
     $payments = $paymentsQuery->fetchAll();
@@ -234,8 +242,8 @@ try {
                             <th>Check-in Date</th>
                             <th>Check-out Date</th>
                             <th>Total Price</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th class="status-column">Status</th>
+                            <th class="actions-column">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -245,9 +253,9 @@ try {
                                 <td><?php echo $booking['room_number']; ?></td>
                                 <td><?php echo formatDate($booking['check_in_date']); ?></td>
                                 <td><?php echo formatDate($booking['check_out_date']); ?></td>
-                                <td>$<?php echo number_format($booking['total_price'], 2); ?></td>
-                                <td><?php echo $booking['booking_is_paid'] ? 'Paid' : 'Unpaid'; ?></td>
-                                <td>
+                                <td>£<?php echo number_format($booking['total_price'], 2); ?></td>
+                                <td class="status-column"><?php echo $booking['booking_is_paid'] ? 'Paid' : 'Unpaid'; ?></td>
+                                <td class="actions-column">
                                     <?php if (!$booking['booking_is_paid']): ?>
                                         <form method="post" style="display: inline;">
                                             <input type="hidden" name="booking_id" value="<?php echo $booking['booking_id']; ?>">
@@ -324,8 +332,8 @@ try {
                             <th>Type</th>
                             <th>Duration (days)</th>
                             <th>Start Date</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th class="status-column">Status</th>
+                            <th class="actions-column">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -335,8 +343,8 @@ try {
                                 <td><?php echo $plan['meal_plan_type']; ?></td>
                                 <td><?php echo $plan['duration_days']; ?></td>
                                 <td><?php echo formatDate($plan['start_date']); ?></td>
-                                <td><?php echo $plan['is_paid'] ? 'Paid' : 'Unpaid'; ?></td>
-                                <td>
+                                <td class="status-column"><?php echo $plan['is_paid'] ? 'Paid' : 'Unpaid'; ?></td>
+                                <td class="actions-column">
                                     <?php if (!$plan['is_paid']): ?>
                                         <form method="post" style="display: inline;">
                                             <input type="hidden" name="meal_plan_user_link_id"
@@ -409,8 +417,8 @@ try {
                             <th>Date</th>
                             <th>Time</th>
                             <th>Price</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th class="status-column">Status</th>
+                            <th class="actions-column">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -418,9 +426,9 @@ try {
                             <tr>
                                 <td><?php echo formatDate($slot['date']); ?></td>
                                 <td><?php echo $slot['start_time']; ?></td>
-                                <td>$<?php echo number_format($slot['price'], 2); ?></td>
-                                <td><?php echo $slot['is_paid'] ? 'Paid' : 'Unpaid'; ?></td>
-                                <td>
+                                <td>£<?php echo number_format($slot['price'], 2); ?></td>
+                                <td class="status-column"><?php echo $slot['is_paid'] ? 'Paid' : 'Unpaid'; ?></td>
+                                <td class="actions-column">
                                     <?php if (!$slot['is_paid']): ?>
                                         <form method="post" style="display: inline;">
                                             <input type="hidden" name="laundry_slot_user_link_id"
@@ -459,7 +467,7 @@ try {
                                 <th>Check-in Date</th>
                                 <th>Check-out Date</th>
                                 <th>Deposit Amount</th>
-                                <th>Actions</th>
+                                <th class="actions-column">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -469,8 +477,8 @@ try {
                                     <td><?php echo $deposit['room_number']; ?></td>
                                     <td><?php echo formatDate($deposit['check_in_date']); ?></td>
                                     <td><?php echo formatDate($deposit['check_out_date']); ?></td>
-                                    <td>$<?php echo number_format($deposit['deposit_amount'], 2); ?></td>
-                                    <td>
+                                    <td>£<?php echo number_format($deposit['deposit_amount'], 2); ?></td>
+                                    <td class="actions-column">
                                         <form method="post" action="../include/checkout.php" style="display: inline;">
                                             <input type="hidden" name="payment_type" value="deposit">
                                             <input type="hidden" name="booking_id" value="<?php echo $deposit['booking_id']; ?>">
@@ -496,7 +504,7 @@ try {
                                 <th>Booking ID</th>
                                 <th>Room Number</th>
                                 <th>Amount</th>
-                                <th>Status</th>
+                                <th class="status-column">Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -505,8 +513,8 @@ try {
                                     <td><?php echo $deposit['deposit_id']; ?></td>
                                     <td><?php echo $deposit['booking_id']; ?></td>
                                     <td><?php echo $deposit['room_number']; ?></td>
-                                    <td>$<?php echo number_format($deposit['amount'], 2); ?></td>
-                                    <td><?php echo ucfirst($deposit['status']); ?></td>
+                                    <td>£<?php echo number_format($deposit['amount'], 2); ?></td>
+                                    <td class="status-column"><?php echo ucfirst($deposit['status']); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -544,7 +552,7 @@ try {
                         <?php foreach ($payments as $payment): ?>
                             <tr>
                                 <td><?php echo ucfirst(str_replace('_', ' ', $payment['payment_type'])); ?></td>
-                                <td>$<?php echo number_format($payment['amount'], 2); ?></td>
+                                <td>£<?php echo number_format($payment['amount'], 2); ?></td>
                                 <td><?php echo formatDateTime($payment['payment_date']); ?></td>
                             </tr>
                         <?php endforeach; ?>

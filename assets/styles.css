@@ -1857,3 +1857,13 @@ tbody {
 .content-container {
   margin-bottom: 30px;
 }
+
+.status-column {
+  width: 120px;
+  text-align: center;
+}
+
+.actions-column {
+  width: 220px;
+  text-align: center;
+}
