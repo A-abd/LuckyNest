@@ -1,8 +1,4 @@
 <?php
-// TODO Add the following:
-// 1. A search function
-// 2. A filter function
-
 session_start();
 
 if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
@@ -17,6 +13,7 @@ $feedback = '';
 $roomData = [];
 $roomTypeOptions = [];
 $amenityOptions = [];
+$locationOptions = ['North Wing', 'South Wing'];
 
 $recordsPerPage = 20;
 $page = isset($_GET["page"]) ? (int) $_GET["page"] : 1;
@@ -28,6 +25,12 @@ $roomTypeOptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $stmt = $conn->query("SELECT amenity_id, amenity_name FROM amenities");
 $amenityOptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+$uploadDir = __DIR__ . '/../assets/room_images/';
+
+if (!file_exists($uploadDir)) {
+    mkdir($uploadDir, 0777, true);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         $action = $_POST['action'];
@@ -37,17 +40,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $roomNumber = $_POST['room_number'];
             $roomTypeId = $_POST['room_type_id'];
             $status = $_POST['status'];
+            $location = $_POST['location'];
             $roomIsAvailable = isset($_POST['room_is_available']) ? 1 : 0;
             $amenities = $_POST['amenities'] ?? [];
 
             $conn->beginTransaction();
             try {
-                $stmt = $conn->prepare("INSERT INTO rooms (room_number, room_type_id, status, room_is_available) 
-                                      VALUES (:roomNumber, :roomTypeId, :status, :roomIsAvailable)");
+                $stmt = $conn->prepare("INSERT INTO rooms (room_number, room_type_id, status, room_is_available, location) 
+                                      VALUES (:roomNumber, :roomTypeId, :status, :roomIsAvailable, :location)");
                 $stmt->bindValue(':roomNumber', $roomNumber, PDO::PARAM_STR);
                 $stmt->bindValue(':roomTypeId', $roomTypeId, PDO::PARAM_INT);
                 $stmt->bindValue(':status', $status, PDO::PARAM_STR);
                 $stmt->bindValue(':roomIsAvailable', $roomIsAvailable, PDO::PARAM_INT);
+                $stmt->bindValue(':location', $location, PDO::PARAM_STR);
                 $stmt->execute();
 
                 $roomId = $conn->lastInsertId();
@@ -59,19 +64,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->execute();
                 }
 
+                if (!empty($_FILES['room_images']['name'][0])) {
+                    foreach ($_FILES['room_images']['tmp_name'] as $key => $tmp_name) {
+                        if ($_FILES['room_images']['error'][$key] === UPLOAD_ERR_OK) {
+                            $fileExtension = pathinfo($_FILES['room_images']['name'][$key], PATHINFO_EXTENSION);
+                            $fileName = uniqid() . '.' . $fileExtension;
+                            $targetPath = $uploadDir . $fileName;
+
+                            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+                            if (in_array(strtolower($fileExtension), $allowedExtensions)) {
+                                if (move_uploaded_file($_FILES['room_images']['tmp_name'][$key], $targetPath)) {
+                                    $imagePath = 'assets/room_images/' . $fileName;
+                                    
+                                    $stmt = $conn->prepare("INSERT INTO room_images (room_id, image_path) VALUES (:roomId, :imagePath)");
+                                    $stmt->bindValue(':roomId', $roomId, PDO::PARAM_INT);
+                                    $stmt->bindValue(':imagePath', $imagePath, PDO::PARAM_STR);
+                                    $stmt->execute();
+                                } else {
+                                    $feedback = 'Error uploading one or more images.';
+                                }
+                            } else {
+                                $feedback = 'Invalid file type. Only JPG, JPEG, PNG, and GIF are allowed.';
+                            }
+                        }
+                    }
+                }
+
                 $conn->commit();
                 $feedback = 'Room has been added successfully!';
             } catch (Exception $e) {
                 $conn->rollBack();
-                $feedback = 'Error adding room.';
+                $feedback = 'Error adding room: ' . $e->getMessage();
             }
         } elseif ($action === 'edit') {
             $roomId = $_POST['room_id'];
             $roomNumber = $_POST['room_number'];
             $roomTypeId = $_POST['room_type_id'];
             $status = $_POST['status'];
+            $location = $_POST['location'];
             $roomIsAvailable = isset($_POST['room_is_available']) ? 1 : 0;
             $amenities = $_POST['amenities'] ?? [];
+            $deleteImages = isset($_POST['delete_images']) ? $_POST['delete_images'] : [];
 
             $conn->beginTransaction();
             try {
@@ -79,12 +112,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                       SET room_number = :roomNumber, 
                                           room_type_id = :roomTypeId, 
                                           status = :status, 
+                                          location = :location,
                                           room_is_available = :roomIsAvailable 
                                       WHERE room_id = :roomId");
                 $stmt->bindValue(':roomId', $roomId, PDO::PARAM_INT);
                 $stmt->bindValue(':roomNumber', $roomNumber, PDO::PARAM_STR);
                 $stmt->bindValue(':roomTypeId', $roomTypeId, PDO::PARAM_INT);
                 $stmt->bindValue(':status', $status, PDO::PARAM_STR);
+                $stmt->bindValue(':location', $location, PDO::PARAM_STR);
                 $stmt->bindValue(':roomIsAvailable', $roomIsAvailable, PDO::PARAM_INT);
                 $stmt->execute();
 
@@ -99,28 +134,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->execute();
                 }
 
+                if (!empty($deleteImages)) {
+                    foreach ($deleteImages as $imageId) {
+                        $stmt = $conn->prepare("SELECT image_path FROM room_images WHERE image_id = :imageId");
+                        $stmt->bindValue(':imageId', $imageId, PDO::PARAM_INT);
+                        $stmt->execute();
+                        $imagePath = $stmt->fetchColumn();
+
+                        $stmt = $conn->prepare("DELETE FROM room_images WHERE image_id = :imageId");
+                        $stmt->bindValue(':imageId', $imageId, PDO::PARAM_INT);
+                        $stmt->execute();
+
+                        if ($imagePath && file_exists(__DIR__ . '/../' . $imagePath)) {
+                            unlink(__DIR__ . '/../' . $imagePath);
+                        }
+                    }
+                }
+
+                if (!empty($_FILES['room_images']['name'][0])) {
+                    foreach ($_FILES['room_images']['tmp_name'] as $key => $tmp_name) {
+                        if ($_FILES['room_images']['error'][$key] === UPLOAD_ERR_OK) {
+                            $fileExtension = pathinfo($_FILES['room_images']['name'][$key], PATHINFO_EXTENSION);
+                            $fileName = uniqid() . '.' . $fileExtension;
+                            $targetPath = $uploadDir . $fileName;
+
+                            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+                            if (in_array(strtolower($fileExtension), $allowedExtensions)) {
+                                if (move_uploaded_file($_FILES['room_images']['tmp_name'][$key], $targetPath)) {
+                                    $imagePath = 'assets/room_images/' . $fileName;
+                                    
+                                    $stmt = $conn->prepare("INSERT INTO room_images (room_id, image_path) VALUES (:roomId, :imagePath)");
+                                    $stmt->bindValue(':roomId', $roomId, PDO::PARAM_INT);
+                                    $stmt->bindValue(':imagePath', $imagePath, PDO::PARAM_STR);
+                                    $stmt->execute();
+                                } else {
+                                    $feedback = 'Error uploading one or more images.';
+                                }
+                            } else {
+                                $feedback = 'Invalid file type. Only JPG, JPEG, PNG, and GIF are allowed.';
+                            }
+                        }
+                    }
+                }
+
                 $conn->commit();
                 $feedback = 'Room updated successfully!';
             } catch (Exception $e) {
                 $conn->rollBack();
-                $feedback = 'Error updating room.';
+                $feedback = 'Error updating room: ' . $e->getMessage();
             }
         } elseif ($action === 'delete') {
             $roomId = $_POST['room_id'];
 
-            $stmt = $conn->prepare("DELETE FROM rooms WHERE room_id = :roomId");
-            $stmt->bindValue(':roomId', $roomId, PDO::PARAM_INT);
+            $conn->beginTransaction();
+            try {
+                $stmt = $conn->prepare("SELECT image_path FROM room_images WHERE room_id = :roomId");
+                $stmt->bindValue(':roomId', $roomId, PDO::PARAM_INT);
+                $stmt->execute();
+                $imagePaths = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-            if ($stmt->execute()) {
+                foreach ($imagePaths as $imagePath) {
+                    if (file_exists(__DIR__ . '/../' . $imagePath)) {
+                        unlink(__DIR__ . '/../' . $imagePath);
+                    }
+                }
+
+                $stmt = $conn->prepare("DELETE FROM room_images WHERE room_id = :roomId");
+                $stmt->bindValue(':roomId', $roomId, PDO::PARAM_INT);
+                $stmt->execute();
+
+                $stmt = $conn->prepare("DELETE FROM room_amenities WHERE room_id = :roomId");
+                $stmt->bindValue(':roomId', $roomId, PDO::PARAM_INT);
+                $stmt->execute();
+
+                $stmt = $conn->prepare("DELETE FROM rooms WHERE room_id = :roomId");
+                $stmt->bindValue(':roomId', $roomId, PDO::PARAM_INT);
+                $stmt->execute();
+
+                $conn->commit();
                 $feedback = 'Room deleted successfully!';
-            } else {
-                $feedback = 'Error deleting room.';
+            } catch (Exception $e) {
+                $conn->rollBack();
+                $feedback = 'Error deleting room: ' . $e->getMessage();
             }
         }
     }
 }
 
-$stmt = $conn->prepare("SELECT r.room_id, r.room_number, r.room_is_available, r.status, rt.room_type_name 
+$stmt = $conn->prepare("SELECT r.room_id, r.room_number, r.room_is_available, r.status, r.location, rt.room_type_name 
                       FROM rooms r 
                       JOIN room_types rt ON r.room_type_id = rt.room_type_id
                       LIMIT ?, ?");
@@ -170,10 +271,11 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
         <div id="add-form" class="add-form">
             <button type="button" class="close-button" onclick="LuckyNest.toggleForm('add-form')">✕</button>
             <h2>Add New Room</h2>
-            <form method="POST" action="rooms.php">
+            <form method="POST" action="rooms.php" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="add">
                 <label for="room_number">Room Number:</label>
                 <input type="text" id="room_number" name="room_number" required>
+                
                 <label for="room_type_id">Room Type:</label>
                 <select id="room_type_id" name="room_type_id" required>
                     <?php foreach ($roomTypeOptions as $roomType): ?>
@@ -182,15 +284,29 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
                         </option>
                     <?php endforeach; ?>
                 </select>
+                
+                <label for="location">Location:</label>
+                <select id="location" name="location" required>
+                    <?php foreach ($locationOptions as $location): ?>
+                        <option value="<?php echo $location; ?>"><?php echo $location; ?></option>
+                    <?php endforeach; ?>
+                </select>
+                
                 <label for="status">Status:</label>
                 <select id="status" name="status" required>
                     <option value="Available">Available</option>
                     <option value="Occupied">Occupied</option>
                 </select>
+                
                 <div class="checkbox-container">
                     <input type="checkbox" id="room_is_available" name="room_is_available"> 
                     <label for="room_is_available">Available</label>
                 </div>
+                
+                <label for="room_images">Room Images:</label>
+                <input type="file" id="room_images" name="room_images[]" accept="image/*" multiple>
+                <small>You can select multiple images (JPG, JPEG, PNG, GIF)</small>
+                
                 <label>Amenities:</label>
                 <?php foreach ($amenityOptions as $amenity): ?>
                     <div class="checkbox-container">
@@ -214,7 +330,9 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
                         <th>Room ID</th>
                         <th>Room Number</th>
                         <th>Room Type</th>
+                        <th>Location</th>
                         <th>Status</th>
+                        <th>Images</th>
                         <th>Amenities</th>
                         <th>Actions</th>
                     </tr>
@@ -229,23 +347,47 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
                         $stmt->bindValue(':roomId', $room['room_id'], PDO::PARAM_INT);
                         $stmt->execute();
                         $roomAmenities = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                        
+                        $stmt = $conn->prepare("SELECT image_id, image_path FROM room_images WHERE room_id = :roomId");
+                        $stmt->bindValue(':roomId', $room['room_id'], PDO::PARAM_INT);
+                        $stmt->execute();
+                        $roomImages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         ?>
                         <tr>
                             <td><?php echo $room['room_id']; ?></td>
                             <td><?php echo $room['room_number']; ?></td>
                             <td><?php echo $room['room_type_name']; ?></td>
+                            <td><?php echo $room['location']; ?></td>
                             <td><?php echo $room['status']; ?></td>
+                            <td>
+                                <?php if (count($roomImages) > 0): ?>
+                                    <div>
+                                        <?php foreach ($roomImages as $index => $image): ?>
+                                            <?php if ($index < 1): ?>
+                                                <img src="../<?php echo $image['image_path']; ?>" alt="Room image" style="max-width: 100px; max-height: 100px;">
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                        <?php if (count($roomImages) > 1): ?>
+                                            <div>(+<?php echo count($roomImages) - 1; ?> more)</div>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php else: ?>
+                                    No images
+                                <?php endif; ?>
+                            </td>
                             <td><?php echo implode(', ', $roomAmenities); ?></td>
                             <td>
                                 <button onclick="LuckyNest.toggleForm('edit-room-form-<?php echo $room['room_id']; ?>')" class="update-button">Edit</button>
                                 <div id="edit-room-form-<?php echo $room['room_id']; ?>" class="edit-form">
                                     <button type="button" class="close-button" onclick="LuckyNest.toggleForm('edit-room-form-<?php echo $room['room_id']; ?>')">✕</button>
-                                    <form method="POST" action="rooms.php">
+                                    <form method="POST" action="rooms.php" enctype="multipart/form-data">
                                         <h2>Edit Room</h2>
                                         <input type="hidden" name="action" value="edit">
                                         <input type="hidden" name="room_id" value="<?php echo $room['room_id']; ?>">
+                                        
                                         <label for="room_number_<?php echo $room['room_id']; ?>">Room Number:</label>
                                         <input type="text" id="room_number_<?php echo $room['room_id']; ?>" name="room_number" value="<?php echo $room['room_number']; ?>" required>
+                                        
                                         <label for="room_type_id_<?php echo $room['room_id']; ?>">Room Type:</label>
                                         <select id="room_type_id_<?php echo $room['room_id']; ?>" name="room_type_id" required>
                                             <?php foreach ($roomTypeOptions as $roomType): ?>
@@ -255,15 +397,47 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
+                                        
+                                        <label for="location_<?php echo $room['room_id']; ?>">Location:</label>
+                                        <select id="location_<?php echo $room['room_id']; ?>" name="location" required>
+                                            <?php foreach ($locationOptions as $location): ?>
+                                                <option value="<?php echo $location; ?>" 
+                                                    <?php echo $location === $room['location'] ? 'selected' : ''; ?>>
+                                                    <?php echo $location; ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        
                                         <label for="status_<?php echo $room['room_id']; ?>">Status:</label>
                                         <select id="status_<?php echo $room['room_id']; ?>" name="status" required>
                                             <option value="Available" <?php echo $room['status'] === 'Available' ? 'selected' : ''; ?>>Available</option>
                                             <option value="Occupied" <?php echo $room['status'] === 'Occupied' ? 'selected' : ''; ?>>Occupied</option>
                                         </select>
+                                        
                                         <label for="room_is_available_<?php echo $room['room_id']; ?>">
                                             <input type="checkbox" id="room_is_available_<?php echo $room['room_id']; ?>" 
                                                 name="room_is_available" <?php echo $room['room_is_available'] ? 'checked' : ''; ?>> Available
                                         </label>
+                                        
+                                        <?php if (count($roomImages) > 0): ?>
+                                            <label>Current Images:</label>
+                                            <div>
+                                                <?php foreach ($roomImages as $image): ?>
+                                                    <div style="margin-bottom: 10px;">
+                                                        <img src="../<?php echo $image['image_path']; ?>" alt="Room image" style="max-width: 100px; max-height: 100px; display: block;">
+                                                        <div>
+                                                            <input type="checkbox" id="delete_image_<?php echo $image['image_id']; ?>" 
+                                                                name="delete_images[]" value="<?php echo $image['image_id']; ?>">
+                                                            <label for="delete_image_<?php echo $image['image_id']; ?>">Delete this image</label>
+                                                        </div>
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        
+                                        <label for="room_images_<?php echo $room['room_id']; ?>">Add New Images:</label>
+                                        <input type="file" id="room_images_<?php echo $room['room_id']; ?>" name="room_images[]" accept="image/*" multiple>
+                                        <small>You can select multiple images (JPG, JPEG, PNG, GIF)</small>
                                         
                                         <label>Amenities:</label>
                                         <?php foreach ($amenityOptions as $amenity): ?>
@@ -304,6 +478,8 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
     </div>
 
     <div id="form-overlay"></div>
+
+    
 </body>
 
 </html>
