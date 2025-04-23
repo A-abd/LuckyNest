@@ -89,7 +89,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         } elseif ($action === 'change_role') {
-            if (isset($_POST['user_id'], $_POST['new_role'], $_POST['confirmed'])) {
+            if ($_SESSION['role'] !== 'owner') {
+                $feedback = 'Only owners can change user roles.';
+            } elseif (isset($_POST['user_id'], $_POST['new_role'], $_POST['confirmed'])) {
                 $userId = $_POST['user_id'];
                 $newRole = $_POST['new_role'];
                 $confirmed = $_POST['confirmed'];
@@ -190,7 +192,7 @@ $conn = null;
                                 <td><?php echo ucfirst($user['role']); ?></td>
                                 <td><?php echo $user['created_at']; ?></td>
                                 <td>
-                                    <?php if ($user['role'] === 'guest' || $user['role'] === 'admin'): ?>
+                                    <?php if (($user['role'] === 'guest' || $user['role'] === 'admin') && $_SESSION['role'] === 'owner'): ?>
                                         <form id="role_<?php echo $user['user_id']; ?>_form" method="POST"
                                             action="create_users.php">
                                             <input type="hidden" name="action" value="change_role">
@@ -205,7 +207,7 @@ $conn = null;
                                                 Change to <?php echo $user['role'] === 'guest' ? 'Admin' : 'Guest'; ?>
                                             </button>
                                         </form>
-                                    <?php else: ?>
+                                    <?php elseif ($user['role'] === 'owner'): ?>
                                         <span>Owner (Cannot change)</span>
                                     <?php endif; ?>
                                 </td>
