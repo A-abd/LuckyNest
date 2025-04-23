@@ -1867,3 +1867,15 @@ tbody {
   width: 220px;
   text-align: center;
 }
+
+.meal-image {
+  max-width: 300px;
+  max-height: 300px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+#modalImageContainer {
+  text-align: center;
+  margin: 15px 0;
+}

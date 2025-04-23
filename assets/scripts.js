@@ -122,7 +122,7 @@ const MealModule = {
       });
     }
 
-    this.initMealModal();
+    this.initMealDetailsModal();
     this.initMealPlanDatePickers();
     this.initMealAssignmentModule();
     this.handleMealPlanDropdownChange();
@@ -175,48 +175,50 @@ const MealModule = {
     }
   },
 
-  initMealModal() {
-    const modal = document.getElementById('mealModal');
-    if (!modal) return;
+  initMealDetailsModal() {
+    document.addEventListener('DOMContentLoaded', function() {
+      const modal = document.getElementById('mealModal');
+      const modalImage = document.getElementById('modalMealImage');
+      const modalMealName = document.getElementById('modalMealName');
+      const modalMealType = document.getElementById('modalMealType');
+      const modalMealPrice = document.getElementById('modalMealPrice');
+      const modalMealTags = document.getElementById('modalMealTags');
+      const closeBtn = document.querySelector('.close');
+      const mealLinks = document.querySelectorAll('.meal-name-link');
 
-    const closeBtn = modal.querySelector('.close');
-    const mealLinks = document.querySelectorAll('.meal-name-link');
+      if (!modal) return;
 
-    if (closeBtn) {
-      closeBtn.onclick = function () {
-        modal.style.display = "none";
-      };
-    }
+      mealLinks.forEach(link => {
+        link.addEventListener('click', function() {
+          const mealId = this.getAttribute('data-meal-id');
+          const mealName = this.getAttribute('data-meal-name');
+          const mealType = this.getAttribute('data-meal-type');
+          const mealPrice = this.getAttribute('data-meal-price');
+          const mealTags = this.getAttribute('data-meal-tags');
+          const mealImage = this.getAttribute('data-meal-image');
 
-    window.addEventListener('click', function (event) {
-      if (event.target === modal) {
-        modal.style.display = "none";
+          modalMealName.textContent = mealName;
+          modalMealType.textContent = mealType;
+          modalMealPrice.textContent = mealPrice;
+          modalMealTags.textContent = mealTags;
+          
+          modalImage.src = '../' + mealImage;
+          modalImage.alt = mealName;
+
+          modal.style.display = 'block';
+        });
+      });
+
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+          modal.style.display = 'none';
+        });
       }
-    });
 
-    mealLinks.forEach(link => {
-      link.addEventListener('click', function () {
-        const mealId = this.getAttribute('data-meal-id');
-        const mealName = this.getAttribute('data-meal-name');
-        const mealType = this.getAttribute('data-meal-type');
-        const mealPrice = this.getAttribute('data-meal-price');
-        const mealTags = this.getAttribute('data-meal-tags');
-        const mealImage = this.getAttribute('data-meal-image');
-
-        document.getElementById('modalMealName').textContent = mealName;
-        document.getElementById('modalMealType').textContent = mealType;
-        document.getElementById('modalMealPrice').textContent = mealPrice;
-        document.getElementById('modalMealTags').textContent = mealTags;
-
-        const imgElement = document.getElementById('modalMealImage');
-        if (mealImage && mealImage !== '') {
-          imgElement.src = mealImage;
-          document.getElementById('modalImageContainer').style.display = 'block';
-        } else {
-          document.getElementById('modalImageContainer').style.display = 'none';
+      window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+          modal.style.display = 'none';
         }
-
-        modal.style.display = "block";
       });
     });
   },
