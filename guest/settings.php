@@ -26,46 +26,6 @@ $qrCodeUrl = $secret ? GoogleQrUrl::generate("LuckyNest", $secret, "LuckyNestApp
 $error = '';
 $success_message = '';
 
-// Handle test notification send
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_test_notification'])) {
-    $notification_type = $_POST['notification_type'];
-
-    try {
-        if ($notification_type === 'payment_reminder') {
-            $result = sendPaymentReminder(
-                $conn,
-                $user_id,
-                'rent',
-                450.00,
-                date('d F Y', strtotime('+7 days')),
-                123
-            );
-            $success_message = "Test payment reminder sent.";
-        } elseif ($notification_type === 'late_payment') {
-            $result = sendLatePaymentNotice(
-                $conn,
-                $user_id,
-                'rent',
-                450.00,
-                date('d F Y', strtotime('-5 days')),
-                123,
-                5
-            );
-            $success_message = "Test late payment notice sent.";
-        }
-
-        // For debugging
-        if (isset($result['error'])) {
-            $error = "Error sending test notification: " . $result['error'];
-        } else {
-            $success_message .= " Email: " . ($result['email'] ? "Sent" : "Not sent");
-            $success_message .= ", SMS: " . ($result['sms'] ? "Sent" : "Not sent");
-        }
-    } catch (Exception $e) {
-        $error = "Error sending test notification: " . $e->getMessage();
-    }
-}
-
 // Handle notification preferences update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_notifications'])) {
     $email_notifications = isset($_POST['email_notifications']) ? 1 : 0;
@@ -236,31 +196,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_code'])) {
                     <button type="submit" name="update_notifications" class="update-button">Save Notification
                         Settings</button>
                 </form>
-
-                <!-- NOTE FOR EXAMINER: This section purely exists to show you that the notification system works in the video presentation -->
-                <!-- This section would be removed in a public version of the software as the notifications are automatically sent (if needed) via the cron job -->
-                <div class="test-section">
-                    <h3>Test Notifications</h3>
-                    <p>Send test notifications to verify your current settings:</p>
-
-                    <div class="test-buttons">
-                        <form method="POST" action="">
-                            <input type="hidden" name="notification_type" value="payment_reminder">
-                            <button type="submit" name="send_test_notification"
-                                class="test-button payment-reminder">Send Test Payment Reminder</button>
-                        </form>
-
-                        <form method="POST" action="">
-                            <input type="hidden" name="notification_type" value="late_payment">
-                            <button type="submit" name="send_test_notification" class="test-button late-payment">Send
-                                Test Late Payment Notice</button>
-                        </form>
-                    </div>
-
-                    <p style="margin-top: 10px; font-size: 0.8em; color: #888;">
-                        Note: These are test notifications and will not affect any actual bookings or payments.
-                    </p>
-                </div>
             </div>
         </div>
     </div>
