@@ -1,6 +1,8 @@
-# LuckyNest is a guest and property management system that was made to streamline administrative tasks for Ms. Lucky. The system provides guest and property management functionalites for the owner/admins and provides meal plan and laundry slot purchases and notifications for guests.
+# LuckyNest
+LuckyNest is a guest and property management system that was made to streamline administrative tasks for Ms. Lucky. The system provides guest and property management functionalities for the owner/admins and provides meal plan and laundry slot purchases and notifications for guests.
 
-## Stack: PHP, MySQL, JS, HTML and CSS.
+## Stack:
+PHP, MySQL, JS, HTML and CSS.
 
 ## Key Features:
 1. **Complete property management** (including advanced DatePickers) 
@@ -10,8 +12,8 @@
 5. **Invoice PDF generation**
 6. **Email notifications**
 7. **SMS notifications**
-9. **Two-Factor Authentication using Authenticator Apps**
-10. **Various analytics/reports pages** (e.g. financial reports)
+8. **Two-Factor Authentication using Authenticator Apps**
+9. **Various analytics/reports pages** (e.g. financial reports)
 
 ## My Contributions (approximately 75% of the project):
 1. **Team Leader and Team Secretary**
@@ -34,7 +36,7 @@ Follow the instructions in the README file that is in the repository.
 5. **PDF Generation:** FPDF
 
 ## Lessons Learnt:
-1. **Always establish a well-thought out file structure before development begiins**
+1. **Always establish a well-thought out file structure before development begins**
 2. **Do small commits often instead of large commits rarely**
 3. **Always minimise user data in the database and hash it to protect user data**
 4. **Modularise files instead of making large, difficult to maintain files**
