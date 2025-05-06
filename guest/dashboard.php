@@ -126,19 +126,11 @@ try {
 
     $depositsQuery = $conn->prepare("
         SELECT d.deposit_id, d.booking_id, d.amount, d.status, b.check_in_date, 
-               b.check_out_date, r.room_number
-        FROM deposits d
-        JOIN bookings b ON d.booking_id = b.booking_id
-        JOIN rooms r ON b.room_id = r.room_id
-        WHERE b.guest_id = ? AND b.booking_is_cancelled = 0
-        ORDER BY d.deposit_id DESC
-        LIMIT 3
-    ");
-    $depositsQuery->execute([$userId]);
-    $deposits = $depositsQuery->fetchAll();
-
-    $pendingDepositsQuery = $conn->prepare("
-        SELECT b.booking_id, r.room_number, b.check_in_date, b.check_out_date, rt.deposit_amount
+               b.check_out_date, r.room_number, rt.deposit_amount,
+               CASE
+                  WHEN d.deposit_id IS NULL THEN 'pending_payment'
+                  ELSE d.status
+               END AS display_status
         FROM bookings b
         JOIN rooms r ON b.room_id = r.room_id
         JOIN room_types rt ON r.room_type_id = rt.room_type_id
@@ -146,12 +138,19 @@ try {
         WHERE b.guest_id = ? 
         AND b.booking_is_cancelled = 0
         AND rt.deposit_amount > 0
-        AND (d.deposit_id IS NULL OR d.status = 'pending')
-        ORDER BY b.check_in_date DESC
-        LIMIT 3
+        ORDER BY 
+            CASE
+                WHEN d.status = 'pending' OR d.deposit_id IS NULL THEN 1
+                WHEN d.status = 'paid' THEN 2
+                WHEN d.status = 'partially_refunded' THEN 3
+                WHEN d.status = 'fully_refunded' THEN 4
+                WHEN d.status = 'withheld' THEN 5
+            END ASC,
+            b.check_in_date DESC
+        LIMIT 10
     ");
-    $pendingDepositsQuery->execute([$userId]);
-    $pendingDeposits = $pendingDepositsQuery->fetchAll();
+    $depositsQuery->execute([$userId]);
+    $deposits = $depositsQuery->fetchAll();
 
     $notificationsQuery = $conn->prepare("
         SELECT message, created_at, is_read 
@@ -280,7 +279,7 @@ try {
                                     <?php if ($booking['booking_is_paid']): ?>
                                         <?php if ($booking['has_rating'] > 0): ?>
                                             <button class="button"
-                                                onclick="window.LuckyNest.toggleForm('roomRatingForm'); document.getElementById('ratingBookingId').value=<?php echo $booking['booking_id']; ?>">Add
+                                                onclick="window.LuckyNest.toggleForm('roomRatingForm'); document.getElementById('ratingBookingId').value=<?php echo $booking['booking_id']; ?>">Edit
                                                 Rating</button>
                                         <?php else: ?>
                                             <button class="button"
@@ -455,30 +454,60 @@ try {
                 <p>You have no active laundry bookings.</p>
             <?php endif; ?>
 
-            <h2>My Security Deposits</h2>
-            <?php if (count($deposits) > 0 || count($pendingDeposits) > 0): ?>
-                <?php if (count($pendingDeposits) > 0): ?>
-                    <h3>Pending Deposits</h3>
-                    <table border="1">
-                        <thead>
+            <h2>My Deposits</h2>
+            <?php if (count($deposits) > 0): ?>
+                <table border="1">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Room Number</th>
+                            <th>Check-in Date</th>
+                            <th>Check-out Date</th>
+                            <th>Amount</th>
+                            <th class="status-column">Status</th>
+                            <th class="actions-column">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($deposits as $deposit): ?>
                             <tr>
-                                <th>Booking ID</th>
-                                <th>Room Number</th>
-                                <th>Check-in Date</th>
-                                <th>Check-out Date</th>
-                                <th>Deposit Amount</th>
-                                <th class="actions-column">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($pendingDeposits as $deposit): ?>
-                                <tr>
-                                    <td><?php echo $deposit['booking_id']; ?></td>
-                                    <td><?php echo $deposit['room_number']; ?></td>
-                                    <td><?php echo formatDate($deposit['check_in_date']); ?></td>
-                                    <td><?php echo formatDate($deposit['check_out_date']); ?></td>
-                                    <td>£<?php echo number_format($deposit['deposit_amount'], 2); ?></td>
-                                    <td class="actions-column">
+                                <td><?php echo $deposit['booking_id']; ?></td>
+                                <td><?php echo $deposit['room_number']; ?></td>
+                                <td><?php echo formatDate($deposit['check_in_date']); ?></td>
+                                <td><?php echo formatDate($deposit['check_out_date']); ?></td>
+                                <td>£<?php echo number_format($deposit['deposit_amount'] ?? $deposit['amount'], 2); ?></td>
+                                <td class="status-column">
+                                    <?php
+                                    $status = $deposit['display_status'];
+                                    $statusText = '';
+
+                                    switch ($status) {
+                                        case 'pending_payment':
+                                            $statusText = 'Payment Required';
+                                            break;
+                                        case 'pending':
+                                            $statusText = 'Processing';
+                                            break;
+                                        case 'paid':
+                                            $statusText = 'Paid';
+                                            break;
+                                        case 'partially_refunded':
+                                            $statusText = 'Partially Refunded';
+                                            break;
+                                        case 'fully_refunded':
+                                            $statusText = 'Fully Refunded';
+                                            break;
+                                        case 'withheld':
+                                            $statusText = 'Withheld';
+                                            break;
+                                        default:
+                                            $statusText = ucfirst($status);
+                                    }
+                                    echo $statusText;
+                                    ?>
+                                </td>
+                                <td class="actions-column">
+                                    <?php if ($status === 'pending_payment'): ?>
                                         <form method="post" action="../include/checkout.php" style="display: inline;">
                                             <input type="hidden" name="payment_type" value="deposit">
                                             <input type="hidden" name="booking_id" value="<?php echo $deposit['booking_id']; ?>">
@@ -488,38 +517,18 @@ try {
                                             <input type="hidden" name="user_id" value="<?php echo $_SESSION['user_id']; ?>">
                                             <button type="submit" class="button">Pay Now</button>
                                         </form>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                <?php endif; ?>
-
-                <?php if (count($deposits) > 0): ?>
-                    <h3>Deposit History</h3>
-                    <table border="1">
-                        <thead>
-                            <tr>
-                                <th>Deposit ID</th>
-                                <th>Booking ID</th>
-                                <th>Room Number</th>
-                                <th>Amount</th>
-                                <th class="status-column">Status</th>
+                                    <?php elseif ($status === 'withheld'): ?>
+                                        <button class="button info-button"
+                                            onclick="alert('Deposit was withheld. Please contact administration for details.')">Details</button>
+                                    <?php elseif ($status === 'partially_refunded'): ?>
+                                        <button class="button info-button"
+                                            onclick="alert('Your deposit was partially refunded. Refunded amount: £<?php echo number_format($deposit['refunded_amount'] ?? 0, 2); ?>')">Details</button>
+                                    <?php endif; ?>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($deposits as $deposit): ?>
-                                <tr>
-                                    <td><?php echo $deposit['deposit_id']; ?></td>
-                                    <td><?php echo $deposit['booking_id']; ?></td>
-                                    <td><?php echo $deposit['room_number']; ?></td>
-                                    <td>£<?php echo number_format($deposit['amount'], 2); ?></td>
-                                    <td class="status-column"><?php echo ucfirst($deposit['status']); ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                <?php endif; ?>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             <?php else: ?>
                 <p>You have no security deposits.</p>
             <?php endif; ?>
