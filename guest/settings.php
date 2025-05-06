@@ -23,10 +23,13 @@ $g = new GoogleAuthenticator();
 $secret = $user['totp_secret'];
 $qrCodeUrl = $secret ? GoogleQrUrl::generate("LuckyNest", $secret, "LuckyNestApp") : '';
 
+if ($secret) {
+    $_SESSION['2fa_verified'] = true;
+}
+
 $error = '';
 $success_message = '';
 
-// Handle notification preferences update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_notifications'])) {
     $email_notifications = isset($_POST['email_notifications']) ? 1 : 0;
     $sms_notifications = isset($_POST['sms_notifications']) ? 1 : 0;
@@ -38,7 +41,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_notifications'
         $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
         $stmt->execute();
 
-        // Update the user data after changes
         $stmt = $conn->prepare("SELECT email_notifications, sms_notifications FROM users WHERE user_id = :user_id");
         $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
         $stmt->execute();
@@ -52,7 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_notifications'
     }
 }
 
-// Handle 2FA changes
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_password'])) {
     $password = $_POST['password'];
 
@@ -62,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_password'])) {
                 $stmt = $conn->prepare("UPDATE users SET totp_secret = NULL WHERE user_id = :user_id");
                 $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
                 $stmt->execute();
-                unset($_SESSION['2fa_verified']); // Clear the verification session variable when disabling 2FA
+                unset($_SESSION['2fa_verified']);
                 header("Location: settings");
                 exit();
             } else {
@@ -93,7 +94,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_code'])) {
         exit();
     } else {
         $error = "Invalid authentication code.";
-        // Keep the QR code and setup visible when verification fails
         if (isset($_SESSION['new_secret'])) {
             $secret = $_SESSION['new_secret'];
             $qrCodeUrl = GoogleQrUrl::generate("LuckyNest", $secret, "LuckyNestApp");
@@ -111,88 +111,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_code'])) {
     <link rel="stylesheet" href="../assets/styles.css">
     <title>Account Settings</title>
     <script src="../assets/scripts.js"></script>
-    <style>
-        .two-factor-auth-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-top: 20px;
-        }
-
-        .two-factor-buttons {
-            flex: 1;
-            padding-right: 20px;
-        }
-
-        .two-factor-qr {
-            flex: 1;
-            text-align: center;
-            border-left: 1px solid rgba(43, 73, 73, 0.2);
-            padding-left: 20px;
-        }
-
-        .status-enabled {
-            background-color: #27ae60;
-            color: #fff;
-            font-weight: 600;
-            display: inline-block;
-            padding: 10px 15px;
-            border-radius: 0px;
-            border: 2px solid #27ae60;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 15px;
-        }
-
-        .status-disabled {
-            background-color: #e74c3c;
-            color: #fff;
-            font-weight: 600;
-            display: inline-block;
-            padding: 10px 15px;
-            border-radius: 0px;
-            border: 2px solid #e74c3c;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 15px;
-        }
-
-        .status-warning {
-            background-color: #f39c12;
-            color: #fff;
-            font-weight: 600;
-            display: inline-block;
-            padding: 10px 15px;
-            border-radius: 0px;
-            border: 2px solid #f39c12;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 15px;
-        }
-
-        .security-info {
-            background-color: #f7d8ce;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 10px;
-            text-align: left;
-        }
-
-        .security-info p {
-            margin-bottom: 10px;
-        }
-
-        .security-info strong {
-            color: #2b4949;
-        }
-
-        .verify-button {
-            width: 49%;
-        }
-
-        #2fa-setup {
-            background-color: #f7d8ce;
-            padding: 15px;
-            border-radius: 4px;
-        }
-    </style>
 </head>
 
 <body>
@@ -220,18 +138,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_code'])) {
                 <div class="two-factor-auth-container">
                     <div class="two-factor-buttons">
                         <?php if ($secret && isset($_SESSION['2fa_verified'])): ?>
-                            <!-- Only show status and disable button if 2FA is verified -->
+                            <!-- Show enabled status when 2FA is set up and verified -->
                             <p class="status-enabled">2FA is currently enabled</p>
                             <button onclick="LuckyNest.showPasswordPrompt('disable')"
                                 class="update-button danger-button">Disable 2FA</button>
                         <?php elseif ($secret): ?>
-                            <!-- Show validation required message if 2FA is enabled but not verified in this session -->
-                            <p class="status-warning">2FA has not been validated</p>
-                            <!-- No disable button here as user hasn't verified 2FA in this session -->
+                            <!-- This condition should never happen with the updated logic, but keeping it as a fallback -->
+                            <p class="status-warning">2FA requires validation</p>
                         <?php else: ?>
-                            <!-- Show disabled status and enable button if no 2FA is set up -->
+                            <!-- Show disabled status when no 2FA is set up -->
                             <p class="status-disabled">2FA is currently disabled</p>
-                            <button onclick="LuckyNest.showPasswordPrompt('enable')" class="update-button">Enable
+                            <br>
+                            <button onclick="LuckyNest.showPasswordPrompt('enable')" class="update-button" style="width: 41.5%;">Enable
                                 2FA</button>
                         <?php endif; ?>
 
@@ -257,29 +175,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_code'])) {
                                     <strong><?php echo htmlspecialchars($_SESSION['new_secret']); ?></strong>
                                 </p>
                                 <form method="POST">
-                                    <label for="totp_code">Enter Code from your Authenticator app:</label>
-                                    <input type="text" id="totp_code" name="totp_code" required>
+                                    <label for="totp_code">Enter the 6-digit code from your Authenticator app:</label>
+
+                                    <div class="otp-container" id="otp-boxes-setup">
+                                        <input type="number" class="otp-input" maxlength="1" pattern="[0-9]" min="0" max="9"
+                                            required>
+                                        <input type="number" class="otp-input" maxlength="1" pattern="[0-9]" min="0" max="9"
+                                            required>
+                                        <input type="number" class="otp-input" maxlength="1" pattern="[0-9]" min="0" max="9"
+                                            required>
+                                        <input type="number" class="otp-input" maxlength="1" pattern="[0-9]" min="0" max="9"
+                                            required>
+                                        <input type="number" class="otp-input" maxlength="1" pattern="[0-9]" min="0" max="9"
+                                            required>
+                                        <input type="number" class="otp-input" maxlength="1" pattern="[0-9]" min="0" max="9"
+                                            required>
+                                    </div>
+
+                                    <!-- Hidden input to store the actual value -->
+                                    <input type="text" id="totp_code" name="totp_code" class="otp-hidden" minlength="6"
+                                        maxlength="6" pattern="[0-9]{6}" required>
+
                                     <button type="submit" class="update-button verify-button">Verify and Enable 2FA</button>
-                                </form>
-                            </div>
-                        <?php elseif ($secret && !isset($_SESSION['2fa_verified'])): ?>
-                            <div class="security-info">
-                                <p><strong>2FA requires validation</strong></p>
-                                <p>Two-factor authentication is set up on your account but needs validation in this session
-                                    before you can manage it.</p>
-                                <p>Please verify your identity by logging in with your authenticator app code.</p>
-                                <form method="POST">
-                                    <label for="totp_verify">Enter verification code from your authenticator app:</label>
-                                    <input type="text" id="totp_verify" name="totp_code" required>
-                                    <button type="submit" class="update-button verify-button">Verify</button>
                                 </form>
                             </div>
                         <?php else: ?>
                             <div class="security-info">
-                                <p><strong>Why enable 2FA?</strong></p>
-                                <p>Two-factor authentication adds an extra layer of security to your account.</p>
-                                <p>Even if someone discovers your password, they won't be able to access your account
-                                    without your authenticator app.</p>
+                                <?php if ($secret): ?>
+                                    <p><strong>2FA is active on your account</strong></p>
+                                    <p>Your account is protected with two-factor authentication.</p>
+                                    <p>If you need to change your authenticator app or device, you can disable 2FA and set it up
+                                        again.</p>
+                                <?php else: ?>
+                                    <p><strong>Why enable Two-factor Authentication (2FA)?</strong></p>
+                                    <p>Two-factor authentication adds an extra layer of security to your account.</p>
+                                    <p>Even if someone discovers your password, they won't be able to access your account
+                                        without your authenticator app.</p>
+                                <?php endif; ?>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -320,6 +252,98 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_code'])) {
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            setupOtpInput('otp-boxes-setup', 'totp_code');
+
+            setupOtpInput('otp-boxes-verify', 'totp_verify');
+
+            function setupOtpInput(containerID, hiddenInputID) {
+                const container = document.getElementById(containerID);
+                if (!container) return;
+
+                const otpInputs = container.querySelectorAll('.otp-input');
+                const hiddenInput = document.getElementById(hiddenInputID);
+                if (!hiddenInput) return;
+
+                if (otpInputs.length > 0) {
+                    otpInputs[0].focus();
+                }
+
+                function updateHiddenInput() {
+                    let otpValue = '';
+                    otpInputs.forEach(input => {
+                        otpValue += input.value;
+                    });
+                    hiddenInput.value = otpValue;
+
+                    return otpValue.length === 6 && /^\d{6}$/.test(otpValue);
+                }
+
+                otpInputs.forEach((input, index) => {
+                    input.addEventListener('input', function (e) {
+                        this.value = this.value.replace(/[^0-9]/g, '');
+
+                        if (this.value.length > 1) {
+                            this.value = this.value.charAt(0);
+                        }
+
+                        if (this.value && index < otpInputs.length - 1) {
+                            otpInputs[index + 1].focus();
+                        }
+
+                        updateHiddenInput();
+                    });
+
+                    input.addEventListener('keydown', function (e) {
+                        if (e.key === 'Backspace') {
+                            if (!this.value && index > 0) {
+                                otpInputs[index - 1].focus();
+                                otpInputs[index - 1].value = '';
+                            } else if (this.value) {
+                                this.value = '';
+                            }
+                            updateHiddenInput();
+                            e.preventDefault();
+                        } else if (e.key === 'ArrowLeft' && index > 0) {
+                            otpInputs[index - 1].focus();
+                            e.preventDefault();
+                        } else if (e.key === 'ArrowRight' && index < otpInputs.length - 1) {
+                            otpInputs[index + 1].focus();
+                            e.preventDefault();
+                        }
+                    });
+
+                    input.addEventListener('paste', function (e) {
+                        e.preventDefault();
+                        const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+
+                        if (/^\d+$/.test(pasteData)) {
+                            for (let i = 0; i < Math.min(pasteData.length, otpInputs.length); i++) {
+                                otpInputs[i].value = pasteData.charAt(i);
+                            }
+
+                            const nextIndex = Math.min(pasteData.length, otpInputs.length - 1);
+                            otpInputs[nextIndex].focus();
+
+                            updateHiddenInput();
+                        }
+                    });
+                });
+
+                const form = container.closest('form');
+                if (form) {
+                    form.addEventListener('submit', function (e) {
+                        if (!updateHiddenInput()) {
+                            e.preventDefault();
+                            alert('Please enter a valid 6-digit code');
+                        }
+                    });
+                }
+            }
+        });
+    </script>
 </body>
 
 </html>

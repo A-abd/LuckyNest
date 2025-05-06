@@ -131,7 +131,7 @@ const MealModule = {
   handleMealPlanDropdownChange() {
     const dropdown = document.getElementById('meal_plan_selector');
     if (dropdown) {
-      dropdown.addEventListener('change', function() {
+      dropdown.addEventListener('change', function () {
         window.location.href = 'meals.php?plan_id=' + this.value;
       });
     }
@@ -176,7 +176,7 @@ const MealModule = {
   },
 
   initMealDetailsModal() {
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       const modal = document.getElementById('mealModal');
       const modalImage = document.getElementById('modalMealImage');
       const modalMealName = document.getElementById('modalMealName');
@@ -189,7 +189,7 @@ const MealModule = {
       if (!modal) return;
 
       mealLinks.forEach(link => {
-        link.addEventListener('click', function() {
+        link.addEventListener('click', function () {
           const mealId = this.getAttribute('data-meal-id');
           const mealName = this.getAttribute('data-meal-name');
           const mealType = this.getAttribute('data-meal-type');
@@ -201,7 +201,7 @@ const MealModule = {
           modalMealType.textContent = mealType;
           modalMealPrice.textContent = mealPrice;
           modalMealTags.textContent = mealTags;
-          
+
           modalImage.src = '../' + mealImage;
           modalImage.alt = mealName;
 
@@ -210,12 +210,12 @@ const MealModule = {
       });
 
       if (closeBtn) {
-        closeBtn.addEventListener('click', function() {
+        closeBtn.addEventListener('click', function () {
           modal.style.display = 'none';
         });
       }
 
-      window.addEventListener('click', function(event) {
+      window.addEventListener('click', function (event) {
         if (event.target === modal) {
           modal.style.display = 'none';
         }
@@ -303,12 +303,12 @@ const MealModule = {
 
     const selectedOption = planSelect.options[planSelect.selectedIndex];
     if (!selectedOption) return;
-    
+
     const planType = selectedOption.getAttribute('data-plan-type');
     const daySelect = document.getElementById('day_number');
     const dayContainer = document.getElementById('day_selection_container');
     const defaultDayInput = document.getElementById('default_day_number');
-    
+
     if (!daySelect || !dayContainer || !defaultDayInput) return;
 
     if (planType === 'Daily') {
@@ -652,7 +652,7 @@ const PaymentModule = {
         form.style.display = 'none';
       }, 300);
     });
-  
+
     const overlay = document.getElementById('form-overlay');
     if (overlay) {
       overlay.classList.remove('active');
@@ -1150,13 +1150,14 @@ const LoginModule = {
 };
 
 // settings
-const SettingsModule = {
+SettingsModule = {
   init() {
     this.initializeEventListeners();
   },
 
   initializeEventListeners() {
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', () => {
+      this.setupOtpInputs();
     });
   },
 
@@ -1171,6 +1172,95 @@ const SettingsModule = {
       return true;
     }
     return false;
+  },
+
+  setupOtpInputs() {
+    this.setupOtpInput('otp-boxes-setup', 'totp_code');
+    this.setupOtpInput('otp-boxes-verify', 'totp_verify');
+  },
+
+  setupOtpInput(containerID, hiddenInputID) {
+    const container = document.getElementById(containerID);
+    if (!container) return;
+
+    const otpInputs = container.querySelectorAll('.otp-input');
+    const hiddenInput = document.getElementById(hiddenInputID);
+    if (!hiddenInput) return;
+
+    if (otpInputs.length > 0) {
+      otpInputs[0].focus();
+    }
+
+    function updateHiddenInput() {
+      let otpValue = '';
+      otpInputs.forEach(input => {
+        otpValue += input.value;
+      });
+      hiddenInput.value = otpValue;
+
+      return otpValue.length === 6 && /^\d{6}$/.test(otpValue);
+    }
+
+    otpInputs.forEach((input, index) => {
+      input.addEventListener('input', function (e) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+
+        if (this.value.length > 1) {
+          this.value = this.value.charAt(0);
+        }
+
+        if (this.value && index < otpInputs.length - 1) {
+          otpInputs[index + 1].focus();
+        }
+
+        updateHiddenInput();
+      });
+
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Backspace') {
+          if (!this.value && index > 0) {
+            otpInputs[index - 1].focus();
+            otpInputs[index - 1].value = '';
+          } else if (this.value) {
+            this.value = '';
+          }
+          updateHiddenInput();
+          e.preventDefault();
+        } else if (e.key === 'ArrowLeft' && index > 0) {
+          otpInputs[index - 1].focus();
+          e.preventDefault();
+        } else if (e.key === 'ArrowRight' && index < otpInputs.length - 1) {
+          otpInputs[index + 1].focus();
+          e.preventDefault();
+        }
+      });
+
+      input.addEventListener('paste', function (e) {
+        e.preventDefault();
+        const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+
+        if (/^\d+$/.test(pasteData)) {
+          for (let i = 0; i < Math.min(pasteData.length, otpInputs.length); i++) {
+            otpInputs[i].value = pasteData.charAt(i);
+          }
+
+          const nextIndex = Math.min(pasteData.length, otpInputs.length - 1);
+          otpInputs[nextIndex].focus();
+
+          updateHiddenInput();
+        }
+      });
+    });
+
+    const form = container.closest('form');
+    if (form) {
+      form.addEventListener('submit', function (e) {
+        if (!updateHiddenInput()) {
+          e.preventDefault();
+          alert('Please enter a valid 6-digit code');
+        }
+      });
+    }
   }
 };
 

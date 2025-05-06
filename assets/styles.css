@@ -1881,3 +1881,134 @@ tbody {
   text-align: center;
   margin: 15px 0;
 }
+
+.two-factor-auth-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 20px;
+}
+
+.two-factor-buttons {
+    flex: 1;
+    padding-right: 20px;
+}
+
+.two-factor-qr {
+    flex: 1;
+    text-align: center;
+    border-left: 1px solid rgba(43, 73, 73, 0.2);
+    padding-left: 20px;
+}
+
+.status-enabled {
+    background-color: #27ae60;
+    color: #fff;
+    font-weight: 600;
+    display: inline-block;
+    padding: 10px 15px;
+    border-radius: 0px;
+    border: 2px solid #27ae60;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 15px;
+}
+
+.status-disabled {
+    background-color: #e74c3c;
+    color: #fff;
+    font-weight: 600;
+    display: inline-block;
+    padding: 10px 15px;
+    border-radius: 0px;
+    border: 2px solid #e74c3c;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 15px;
+}
+
+.status-warning {
+    background-color: #f39c12;
+    color: #fff;
+    font-weight: 600;
+    display: inline-block;
+    padding: 10px 15px;
+    border-radius: 0px;
+    border: 2px solid #f39c12;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 15px;
+}
+
+.security-info {
+    background-color: #f7d8ce;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 10px;
+    text-align: left;
+}
+
+.security-info p {
+    margin-bottom: 10px;
+}
+
+.security-info strong {
+    color: #2b4949;
+}
+
+.verify-button {
+    width: 49%;
+}
+
+#2fa-setup {
+    background-color: #f7d8ce;
+    padding: 15px;
+    border-radius: 4px;
+}
+
+/* OTP Input Styling */
+.otp-container {
+    display: flex;
+    justify-content: space-between;
+    margin: 15px 0;
+    gap: 8px;
+}
+
+.otp-input {
+    width: 45px;
+    height: 50px;
+    font-size: 24px;
+    text-align: center;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+    background-color: #f7d8ce;
+    color: #2b4949;
+    font-weight: bold;
+}
+
+.otp-input:focus {
+    border-color: #507878;
+    outline: none;
+    box-shadow: 0 0 5px rgba(80, 120, 120, 0.5);
+}
+
+.otp-hidden {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.error-message {
+    color: red;
+    margin-bottom: 15px;
+    font-weight: normal;
+    font-size: 14px;
+}
+
+/* Prevent up/down arrows on number inputs */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
