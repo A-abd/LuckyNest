@@ -2,7 +2,7 @@
 session_start();
 
 if (!isset($_SESSION['role'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'id' => $laundrySlotId,
                     'price' => $_POST['price']
                 ];
-                header('Location: payments_page.php');
+                header('Location: payments_page');
                 exit();
             } catch (PDOException $e) {
                 $conn->rollBack();
@@ -128,7 +128,7 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
     <?php include "../include/guest_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../guest/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../guest/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Laundry Slots</h1>
             <?php if ($feedback): ?>
@@ -164,7 +164,7 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
                                 <td><?php echo $slot['recurring'] ? 'Yes' : 'No'; ?></td>
                                 <td>£<?php echo number_format($slot['price'], 2); ?></td>
                                 <td>
-                                    <form method="POST" action="laundry.php?date=<?php echo $selectedDate; ?>"
+                                    <form method="POST" action="laundry?date=<?php echo $selectedDate; ?>"
                                         style="display:inline;">
                                         <input type="hidden" name="action" value="book_laundry_slot">
                                         <input type="hidden" name="laundry_slot_id"

@@ -2,7 +2,7 @@
 session_start();
 
 if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 $feedback = 'Meal added successfully!';
-                header("Location: meals.php?feedback=" . urlencode($feedback));
+                header("Location: meals?feedback=" . urlencode($feedback));
                 exit();
             } else {
                 $feedback = 'Error adding meal.';
@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 $feedback = 'Meal updated successfully!';
-                header("Location: meals.php?feedback=" . urlencode($feedback));
+                header("Location: meals?feedback=" . urlencode($feedback));
                 exit();
             } else {
                 $feedback = 'Error updating the meal.';
@@ -149,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 unlink(__DIR__ . '/../' . $imagePath);
             }
             $feedback = 'Meal deleted successfully!';
-            header("Location: meals.php?feedback=" . urlencode($feedback));
+            header("Location: meals?feedback=" . urlencode($feedback));
             exit();
         } else {
             $feedback = 'Error deleting the meal.';
@@ -208,7 +208,7 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../admin/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Manage Meals</h1>
             <?php if ($feedback): ?>
@@ -224,7 +224,7 @@ $conn = null;
             <div id="add-form" class="add-form">
                 <button type="button" class="close-button" onclick="LuckyNest.toggleForm('add-form')">✕</button>
                 <h2>Add New Meal</h2>
-                <form method="POST" action="meals.php" enctype="multipart/form-data">
+                <form method="POST" action="meals" enctype="multipart/form-data">
                     <input type="hidden" name="action" value="add_meal">
                     <label for="name">Name:</label>
                     <input type="text" id="name" name="name" required>
@@ -300,7 +300,7 @@ $conn = null;
                                 <button onclick="LuckyNest.toggleForm('edit-form-<?php echo $meal['meal_id']; ?>')"
                                     class="update-button">Edit</button>
                                 <div id="edit-form-<?php echo $meal['meal_id']; ?>" class="edit-form">
-                                    <form method="POST" action="meals.php" enctype="multipart/form-data"
+                                    <form method="POST" action="meals" enctype="multipart/form-data"
                                         style="display:inline;">
                                         <button type="button" class="close-button"
                                             onclick="LuckyNest.toggleForm('edit-form-<?php echo $meal['meal_id']; ?>')">✕</button>
@@ -373,7 +373,7 @@ $conn = null;
                                     </form>
 
                                     <form id="delete-meal-form-<?php echo $meal['meal_id']; ?>" method="POST"
-                                        action="meals.php" style="display:none;">
+                                        action="meals" style="display:none;">
                                         <input type="hidden" name="action" value="delete_meal">
                                         <input type="hidden" name="meal_id" value="<?php echo $meal['meal_id']; ?>">
                                     </form>
@@ -385,7 +385,7 @@ $conn = null;
             </table>
 
             <?php
-            $url = 'meals.php';
+            $url = 'meals';
             echo generatePagination($page, $totalPages, $url);
             ?>
         </div>

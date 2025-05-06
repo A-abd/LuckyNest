@@ -2,7 +2,7 @@
 session_start();
 
 if ($_SESSION['role'] != 'admin' && $_SESSION['role'] != 'owner') {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -121,7 +121,7 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../admin/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Manage Custom Meal Requests</h1>
             <?php if ($feedback): ?>
@@ -129,7 +129,7 @@ $conn = null;
             <?php endif; ?>
 
             <div class="search-filter-container">
-                <form method="GET" action="meal_custom_view.php" class="search-filter-form">
+                <form method="GET" action="meal_custom_view" class="search-filter-form">
                     <div class="search-box">
                         <input type="text" name="search" placeholder="Search by meal name or guest name"
                             value="<?php echo htmlspecialchars($search); ?>">
@@ -148,7 +148,7 @@ $conn = null;
                         </select>
                     </div>
                     <button type="submit" class="update-button">Filter</button>
-                    <a href="meal_custom_view.php" class="update-button">Reset</a>
+                    <a href="meal_custom_view" class="update-button">Reset</a>
                 </form>
             </div>
 
@@ -237,7 +237,7 @@ $conn = null;
                                     </div>
 
                                     <form id="delete-form-<?php echo $mealCustom['meal_custom_id']; ?>" method="POST"
-                                        action="meal_custom_view.php" style="display:none;">
+                                        action="meal_custom_view" style="display:none;">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="meal_custom_id"
                                             value="<?php echo $mealCustom['meal_custom_id']; ?>">
@@ -249,7 +249,7 @@ $conn = null;
                                     <button type="button" class="close-button"
                                         onclick="LuckyNest.toggleForm('status-form-<?php echo $mealCustom['meal_custom_id']; ?>')">✕</button>
                                     <h2>Update Request Status</h2>
-                                    <form method="POST" action="meal_custom_view.php">
+                                    <form method="POST" action="meal_custom_view">
                                         <input type="hidden" name="action" value="update_status">
                                         <input type="hidden" name="meal_custom_id"
                                             value="<?php echo $mealCustom['meal_custom_id']; ?>">
@@ -273,7 +273,7 @@ $conn = null;
                                     </form>
 
                                     <form id="delete-form-status-<?php echo $mealCustom['meal_custom_id']; ?>" method="POST"
-                                        action="meal_custom_view.php" style="display:none;">
+                                        action="meal_custom_view" style="display:none;">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="meal_custom_id"
                                             value="<?php echo $mealCustom['meal_custom_id']; ?>">
@@ -290,7 +290,7 @@ $conn = null;
                 </tbody>
             </table>
             <?php
-            $url = 'meal_custom_view.php';
+            $url = 'meal_custom_view';
             if (!empty($statusFilter) || !empty($search)) {
                 $url .= '?' . http_build_query(array_filter([
                     'status' => $statusFilter,

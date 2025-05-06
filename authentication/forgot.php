@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['email']) && isset($_PO
     <div class="blur-layer-4"></div>
     <h1 class="title">LuckyNest</h1>
         <div class="wrapper">
-            <form method="POST" action="forgot.php">
+            <form method="POST" action="forgot">
                 <h1>Forgot Password</h1>
                 <p>Enter your email address and select how you'd like to receive the reset link.</p>
 
@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['email']) && isset($_PO
                 <button type="submit" class="btn">Send Reset Link</button>
 
                 <div class="back-to-login">
-                    <a href="login.php">Back to Login</a>
+                    <a href="login">Back to Login</a>
                 </div>
             </form>
         </div>

@@ -2,7 +2,7 @@
 session_start();
 
 if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -100,7 +100,7 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../admin/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Manage Room Types</h1>
             <?php if ($feedback): ?>
@@ -116,7 +116,7 @@ $conn = null;
             <div id="add-form" class="add-form">
                 <button type="button" class="close-button" onclick="LuckyNest.toggleForm('add-form')">✕</button>
                 <h2>Add New Room Type</h2>
-                <form method="POST" action="room_types.php">
+                <form method="POST" action="room_types">
                     <input type="hidden" name="action" value="add">
                     <label for="room_type_name">Room Type Name:</label>
                     <input type="text" id="room_type_name" name="room_type_name" required>
@@ -154,7 +154,7 @@ $conn = null;
                                 <div id='edit-form-<?php echo $roomType['room_type_id']; ?>' class="edit-form">
                                     <button type="button" class="close-button"
                                         onclick="LuckyNest.toggleForm('edit-form-<?php echo $roomType['room_type_id']; ?>')">✕</button>
-                                    <form method="POST" action="room_types.php" style="display:inline;">
+                                    <form method="POST" action="room_types" style="display:inline;">
                                         <h2>Edit Room</h2>
                                         <input type="hidden" name="action" value="edit">
                                         <input type="hidden" name="room_type_id"
@@ -183,7 +183,7 @@ $conn = null;
                                     </form>
 
                                     <form id="delete-form-<?php echo $roomType['room_type_id']; ?>" method="POST"
-                                        action="room_types.php" style="display:none;">
+                                        action="room_types" style="display:none;">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="room_type_id"
                                             value="<?php echo $roomType['room_type_id']; ?>">
@@ -195,7 +195,7 @@ $conn = null;
                 </tbody>
             </table>
             <?php
-            $url = 'room_types.php';
+            $url = 'room_types';
             echo generatePagination($page, $totalPages, $url);
             ?>
             <br>

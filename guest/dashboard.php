@@ -2,7 +2,7 @@
 session_start();
 
 if ($_SESSION['role'] !== 'guest') {
-    header('Location: ../authentication/../authentication/unauthorized.php');
+    header('Location: ../authentication/../authentication/unauthorized');
     exit();
 }
 
@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $notifStmt = $conn->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)");
         $notifStmt->execute([$_SESSION['user_id'], $message]);
 
-        header("Location: dashboard.php");
+        header("Location: dashboard");
         exit();
     }
 
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $notifStmt = $conn->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)");
         $notifStmt->execute([$_SESSION['user_id'], $message]);
 
-        header("Location: dashboard.php");
+        header("Location: dashboard");
         exit();
     }
 
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $notifStmt = $conn->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)");
         $notifStmt->execute([$_SESSION['user_id'], $message]);
 
-        header("Location: dashboard.php");
+        header("Location: dashboard");
         exit();
     }
 
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 ON DUPLICATE KEY UPDATE rating = ?, review = ?");
         $stmt->execute([$_SESSION['user_id'], $mealPlanId, $rating, $review, $rating, $review]);
 
-        header("Location: dashboard.php");
+        header("Location: dashboard");
         exit();
     }
 
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 ON DUPLICATE KEY UPDATE rating = ?, review = ?");
         $stmt->execute([$_SESSION['user_id'], $bookingId, $rating, $review, $rating, $review]);
 
-        header("Location: dashboard.php");
+        header("Location: dashboard");
         exit();
     }
 }
@@ -209,7 +209,7 @@ try {
     <?php include "../include/guest_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../guest/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../guest/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>My Dashboard</h1>
 

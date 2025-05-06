@@ -2,7 +2,7 @@
 session_start();
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -227,7 +227,7 @@ $conn = null;
     <?php include '../include/admin_navbar.php'; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../admin/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Laundry Management</h1>
             <?php if ($feedback): ?>
@@ -245,7 +245,7 @@ $conn = null;
             <div id="add-form" class="add-form">
                 <button type="button" class="close-button" onclick="LuckyNest.toggleForm('add-form')">✕</button>
                 <h2>Create Timeslot</h2>
-                <form method="POST" action="laundry.php">
+                <form method="POST" action="laundry">
                     <input type="hidden" name="action" value="create_timeslot">
                     <input type="hidden" id="selected_date" name="selected_date" value="<?php echo $selectedDate; ?>">
 
@@ -305,7 +305,7 @@ $conn = null;
                                     <?php if ($timeslot['recurring']): ?>
                                         <span class="recurring-badge">Yes</span>
                                     <?php else: ?>
-                                        No
+                                        <span class="recurring-badge">No</span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
@@ -316,7 +316,7 @@ $conn = null;
                                     <div id="edit-form-<?php echo $timeslot['laundry_slot_id']; ?>" class="edit-form">
                                         <button type="button" class="close-button"
                                             onclick="LuckyNest.toggleForm('edit-form-<?php echo $timeslot['laundry_slot_id']; ?>')">✕</button>
-                                        <form method="POST" action="laundry.php">
+                                        <form method="POST" action="laundry">
                                             <h2>Edit Timeslot</h2>
                                             <input type="hidden" name="action" value="update_timeslot">
                                             <input type="hidden" name="slot_id"
@@ -337,7 +337,7 @@ $conn = null;
                                         </form>
 
                                         <form id="delete-form-<?php echo $timeslot['laundry_slot_id']; ?>" method="POST"
-                                            action="laundry.php" style="display:none;">
+                                            action="laundry" style="display:none;">
                                             <input type="hidden" name="action" value="delete_timeslot">
                                             <input type="hidden" name="slot_id"
                                                 value="<?php echo $timeslot['laundry_slot_id']; ?>">

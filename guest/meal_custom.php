@@ -2,7 +2,7 @@
 session_start();
 
 if (!isset($_SESSION['role'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -116,7 +116,7 @@ $conn = null;
     <?php include "../include/guest_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../guest/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../guest/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Custom Meal Requests</h1>
             <?php if ($feedback): ?>
@@ -131,7 +131,7 @@ $conn = null;
             <div id="add-form" class="add-form">
                 <button type="button" class="close-button" onclick="LuckyNest.toggleForm('add-form')">✕</button>
                 <h2>Request Custom Meal</h2>
-                <form method="POST" action="meal_custom.php">
+                <form method="POST" action="meal_custom">
                     <input type="hidden" name="action" value="add">
                     <label for="meal_name">Meal Name:</label>
                     <input type="text" id="meal_name" name="meal_name" required>
@@ -224,7 +224,7 @@ $conn = null;
                                     </div>
                                     <?php if ($mealCustom['status'] === 'Pending'): ?>
                                         <form id="delete-form-<?php echo $mealCustom['meal_custom_id']; ?>" method="POST"
-                                            action="meal_custom.php">
+                                            action="meal_custom">
                                             <input type="hidden" name="action" value="delete">
                                             <input type="hidden" name="meal_custom_id"
                                                 value="<?php echo $mealCustom['meal_custom_id']; ?>">
@@ -238,7 +238,7 @@ $conn = null;
                                         <button type="button" class="close-button"
                                             onclick="LuckyNest.toggleForm('edit-form-<?php echo $mealCustom['meal_custom_id']; ?>')">✕</button>
                                         <h2>Edit Custom Meal Request</h2>
-                                        <form method="POST" action="meal_custom.php">
+                                        <form method="POST" action="meal_custom">
                                             <input type="hidden" name="action" value="edit">
                                             <input type="hidden" name="meal_custom_id"
                                                 value="<?php echo $mealCustom['meal_custom_id']; ?>">
@@ -278,7 +278,7 @@ $conn = null;
                                         </form>
 
                                         <form id="delete-form-<?php echo $mealCustom['meal_custom_id']; ?>" method="POST"
-                                            action="meal_custom.php" style="display:none;">
+                                            action="meal_custom" style="display:none;">
                                             <input type="hidden" name="action" value="delete">
                                             <input type="hidden" name="meal_custom_id"
                                                 value="<?php echo $mealCustom['meal_custom_id']; ?>">
@@ -296,7 +296,7 @@ $conn = null;
                 </tbody>
             </table>
             <?php
-            $url = 'meal_custom.php';
+            $url = 'meal_custom';
             echo generatePagination($page, $totalPages, $url);
             ?>
             <br>

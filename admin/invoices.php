@@ -2,7 +2,7 @@
 session_start();
 
 if ($_SESSION['role'] != 'admin' && $_SESSION['role'] != 'owner') {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -151,7 +151,7 @@ function getPaymentTypes()
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../admin/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>View User Invoices</h1>
             <?php if ($feedback): ?>
@@ -159,7 +159,7 @@ function getPaymentTypes()
             <?php endif; ?>
 
             <div class="user-selection-form">
-                <form method="GET" action="invoices.php">
+                <form method="GET" action="invoices">
                     <label for="user_id">Select User:</label>
                     <select id="user_id" name="user_id" onchange="this.form.submit()">
                         <option value="">-- Select a User --</option>
@@ -174,7 +174,7 @@ function getPaymentTypes()
 
             <?php if ($user_id): ?>
                 <div class="filter-form">
-                    <form method="GET" action="invoices.php">
+                    <form method="GET" action="invoices">
                         <input type="hidden" name="user_id" value="<?php echo $user_id; ?>">
 
                         <div class="filter-row">
@@ -202,7 +202,7 @@ function getPaymentTypes()
 
                             <div class="filter-buttons">
                                 <button type="submit" class="filter-button">Apply Filter</button>
-                                <a href="invoices.php?user_id=<?php echo $user_id; ?>" class="filter-button">Reset</a>
+                                <a href="invoices?user_id=<?php echo $user_id; ?>" class="filter-button">Reset</a>
                             </div>
                         </div>
                     </form>
@@ -259,7 +259,7 @@ function getPaymentTypes()
                         'start_date' => $start_date,
                         'end_date' => $end_date
                     ]);
-                    echo generatePagination($page, $totalPages, "invoices.php?" . $queryParams);
+                    echo generatePagination($page, $totalPages, "invoices?" . $queryParams);
                     ?>
                 <?php endif; ?>
             <?php else: ?>

@@ -2,7 +2,7 @@
 session_start();
 
 if ($_SESSION['role'] !== 'owner' && $_SESSION['role'] !== 'admin' || !isset($_SESSION['role'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $mail->isHTML(true);
                             $mail->Subject = 'Invitation to Register at LuckyNest';
 
-                            $registrationLink = 'http://' . $_SERVER['HTTP_HOST'] . '/LuckyNest/authentication/registration.php?token=' . $token;
+                            $registrationLink = 'http://' . $_SERVER['HTTP_HOST'] . '/LuckyNest/authentication/registration?token=' . $token;
 
                             $mail->Body = "
                             <html>
@@ -142,7 +142,7 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../admin/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Create Users</h1>
             <?php if ($feedback): ?>
@@ -159,7 +159,7 @@ $conn = null;
             <div id="add-form" class="add-form">
                 <button type="button" class="close-button" onclick="LuckyNest.toggleForm('add-form')">✕</button>
                 <h2>Send Registration Invitation</h2>
-                <form method="POST" action="create_users.php">
+                <form method="POST" action="create_users">
                     <input type="hidden" name="action" value="invite">
                     <label for="email">Email Address:</label>
                     <input type="email" id="email" name="email" required>
@@ -194,7 +194,7 @@ $conn = null;
                                 <td>
                                     <?php if (($user['role'] === 'guest' || $user['role'] === 'admin') && $_SESSION['role'] === 'owner'): ?>
                                         <form id="role_<?php echo $user['user_id']; ?>_form" method="POST"
-                                            action="create_users.php">
+                                            action="create_users">
                                             <input type="hidden" name="action" value="change_role">
                                             <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
                                             <input type="hidden" name="new_role"

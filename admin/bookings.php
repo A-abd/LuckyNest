@@ -3,7 +3,7 @@
 session_start();
 
 if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -301,7 +301,7 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../admin/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Manage Bookings</h1>
             <?php if ($feedback): ?>
@@ -317,7 +317,7 @@ $conn = null;
             <div id="add-form" class="add-form">
                 <button type="button" class="close-button" onclick="LuckyNest.toggleForm('add-form')">✕</button>
                 <h2>Add New Booking</h2>
-                <form method="POST" action="bookings.php">
+                <form method="POST" action="bookings">
                     <input type="hidden" name="action" value="add">
                     <label for="room_id">Room:</label>
                     <select id="room_id" name="room_id" required>
@@ -398,7 +398,7 @@ $conn = null;
                                 <div id="edit-form-<?php echo $booking['booking_id']; ?>" class="edit-form">
                                     <button type="button" class="close-button"
                                         onclick="LuckyNest.toggleForm('edit-form-<?php echo $booking['booking_id']; ?>')">✕</button>
-                                    <form method="POST" action="bookings.php" style="display:inline;">
+                                    <form method="POST" action="bookings" style="display:inline;">
                                         <h2>Edit Booking</h2>
                                         <input type="hidden" name="action" value="edit">
                                         <input type="hidden" name="booking_id"
@@ -441,7 +441,7 @@ $conn = null;
                                     </form>
 
                                     <form id="delete-form-<?php echo $booking['booking_id']; ?>" method="POST"
-                                        action="bookings.php" style="display:none;">
+                                        action="bookings" style="display:none;">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="booking_id"
                                             value="<?php echo $booking['booking_id']; ?>">
@@ -453,7 +453,7 @@ $conn = null;
                 </tbody>
             </table>
             <?php
-            $url = 'bookings.php';
+            $url = 'bookings';
             echo generatePagination($page, $totalPages, $url);
             ?>
             <br>

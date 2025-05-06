@@ -2,7 +2,7 @@
 session_start();
 
 if (!isset($_SESSION['user_id'])) {
-    header("Location: ../authentication/unauthorized.php");
+    header("Location: ../authentication/unauthorized");
     exit();
 }
 
@@ -166,7 +166,7 @@ if (isset($_GET['deposit']) && isset($_GET['booking_id'])) {
     <?php include '../include/guest_navbar.php'; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../guest/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../guest/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Make a Payment</h1>
             <div class="button-center">
@@ -204,7 +204,7 @@ if (isset($_GET['deposit']) && isset($_GET['booking_id'])) {
                                         <td><?php echo $booking['room_type_name']; ?></td>
                                         <td><?php echo date('d/m/Y', strtotime($booking['check_in_date'])); ?></td>
                                         <td>
-                                            <a href="payments_page.php?deposit=1&booking_id=<?php echo $booking['booking_id']; ?>"
+                                            <a href="payments_page?deposit=1&booking_id=<?php echo $booking['booking_id']; ?>"
                                                 class="update-button">Pay Deposit</a>
                                         </td>
                                     </tr>
@@ -215,7 +215,7 @@ if (isset($_GET['deposit']) && isset($_GET['booking_id'])) {
                         <p class="center-only">No unpaid bookings found for this guest.</p>
                     <?php endif; ?>
                 <?php else: ?>
-                    <form action="../include/checkout.php" method="POST">
+                    <form action="../include/checkout" method="POST">
                         <label for="booking_selection">Select Booking:</label>
                         <select id="booking_selection" name="booking_id" onchange="LuckyNest.updateBookingDetails()"
                             required>
@@ -242,7 +242,7 @@ if (isset($_GET['deposit']) && isset($_GET['booking_id'])) {
                         <input type="hidden" id="user_id" name="user_id" value="<?php echo $guest_id; ?>">
                         <input type="hidden" id="room_id" name="room_id">
                         <input type="hidden" id="payment_type_hidden" name="payment_type" value="rent">
-                        <input type="hidden" name="return_url" value="payments_page.php">
+                        <input type="hidden" name="return_url" value="payments_page">
 
                         <button type="submit" class="update-button">Pay with Stripe</button>
                     </form>
@@ -255,7 +255,7 @@ if (isset($_GET['deposit']) && isset($_GET['booking_id'])) {
                 <?php if (empty($mealPlans)): ?>
                     <p class="center-only">No unpaid meal plans found for this guest.</p>
                 <?php else: ?>
-                    <form action="../include/checkout.php" method="POST">
+                    <form action="../include/checkout" method="POST">
                         <label for="meal_plan_selection">Select Meal Plan:</label>
                         <select id="meal_plan_selection" name="meal_plan_id" onchange="LuckyNest.calculateAmount()"
                             required>
@@ -277,7 +277,7 @@ if (isset($_GET['deposit']) && isset($_GET['booking_id'])) {
 
                         <input type="hidden" id="payment_type_hidden" name="payment_type" value="meal_plan">
                         <input type="hidden" id="user_id" name="user_id" value="<?php echo $guest_id; ?>">
-                        <input type="hidden" name="return_url" value="payments_page.php">
+                        <input type="hidden" name="return_url" value="payments_page">
 
                         <button type="submit" class="update-button">Pay with Stripe</button>
                     </form>
@@ -290,7 +290,7 @@ if (isset($_GET['deposit']) && isset($_GET['booking_id'])) {
                 <?php if (empty($laundrySlots)): ?>
                     <p class="center-only">No unpaid laundry slots found for this guest.</p>
                 <?php else: ?>
-                    <form action="../include/checkout.php" method="POST">
+                    <form action="../include/checkout" method="POST">
                         <label for="laundry_selection">Select Laundry Slot:</label>
                         <select id="laundry_selection" name="laundry_slot_id" onchange="LuckyNest.calculateAmount()"
                             required>
@@ -313,7 +313,7 @@ if (isset($_GET['deposit']) && isset($_GET['booking_id'])) {
 
                         <input type="hidden" id="payment_type_hidden" name="payment_type" value="laundry">
                         <input type="hidden" id="user_id" name="user_id" value="<?php echo $guest_id; ?>">
-                        <input type="hidden" name="return_url" value="payments_page.php">
+                        <input type="hidden" name="return_url" value="payments_page">
 
                         <button type="submit" class="update-button">Pay with Stripe</button>
                     </form>
@@ -325,7 +325,7 @@ if (isset($_GET['deposit']) && isset($_GET['booking_id'])) {
                 <button type="button" class="close-button" onclick="LuckyNest.hidePaymentForm()">✕</button>
                 <h2>Pay Security Deposit</h2>
                 <?php if ($depositBooking): ?>
-                    <form action="../include/checkout.php" method="POST">
+                    <form action="../include/checkout" method="POST">
                         <label for="booking_info">Booking Information:</label>
                         <div class="booking-info">
                             <p><strong>Booking ID:</strong> <?php echo $depositBooking['booking_id']; ?></p>
@@ -346,7 +346,7 @@ if (isset($_GET['deposit']) && isset($_GET['booking_id'])) {
                         <input type="hidden" name="booking_id" value="<?php echo $depositBooking['booking_id']; ?>">
                         <input type="hidden" name="payment_type" value="deposit">
                         <input type="hidden" name="user_id" value="<?php echo $guest_id; ?>">
-                        <input type="hidden" name="return_url" value="payments_page.php">
+                        <input type="hidden" name="return_url" value="payments_page">
 
                         <button type="submit" class="update-button">Pay Deposit with Stripe</button>
                     </form>
@@ -373,7 +373,7 @@ if (isset($_GET['deposit']) && isset($_GET['booking_id'])) {
                                     <td><?php echo date('d/m/Y', strtotime($deposit['check_in_date'])); ?></td>
                                     <td>£<?php echo number_format($deposit['deposit_amount'], 2); ?></td>
                                     <td>
-                                        <a href="payments_page.php?deposit=1&booking_id=<?php echo $deposit['booking_id']; ?>"
+                                        <a href="payments_page?deposit=1&booking_id=<?php echo $deposit['booking_id']; ?>"
                                             class="update-button">Pay Deposit</a>
                                     </td>
                                 </tr>
@@ -382,7 +382,7 @@ if (isset($_GET['deposit']) && isset($_GET['booking_id'])) {
                     </table>
                 <?php else: ?>
                     <p class="center-only">No security deposits pending payment. You can view your deposits on the <a
-                            href="deposits.php">deposits page</a>.</p>
+                            href="deposits">deposits page</a>.</p>
                 <?php endif; ?>
             </div>
         </div>

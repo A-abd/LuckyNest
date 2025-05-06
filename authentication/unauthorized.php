@@ -36,7 +36,7 @@ include __DIR__ . '/../include/db.php';
     ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../index.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../index">LuckyNest</a></h1>
         <div class="content-container">
             <div class="unauthorized-message">
                 <h1>Unauthorized Access</h1>
@@ -46,14 +46,14 @@ include __DIR__ . '/../include/db.php';
                 <?php if (!isset($_SESSION['role'])): ?>
                     <p>You are not logged in, please login to access this page.</p>
                     <div class="button-center">
-                        <a href="../index.php" class="update-button">Log In</a>
+                        <a href="../index" class="update-button">Log In</a>
                     </div>
                 <?php else: ?>
                     <div class="button-center">
                         <?php if ($_SESSION['role'] == 'admin'): ?>
-                            <a href="../admin/dashboard.php" class="update-button">Go to Dashboard</a>
+                            <a href="../admin/dashboard" class="update-button">Go to Dashboard</a>
                         <?php elseif ($_SESSION['role'] == 'staff'): ?>
-                            <a href="../guest/dashboard.php" class="update-button">Go to Dashboard</a>
+                            <a href="../guest/dashboard" class="update-button">Go to Dashboard</a>
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>

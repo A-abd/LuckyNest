@@ -2,7 +2,7 @@
 session_start();
 
 if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
-    header('Location: unauthorized.php');
+    header('Location: unauthorized');
     exit();
 }
 
@@ -252,7 +252,7 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../admin/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Manage Ratings</h1>
             <?php if ($feedback): ?>
@@ -261,7 +261,7 @@ $conn = null;
 
             <!-- Filter Form -->
             <h3>Filter Ratings</h3>
-            <form method="GET" action="ratings.php">
+            <form method="GET" action="ratings">
                 <table class="filter-table">
                     <tr>
                         <td>
@@ -315,7 +315,7 @@ $conn = null;
                     <tr>
                         <td colspan="2" style="text-align: center;">
                             <button type="submit" class="update-button">Apply Filters</button>
-                            <a href="ratings.php" class="update-button">Reset</a>
+                            <a href="ratings" class="update-button">Reset</a>
                         </td>
                     </tr>
                 </table>
@@ -348,7 +348,7 @@ $conn = null;
                             <td><?php echo $rating['formatted_time']; ?></td>
                             <td><?php echo $rating['formatted_date']; ?></td>
                             <td>
-                                <a href="ratings.php?user_id=<?php echo $rating['user_id']; ?>">
+                                <a href="ratings?user_id=<?php echo $rating['user_id']; ?>">
                                     <?php echo $rating['forename'] . ' ' . $rating['surname']; ?>
                                 </a>
                             </td>
@@ -356,11 +356,11 @@ $conn = null;
                             <td><?php echo $rating['rating_type'] === 'meal_plan' ? 'Meal Plan' : 'Room'; ?></td>
                             <td>
                                 <?php if ($rating['rating_type'] === 'meal_plan'): ?>
-                                    <a href="ratings.php?type=meal_plan&meal_plan_id=<?php echo $rating['meal_plan_id']; ?>">
+                                    <a href="ratings?type=meal_plan&meal_plan_id=<?php echo $rating['meal_plan_id']; ?>">
                                         <?php echo $rating['plan_name']; ?>
                                     </a>
                                 <?php else: ?>
-                                    <a href="ratings.php?type=room&room_id=<?php echo $rating['room_id']; ?>">
+                                    <a href="ratings?type=room&room_id=<?php echo $rating['room_id']; ?>">
                                         <?php echo $rating['room_number']; ?>
                                     </a>
                                 <?php endif; ?>
@@ -394,7 +394,7 @@ $conn = null;
             if ($roomId)
                 $urlParams[] = "room_id=$roomId";
 
-            $url = 'ratings.php' . (!empty($urlParams) ? "?" . implode("&", $urlParams) : "");
+            $url = 'ratings' . (!empty($urlParams) ? "?" . implode("&", $urlParams) : "");
             echo generatePagination($page, $totalPages, $url);
             ?>
             <br>

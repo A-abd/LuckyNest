@@ -2,7 +2,7 @@
 session_start();
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -94,7 +94,7 @@ $conn = null;
 
     <div class="blur-layer"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../guest/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../guest/dashboard">LuckyNest</a></h1>
         <div class="centering">
             <h2 class="manage-profile">Manage Profile</h2>
             <?php if ($feedback): ?>
@@ -153,7 +153,7 @@ $conn = null;
                     <div class="update-password-title">
                         <h2>Update Password</h2>
                     </div>
-                    <form method="POST" action="profile.php">
+                    <form method="POST" action="profile">
                         <div class="input-space">
                             <input type="hidden" name="action" value="update_password">
                         </div>

@@ -2,7 +2,7 @@
 session_start();
 
 if (!isset($_SESSION['user_id'])) {
-    header("Location: ../authentication/unauthorized.php");
+    header("Location: ../authentication/unauthorized");
     exit();
 }
 
@@ -58,7 +58,7 @@ try {
 
     <div class="blur-layer-2"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../guest/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../guest/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Payment Cancelled</h1>
 
@@ -79,8 +79,8 @@ try {
                 assistance.</p>
 
             <div class="button-center">
-                <a href="payments_page.php" class="update-button">Return to Payments</a>
-                <a href="dashboard.php" class="update-button">Go to Dashboard</a>
+                <a href="payments_page" class="update-button">Return to Payments</a>
+                <a href="dashboard" class="update-button">Go to Dashboard</a>
             </div>
         </div>
     </div>

@@ -21,13 +21,13 @@
 
     <aside class="sidebar sidebar-hidden" id="sidebar">
         <ul class="sidebar-menu">
-            <li class="menu-item"><a href="../guest/dashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <li class="menu-item"><a href="../guest/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
             </li>
 
             <li class="menu-category">Payments</li>
-            <li class="menu-item"><a href="../guest/payments_page.php"><i class="fas fa-money-bill-wave"></i> Payments
+            <li class="menu-item"><a href="../guest/payments_page"><i class="fas fa-money-bill-wave"></i> Payments
                     Page</a></li>
-            <li class="menu-item"><a href="../guest/deposits.php"><i class="fas fa-piggy-bank"></i> Security Deposit</a>
+            <li class="menu-item"><a href="../guest/deposits"><i class="fas fa-piggy-bank"></i> Security Deposit</a>
             </li>
 
             <li class="menu-category">Services</li>
@@ -36,18 +36,18 @@
                 <i class="fas fa-chevron-down"></i>
             </li>
             <ul class="submenu">
-                <a href="../guest/meals.php">
+                <a href="../guest/meals">
                     <li class="submenu-item"><i class="fas fa-utensils"></i> Meals</li>
                 </a>
-                <a href="../guest/meal_custom.php">
+                <a href="../guest/meal_custom">
                     <li class="submenu-item"><i class="fas fa-concierge-bell"></i> Custom Meal Orders</li>
                 </a>
             </ul>
             <li class="menu-item">
-                <a href="../guest/laundry.php"><i class="fas fa-tshirt"></i> Laundry</a>
+                <a href="../guest/laundry"><i class="fas fa-tshirt"></i> Laundry</a>
             </li>
             <li class="menu-item">
-                <a href="../guest/maintenance.php"><i class="fas fa-wrench"></i> Make Maintenance Request</a>
+                <a href="../guest/maintenance"><i class="fas fa-wrench"></i> Make Maintenance Request</a>
             </li>
 
             <li class="menu-category">Reports</li>
@@ -56,28 +56,28 @@
                 <i class="fas fa-chevron-down"></i>
             </li>
             <ul class="submenu">
-                <a href="../guest/invoices.php">
+                <a href="../guest/invoices">
                     <li class="submenu-item"><i class="fas fa-chart-bar"></i> Payment Statistics</li>
                 </a>
-                <a href="../guest/stats_food.php">
+                <a href="../guest/stats_food">
                     <li class="submenu-item"><i class="fas fa-hamburger"></i> Food Consumption Statistics</li>
                 </a>
             </ul>
 
             <li class="menu-category">Communication</li>
             <li class="menu-item">
-                <a href="../guest/view_announcements.php"><i class="fas fa-bullhorn"></i> Announcements</a>
+                <a href="../guest/view_announcements"><i class="fas fa-bullhorn"></i> Announcements</a>
             </li>
 
             <li class="menu-category">Settings</li>
             <li class="menu-item">
-                <a href="../guest/profile.php"><i class="fas fa-user"></i> Your Profile</a>
+                <a href="../guest/profile"><i class="fas fa-user"></i> Your Profile</a>
             </li>
             <li class="menu-item">
-                <a href="../guest/settings.php"><i class="fas fa-cog"></i> Settings</a>
+                <a href="../guest/settings"><i class="fas fa-cog"></i> Settings</a>
             </li>
             <li class="menu-item">
-            <a href="../authentication/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            <a href="../authentication/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </li>
         </ul>
     </aside>

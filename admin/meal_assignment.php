@@ -2,7 +2,7 @@
 session_start();
 
 if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -239,7 +239,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     updateMealPlanPrice($conn, $planId);
 
                     $feedback = 'Successfully assigned ' . $successCount . ' meal(s) to plan!';
-                    header("Location: meal_assignment.php?feedback=" . urlencode($feedback));
+                    header("Location: meal_assignment?feedback=" . urlencode($feedback));
                     exit();
                 } else {
                     $feedback = 'Error assigning meals to plan.';
@@ -264,7 +264,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             updateMealPlanPrice($conn, $planId);
 
             $feedback = 'Assignment deleted successfully!';
-            header("Location: meal_assignment.php?feedback=" . urlencode($feedback));
+            header("Location: meal_assignment?feedback=" . urlencode($feedback));
             exit();
         } else {
             $feedback = 'Error deleting the assignment.';
@@ -383,7 +383,7 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../admin/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Assign Meals to Meal Plans</h1>
 
@@ -392,7 +392,7 @@ $conn = null;
             <?php endif; ?>
 
             <div class="button-center">
-                <form method="GET" action="meal_assignment.php" style="display: inline-block; margin-right: 10px;">
+                <form method="GET" action="meal_assignment" style="display: inline-block; margin-right: 10px;">
                     <select name="meal_plan_type" onchange="this.form.submit()">
                         <option value="">All Meal Plan Types</option>
                         <option value="Daily" <?php echo (isset($_GET['meal_plan_type']) && $_GET['meal_plan_type'] == 'Daily' ? 'selected' : ''); ?>>Daily Plans</option>
@@ -401,7 +401,7 @@ $conn = null;
                     </select>
                 </form>
 
-                <form method="GET" action="meal_assignment.php" style="display: inline-block; margin-right: 10px;">
+                <form method="GET" action="meal_assignment" style="display: inline-block; margin-right: 10px;">
                     <select name="selected_plan" onchange="this.form.submit()">
                         <option value="">Select Specific Plan</option>
                         <?php foreach ($mealPlanData as $plan): ?>
@@ -420,7 +420,7 @@ $conn = null;
                     </select>
                 </form>
 
-                <a href="meal_assignment.php" class="update-button"
+                <a href="meal_assignment" class="update-button"
                     style="display: inline-block; padding: 5px 10px; text-decoration: none;">Reset Filters</a>
             </div>
 
@@ -432,7 +432,7 @@ $conn = null;
             <div id="add-form" class="add-form" style="display:none;">
                 <button type="button" class="close-button" onclick="LuckyNest.toggleForm('add-form')">✕</button>
                 <h2>Assign New Meal to Plan</h2>
-                <form method="POST" action="meal_assignment.php">
+                <form method="POST" action="meal_assignment">
                     <input type="hidden" name="action" value="meal_assignment">
 
                     <label for="plan_id">Meal Plan:</label>
@@ -564,7 +564,7 @@ $conn = null;
                                         <td><?php echo $assignment['meal_name']; ?></td>
                                         <td><?php echo $assignment['meal_type']; ?></td>
                                         <td>
-                                            <form method="POST" action="meal_assignment.php" style="display:inline;">
+                                            <form method="POST" action="meal_assignment" style="display:inline;">
                                                 <input type="hidden" name="action" value="delete_assignment">
                                                 <input type="hidden" name="assignment_id"
                                                     value="<?php echo $assignment['meal_plan_item_link_id']; ?>">

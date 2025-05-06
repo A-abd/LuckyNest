@@ -2,7 +2,7 @@
 session_start();
 
 if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -105,7 +105,7 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../admin/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>View Maintenance Requests</h1>
             <?php if ($feedback): ?>
@@ -113,7 +113,7 @@ $conn = null;
             <?php endif; ?>
 
             <div class="filter-section">
-                <form method="GET" action="view_maintenance.php">
+                <form method="GET" action="view_maintenance">
                     <label for="status-filter">Filter by Status:</label>
                     <select id="status-filter" name="status" onchange="this.form.submit()">
                         <option value="">All Statuses</option>
@@ -159,7 +159,7 @@ $conn = null;
                                     class="edit-form">
                                     <button type="button" class="close-button"
                                         onclick="LuckyNest.toggleForm('edit-form-<?php echo $request['request_id']; ?>')">✕</button>
-                                    <form method="POST" action="view_maintenance.php<?php echo !empty($statusFilter) ? '?status=' . urlencode($statusFilter) : ''; ?>" style="display:inline;">
+                                    <form method="POST" action="view_maintenance<?php echo !empty($statusFilter) ? '?status=' . urlencode($statusFilter) : ''; ?>" style="display:inline;">
                                         <h2>Update Maintenance Request</h2>
                                         <input type="hidden" name="action" value="update_status">
                                         <input type="hidden" name="request_id"
@@ -184,7 +184,7 @@ $conn = null;
                                     </form>
 
                                     <form id="delete-form-<?php echo $request['request_id']; ?>" method="POST"
-                                        action="view_maintenance.php<?php echo !empty($statusFilter) ? '?status=' . urlencode($statusFilter) : ''; ?>" style="display:none;">
+                                        action="view_maintenance<?php echo !empty($statusFilter) ? '?status=' . urlencode($statusFilter) : ''; ?>" style="display:none;">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="request_id"
                                             value="<?php echo $request['request_id']; ?>">
@@ -201,7 +201,7 @@ $conn = null;
             <?php endif; ?>
             
             <?php
-            $url = 'view_maintenance.php';
+            $url = 'view_maintenance';
             if (!empty($statusFilter)) {
                 $url .= '?status=' . urlencode($statusFilter);
             }

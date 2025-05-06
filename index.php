@@ -1,3 +1,3 @@
 <?php
-header('Location:authentication/login.php');
+header('Location:authentication/login');
 ?>

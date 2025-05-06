@@ -2,7 +2,7 @@
 session_start();
 
 if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -99,7 +99,7 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-2"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../admin/dashboard">LuckyNest</a></h1>
 
         <div class="center-container">
             <h2 class="manage-profile">Manage Users</h2>
@@ -143,7 +143,7 @@ $conn = null;
                                         <button type="button" class="close-button"
                                             onclick="LuckyNest.toggleForm('edit-form-<?php echo $user['user_id']; ?>')">✕</button>
                                         <h2>Edit User</h2>
-                                        <form method="POST" action="users.php" style="display:inline;">
+                                        <form method="POST" action="users" style="display:inline;">
                                             <input type="hidden" name="action" value="edit">
                                             <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
                                             <label for="forename_<?php echo $user['user_id']; ?>">Forename:</label>
@@ -183,7 +183,7 @@ $conn = null;
                                         </form>
 
                                         <form id="delete-form-<?php echo $user['user_id']; ?>" method="POST"
-                                            action="users.php" style="display:none;">
+                                            action="users" style="display:none;">
                                             <input type="hidden" name="action" value="delete">
                                             <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
                                         </form>
@@ -195,7 +195,7 @@ $conn = null;
                 </table>
             </div>
             <?php
-            $url = 'users.php';
+            $url = 'users';
             echo generatePagination($page, $totalPages, $url);
             ?>
             <br>

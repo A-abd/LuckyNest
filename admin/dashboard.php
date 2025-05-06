@@ -2,7 +2,7 @@
 session_start();
 
 if ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'owner') {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -69,7 +69,7 @@ try {
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../admin/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Admin Dashboard</h1>
 

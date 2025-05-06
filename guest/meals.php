@@ -2,7 +2,7 @@
 session_start();
 
 if (!isset($_SESSION['role'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
         if ($addQuery->execute()) {
             $mealPlanUserLinkId = $conn->lastInsertId();
-            header("Location: payments_page.php?type=meal_plan&id=$mealPlanUserLinkId");
+            header("Location: payments_page?type=meal_plan&id=$mealPlanUserLinkId");
             exit();
         } else {
             $feedback = 'Error booking meal plan.';
@@ -129,7 +129,7 @@ $conn = null;
     <?php include "../include/guest_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../guest/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../guest/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Available Meal Plans</h1>
             <?php if ($feedback): ?>
@@ -158,7 +158,7 @@ $conn = null;
                         <p>Duration: <?php echo $plan['duration_days']; ?> days</p>
                         <p>Total Price: £<?php echo number_format($plan['total_price'], 2); ?></p>
 
-                        <form method="POST" action="meals.php?plan_id=<?php echo $selectedPlanId; ?>">
+                        <form method="POST" action="meals?plan_id=<?php echo $selectedPlanId; ?>">
                             <input type="hidden" name="action" value="book">
                             <input type="hidden" name="meal_plan_id" value="<?php echo $plan['meal_plan_id']; ?>">
 

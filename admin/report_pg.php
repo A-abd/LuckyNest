@@ -2,7 +2,7 @@
 session_start();
 
 if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -117,7 +117,7 @@ $conn = null;
             <h1>Guest Booking Report</h1>
 
 
-            <form method="GET" action="report_pg.php" class="center-only">
+            <form method="GET" action="report_pg" class="center-only">
                 <label for="guest_id">Select Guest:</label>
                 <select name="guest_id" id="guest_id" onchange="this.form.submit()">
                     <option value="">All Guests</option>
@@ -167,7 +167,7 @@ $conn = null;
             </table>
 
             <?php
-            $url = 'report_pg.php';
+            $url = 'report_pg';
             $urlWithParams = $selectedGuestId ? $url . "?guest_id=" . $selectedGuestId : $url;
             echo generatePagination($page, $totalPages, $urlWithParams);
             ?>

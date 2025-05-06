@@ -2,7 +2,7 @@
 session_start();
 
 if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($stmt) {
             $feedback = 'Meal plan added successfully!';
-            header("Location: meal_plans.php?feedback=" . urlencode($feedback));
+            header("Location: meal_plans?feedback=" . urlencode($feedback));
             exit();
         } else {
             $feedback = 'Error adding meal plan.';
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($stmt) {
             $feedback = 'Meal plan updated successfully!';
-            header("Location: meal_plans.php?feedback=" . urlencode($feedback));
+            header("Location: meal_plans?feedback=" . urlencode($feedback));
             exit();
         } else {
             $feedback = 'Error updating the meal plan.';
@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($stmt) {
             $feedback = 'Meal plan deleted successfully!';
-            header("Location: meal_plans.php?feedback=" . urlencode($feedback));
+            header("Location: meal_plans?feedback=" . urlencode($feedback));
             exit();
         } else {
             $feedback = 'Error deleting the meal plan.';
@@ -103,7 +103,7 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../admin/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Manage Meal Plans</h1>
             <?php if ($feedback): ?>
@@ -117,7 +117,7 @@ $conn = null;
             <div id="add-form" class="add-form">
                 <button type="button" class="close-button" onclick="LuckyNest.toggleForm('add-form')">✕</button>
                 <h2>Add New Meal Plan</h2>
-                <form method="POST" action="meal_plans.php">
+                <form method="POST" action="meal_plans">
                     <input type="hidden" name="action" value="add_meal_plan">
                     
                     <label for="meal_plan_type">Plan Type:</label>
@@ -159,7 +159,7 @@ $conn = null;
                             <td>
                                 <button onclick="LuckyNest.toggleForm('edit-form-<?php echo $mealPlan['meal_plan_id']; ?>')" class="update-button">Edit</button>
                                 <div id="edit-form-<?php echo $mealPlan['meal_plan_id']; ?>" class="edit-form">
-                                    <form method="POST" action="meal_plans.php" style="display:inline;">
+                                    <form method="POST" action="meal_plans" style="display:inline;">
                                         <button type="button" class="close-button" onclick="LuckyNest.toggleForm('edit-form-<?php echo $mealPlan['meal_plan_id']; ?>')">✕</button>
                                         <h2>Edit Meal Plan</h2>
                                         <input type="hidden" name="action" value="edit_meal_plan">
@@ -191,7 +191,7 @@ $conn = null;
                                         </div>
                                     </form>
 
-                                    <form id="delete-meal-plan-form-<?php echo $mealPlan['meal_plan_id']; ?>" method="POST" action="meal_plans.php" style="display:none;">
+                                    <form id="delete-meal-plan-form-<?php echo $mealPlan['meal_plan_id']; ?>" method="POST" action="meal_plans" style="display:none;">
                                         <input type="hidden" name="action" value="delete_meal_plan">
                                         <input type="hidden" name="plan_id" value="<?php echo $mealPlan['meal_plan_id']; ?>">
                                     </form>
@@ -203,7 +203,7 @@ $conn = null;
             </table>
 
             <?php
-            $url = 'meal_plans.php';
+            $url = 'meal_plans';
             echo generatePagination($page, $totalMealPlanPages, $url);
             ?>
         </div>

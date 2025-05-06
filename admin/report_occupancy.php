@@ -2,7 +2,7 @@
 session_start();
 
 if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -122,13 +122,13 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../admin/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Room Occupancy Report</h1>
 
             <div class="center-container">
                 <!-- Date Range Filter -->
-                <form method="GET" action="report_occupancy.php">
+                <form method="GET" action="report_occupancy">
                     <div class="date-filter">
                         <label for="start_date">Start Date:</label>
                         <input type="date" id="start_date" name="start_date"
@@ -181,7 +181,7 @@ $conn = null;
                 </table>
 
                 <?php
-                $url = 'report_occupancy.php';
+                $url = 'report_occupancy';
                 $urlWithParams = $url . "?start_date=" . urlencode($startDate) . "&end_date=" . urlencode($endDate);
                 echo generatePagination($page, $totalPages, $urlWithParams);
                 ?>

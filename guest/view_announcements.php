@@ -2,7 +2,7 @@
 session_start();
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'guest') {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -51,7 +51,7 @@ $conn = null;
     <?php include "../include/" . ($_SESSION['role'] == 'guest' ? 'guest_navbar.php' : 'admin_navbar.php'); ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../guest/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../guest/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Announcements</h1>
 
@@ -76,7 +76,7 @@ $conn = null;
                 <?php endforeach; ?>
 
                 <?php
-                $url = 'view_announcements.php';
+                $url = 'view_announcements';
                 echo generatePagination($page, $totalPages, $url);
                 ?>
             <?php else: ?>

@@ -2,7 +2,7 @@
 session_start();
 
 if ($_SESSION['role'] != 'owner') {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -198,7 +198,7 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../admin/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Manage Admin Users</h1>
             <?php if ($feedback): ?>
@@ -214,7 +214,7 @@ $conn = null;
             <div id="add-form" class="add-form">
                 <button type="button" class="close-button" onclick="LuckyNest.toggleForm('add-form')">✕</button>
                 <h2>Add New Admin User</h2>
-                <form method="POST" action="admins.php">
+                <form method="POST" action="admins">
                     <input type="hidden" name="action" value="add">
 
                     <label for="forename">First Name:</label>
@@ -278,7 +278,7 @@ $conn = null;
                                     <div id='edit-form-<?php echo $admin['user_id']; ?>' class="edit-form">
                                         <button type="button" class="close-button"
                                             onclick="LuckyNest.toggleForm('edit-form-<?php echo $admin['user_id']; ?>')">✕</button>
-                                        <form method="POST" action="admins.php" style="display:inline;">
+                                        <form method="POST" action="admins" style="display:inline;">
                                             <h2>Edit Admin User</h2>
                                             <input type="hidden" name="action" value="edit">
                                             <input type="hidden" name="user_id" value="<?php echo $admin['user_id']; ?>">
@@ -330,7 +330,7 @@ $conn = null;
 
                                         <?php if ($admin['role'] === 'admin' && $admin['user_id'] !== $_SESSION['user_id']): ?>
                                             <form id="delete-form-<?php echo $admin['user_id']; ?>" method="POST"
-                                                action="admins.php" style="display:none;">
+                                                action="admins" style="display:none;">
                                                 <input type="hidden" name="action" value="delete">
                                                 <input type="hidden" name="user_id" value="<?php echo $admin['user_id']; ?>">
                                             </form>
@@ -343,7 +343,7 @@ $conn = null;
                 </tbody>
             </table>
             <?php
-            $url = 'admins.php';
+            $url = 'admins';
             echo generatePagination($page, $totalPages, $url);
             ?>
             <br>

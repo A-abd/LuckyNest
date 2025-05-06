@@ -2,7 +2,7 @@
 session_start();
 
 if (!isset($_SESSION['role'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['feedback'] = 'Error submitting maintenance request. Please try again.';
         }
 
-        header('Location: maintenance.php');
+        header('Location: maintenance');
         exit;
     }
 }
@@ -105,7 +105,7 @@ $conn = null;
     <?php include "../include/guest_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../guest/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../guest/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Maintenance Request</h1>
             <?php if ($feedback): ?>
@@ -122,7 +122,7 @@ $conn = null;
             <div id="add-form" class="add-form">
                 <button type="button" class="close-button" onclick="LuckyNest.toggleForm('add-form')">✕</button>
                 <h2>Submit a Maintenance Request</h2>
-                <form method="POST" action="maintenance.php">
+                <form method="POST" action="maintenance">
                     <input type="hidden" name="action" value="add">
 
                     <label for="room_number">Room Number:</label>
@@ -194,7 +194,7 @@ $conn = null;
 
             <?php if (isset($_SESSION['role']) && $_SESSION['role'] != 'guest'): ?>
                 <div class="button-center">
-                    <a href="view_maintenance.php" class="update-add-button">View & Manage Maintenance Requests</a>
+                    <a href="view_maintenance" class="update-add-button">View & Manage Maintenance Requests</a>
                 </div>
             <?php endif; ?>
         </div>

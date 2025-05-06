@@ -2,7 +2,7 @@
 session_start();
 
 if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $refund_amount = $_POST['refunded_amount'];
                 $withholding_reason = $_POST['withholding_reason'] ?? '';
                 
-                header('Location: ../include/refund.php');
+                header('Location: ../include/refund');
                 exit();
             } else {
                 $refunded_amount = $_POST['refunded_amount'] ?? 0;
@@ -98,7 +98,7 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-4"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../admin/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Manage Deposits</h1>
             <?php if ($feedback): ?>
@@ -146,7 +146,7 @@ $conn = null;
                                     <p><strong>Original Amount:</strong> £<?php echo number_format($deposit['amount'], 2); ?></p>
                                     
                                     <!-- Modified form action to use refund.php for refund actions -->
-                                    <form method="POST" action="<?php echo in_array($deposit['status'], ['paid']) ? '../include/refund.php' : 'deposits.php'; ?>" id="form-<?php echo $deposit['deposit_id']; ?>">
+                                    <form method="POST" action="<?php echo in_array($deposit['status'], ['paid']) ? '../include/refund' : 'deposits'; ?>" id="form-<?php echo $deposit['deposit_id']; ?>">
                                         <input type="hidden" name="action" value="edit">
                                         <input type="hidden" name="deposit_id" value="<?php echo $deposit['deposit_id']; ?>">
                                         
@@ -178,7 +178,7 @@ $conn = null;
                 </tbody>
             </table>
             <?php
-            $url = 'deposits.php';
+            $url = 'deposits';
             echo generatePagination($page, $totalPages, $url);
             ?>
             <br>

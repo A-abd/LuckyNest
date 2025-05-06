@@ -2,7 +2,7 @@
 session_start();
 
 if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Redirect after POST to prevent form resubmission
-        header('Location: announcements.php' . (isset($_GET['page']) ? '?page=' . $_GET['page'] : ''));
+        header('Location: announcements' . (isset($_GET['page']) ? '?page=' . $_GET['page'] : ''));
         exit();
     }
 }
@@ -117,7 +117,7 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../admin/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Manage Announcements</h1>
             <?php if ($feedback): ?>
@@ -138,7 +138,7 @@ $conn = null;
                 <button type="button" class="close-button" onclick="LuckyNest.toggleForm('add-form')">✕</button>
                 <h2>Add New Announcement</h2>
                 <form method="POST"
-                    action="announcements.php<?php echo isset($_GET['page']) ? '?page=' . $_GET['page'] : ''; ?>">
+                    action="announcements<?php echo isset($_GET['page']) ? '?page=' . $_GET['page'] : ''; ?>">
                     <input type="hidden" name="action" value="add">
                     <label for="title">Title:</label>
                     <input type="text" id="title" name="title" required>
@@ -184,7 +184,7 @@ $conn = null;
                                     <button type="button" class="close-button"
                                         onclick="LuckyNest.toggleForm('edit-form-<?php echo $announcement['announcement_id']; ?>')">✕</button>
                                     <form method="POST"
-                                        action="announcements.php<?php echo isset($_GET['page']) ? '?page=' . $_GET['page'] : ''; ?>"
+                                        action="announcements<?php echo isset($_GET['page']) ? '?page=' . $_GET['page'] : ''; ?>"
                                         style="display:inline;">
                                         <h2>Edit Announcement</h2>
                                         <input type="hidden" name="action" value="edit">
@@ -214,7 +214,7 @@ $conn = null;
                                     </form>
 
                                     <form id="delete-form-<?php echo $announcement['announcement_id']; ?>" method="POST"
-                                        action="announcements.php<?php echo isset($_GET['page']) ? '?page=' . $_GET['page'] : ''; ?>"
+                                        action="announcements<?php echo isset($_GET['page']) ? '?page=' . $_GET['page'] : ''; ?>"
                                         style="display:none;">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="announcement_id"
@@ -227,7 +227,7 @@ $conn = null;
                 </tbody>
             </table>
             <?php
-            $url = 'announcements.php';
+            $url = 'announcements';
             echo generatePagination($page, $totalPages, $url);
             ?>
             <br>

@@ -2,7 +2,7 @@
 session_start();
 
 if (!isset($_SESSION['user_id'])) {
-    header("Location: ../unauthorized.php");
+    header("Location: ../unauthorized");
     exit();
 }
 
@@ -133,7 +133,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $amount = floatval($amount);
         $amountRounded = round($amount, 2);
 
-        $returnUrl = isset($_POST["return_url"]) ? $_POST["return_url"] : "../guest/payments_page.php";
+        $returnUrl = isset($_POST["return_url"]) ? $_POST["return_url"] : "../guest/payments_page";
 
         $checkoutSession = \Stripe\Checkout\Session::create([
             "payment_method_types" => ["card"],
@@ -151,8 +151,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]
             ],
             "mode" => "payment",
-            "success_url" => "http://localhost/LuckyNest/guest/success.php?session_id={CHECKOUT_SESSION_ID}&reference_id=" . $referenceId . "&payment_type=" . $paymentType,
-            "cancel_url" => "http://localhost/LuckyNest/guest/cancel.php",
+            "success_url" => "http://localhost/LuckyNest/guest/success?session_id={CHECKOUT_SESSION_ID}&reference_id=" . $referenceId . "&payment_type=" . $paymentType,
+            "cancel_url" => "http://localhost/LuckyNest/guest/cancel",
         ]);
 
         header("Location: " . $checkoutSession->url);

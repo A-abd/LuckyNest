@@ -2,7 +2,7 @@
 session_start();
 
 if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -253,7 +253,7 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
 <body>
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer"></div>
-    <h1><a href="../admin/dashboard.php" class="title">LuckyNest</a></h1>
+    <h1><a href="../admin/dashboard" class="title">LuckyNest</a></h1>
     
     <div class="content-container">
         <h1 class="rooms-title">Manage Rooms</h1>
@@ -271,7 +271,7 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
         <div id="add-form" class="add-form">
             <button type="button" class="close-button" onclick="LuckyNest.toggleForm('add-form')">✕</button>
             <h2>Add New Room</h2>
-            <form method="POST" action="rooms.php" enctype="multipart/form-data">
+            <form method="POST" action="rooms" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="add">
                 <label for="room_number">Room Number:</label>
                 <input type="text" id="room_number" name="room_number" required>
@@ -380,7 +380,7 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
                                 <button onclick="LuckyNest.toggleForm('edit-room-form-<?php echo $room['room_id']; ?>')" class="update-button">Edit</button>
                                 <div id="edit-room-form-<?php echo $room['room_id']; ?>" class="edit-form">
                                     <button type="button" class="close-button" onclick="LuckyNest.toggleForm('edit-room-form-<?php echo $room['room_id']; ?>')">✕</button>
-                                    <form method="POST" action="rooms.php" enctype="multipart/form-data">
+                                    <form method="POST" action="rooms" enctype="multipart/form-data">
                                         <h2>Edit Room</h2>
                                         <input type="hidden" name="action" value="edit">
                                         <input type="hidden" name="room_id" value="<?php echo $room['room_id']; ?>">
@@ -459,7 +459,7 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
                                         </div>
                                     </form>
                                     
-                                    <form id="delete-form-<?php echo $room['room_id']; ?>" method="POST" action="rooms.php" style="display:none;">
+                                    <form id="delete-form-<?php echo $room['room_id']; ?>" method="POST" action="rooms" style="display:none;">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="room_id" value="<?php echo $room['room_id']; ?>">
                                     </form>
@@ -471,7 +471,7 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
             </table>
         </div>  
         <?php
-        $url = 'rooms.php';
+        $url = 'rooms';
         echo generatePagination($page, $totalPages, $url);
         ?>
 

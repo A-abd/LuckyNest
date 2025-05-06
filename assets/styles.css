@@ -1539,7 +1539,8 @@ tbody {
 
 .recurring-badge {
   display: inline-block;
-  background-color: #2196F3;
+  color: #ffcdd2;
+  background-color: #507878;
   color: white;
   padding: 2px 6px;
   border-radius: 4px;
@@ -1719,6 +1720,7 @@ tbody {
 .danger-button {
   background-color: #e74c3c;
   border-color: #e74c3c;
+  width: 45%;
 }
 
 .danger-button:hover {

@@ -2,7 +2,7 @@
 session_start();
 
 if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -131,7 +131,7 @@ $conn = null;
     <?php include "../include/admin_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../admin/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../admin/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Overall Ratings</h1>
             <?php if ($feedback): ?>
@@ -139,7 +139,7 @@ $conn = null;
             <?php endif; ?>
 
             <!-- Filter Form -->
-            <form method="GET" action="ratings_overall.php" id="filter-form">
+            <form method="GET" action="ratings_overall" id="filter-form">
                 <div class="filter-container">
                     <label for="rating_type">Rating Type:</label>
                     <select id="rating_type" name="rating_type" onchange="this.form.submit()">
@@ -157,7 +157,7 @@ $conn = null;
                     <input type="date" id="end_date" name="end_date" value="<?php echo $endDate; ?>">
 
                     <button type="submit" class="filter-button">Apply Filters</button>
-                    <button type="button" onclick="window.location.href='ratings_overall.php'"
+                    <button type="button" onclick="window.location.href='ratings_overall'"
                         class="reset-button">Reset</button>
                 </div>
             </form>
@@ -213,7 +213,7 @@ $conn = null;
             </table>
 
             <?php
-            $url = 'ratings_overall.php?rating_type=' . $ratingType;
+            $url = 'ratings_overall?rating_type=' . $ratingType;
             if (!empty($startDate)) {
                 $url .= '&start_date=' . $startDate;
             }

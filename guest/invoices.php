@@ -2,7 +2,7 @@
 session_start();
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -81,7 +81,7 @@ $deposit_invoices = array_filter($invoices, function ($invoice) {
     <?php include "../include/guest_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../guest/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../guest/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>Rent Payments</h1>
             <?php if (empty($rent_invoices)): ?>
@@ -208,7 +208,7 @@ $deposit_invoices = array_filter($invoices, function ($invoice) {
             <?php endif; ?>
 
             <?php
-            $url = 'invoices.php';
+            $url = 'invoices';
             echo generatePagination($page, $totalPages, $url);
             ?>
 

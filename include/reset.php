@@ -92,7 +92,7 @@ function sendPasswordResetEmail($email, $token, $conn, $method = 'email')
             return false;
         }
 
-        $resetLink = "http://" . $_SERVER['HTTP_HOST'] . "/LuckyNest/authentication/reset_page.php?token=" . $token . "&email=" . urlencode($email);
+        $resetLink = "http://" . $_SERVER['HTTP_HOST'] . "/LuckyNest/authentication/reset_page?token=" . $token . "&email=" . urlencode($email);
 
         $message = '<!doctype html>
 <html>

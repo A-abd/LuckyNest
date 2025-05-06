@@ -170,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $validToken) {
                     $stmt->execute();
 
                     $conn->commit();
-                    $success = 'Registration successful! You can now <a href="login.php">login</a>.';
+                    $success = 'Registration successful! You can now <a href="login">login</a>.';
                 } catch (Exception $e) {
                     $conn->rollBack();
                     $error = 'Registration failed. Please try again.';
@@ -214,7 +214,7 @@ $countryCodes = [
             <?php if ($success): ?>
                 <p class="success"><?php echo $success; ?></p>
             <?php elseif ($validToken): ?>
-                <form method="POST" action="registration.php?token=<?php echo htmlspecialchars($_GET['token']); ?>">
+                <form method="POST" action="registration?token=<?php echo htmlspecialchars($_GET['token']); ?>">
                     <input type="hidden" name="token" value="<?php echo htmlspecialchars($_GET['token']); ?>">
 
                     <div class="input-box">
@@ -303,7 +303,7 @@ $countryCodes = [
                     <button type="submit" class="btn">Register</button>
 
                     <div class="login-link">
-                        <p>Have an account already? <a href="login.php">Login</a></p>
+                        <p>Have an account already? <a href="login">Login</a></p>
                     </div>
                 </form>
             <?php endif; ?>

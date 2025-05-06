@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['new_password'], $_POST
                 $error = implode("<br>", $passwordErrors);
             } else {
                 if (updatePassword($user_id, $new_password, $conn)) {
-                    $success = "Your password has been successfully reset. You can now <a href='../authentication/login.php'>log in</a> with your new password.";
+                    $success = "Your password has been successfully reset. You can now <a href='../authentication/login'>log in</a> with your new password.";
                 } else {
                     $error = "Failed to update password. Please try again.";
                 }
@@ -75,11 +75,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['new_password'], $_POST
                         <?php echo $error; ?>
                     </div>
                 <?php endif; ?>
-                <p>This password reset link is invalid or has expired. Please <a href="../authentication/login.php">return
+                <p>This password reset link is invalid or has expired. Please <a href="../authentication/login">return
                         to login</a> and
                     request a new password reset.</p>
             <?php else: ?>
-                <form id="reset-form" method="POST" action="reset_page.php" onsubmit="return LuckyNest.validateResetForm()">
+                <form id="reset-form" method="POST" action="reset_page" onsubmit="return LuckyNest.validateResetForm()">
                     <h1>Reset Your Password</h1>
 
                     <?php if ($error): ?>

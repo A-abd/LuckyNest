@@ -2,7 +2,7 @@
 session_start();
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'guest') {
-    header('Location: ../authentication/unauthorized.php');
+    header('Location: ../authentication/unauthorized');
     exit();
 }
 
@@ -130,7 +130,7 @@ $conn = null;
     <?php include "../include/guest_navbar.php"; ?>
     <div class="blur-layer-3"></div>
     <div class="manage-default">
-        <h1><a class="title" href="../guest/dashboard.php">LuckyNest</a></h1>
+        <h1><a class="title" href="../guest/dashboard">LuckyNest</a></h1>
         <div class="content-container">
             <h1>My Meal Plans & Consumption</h1>
             <?php if ($feedback): ?>
@@ -241,13 +241,13 @@ $conn = null;
                     </tbody>
                 </table>
                 <?php
-                $url = 'stats_food.php';
+                $url = 'stats_food';
                 echo generatePagination($page, $totalPages, $url);
                 ?>
             <?php else: ?>
                 <p>You don't have any active meal plans.</p>
                 <div class="button-center">
-                    <a href="meal_plans.php" class="update-button">View Available Meal Plans</a>
+                    <a href="meal_plans" class="update-button">View Available Meal Plans</a>
                 </div>
             <?php endif; ?>
 
