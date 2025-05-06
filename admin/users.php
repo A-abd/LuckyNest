@@ -92,7 +92,7 @@ $conn = null;
         href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap" />
     <link rel="stylesheet" href="../assets/styles.css">
     <script src="../assets/scripts.js"></script>
-    <title>Manage Users</title>
+    <title>Manage Guests</title>
 </head>
 
 <body>
@@ -102,12 +102,12 @@ $conn = null;
         <h1><a class="title" href="../admin/dashboard">LuckyNest</a></h1>
 
         <div class="center-container">
-            <h2 class="manage-profile">Manage Users</h2>
+            <h2 class="manage-profile">Manage Guests</h2>
             <?php if ($feedback): ?>
                 <div class="feedback-message" id="feedback_message"><?php echo $feedback; ?></div>
             <?php endif; ?>
 
-            <h3>User List</h3>
+            <h3>Guest List</h3>
             <div class="manage-guests-wrapper">
                 <table class="manage-guest-table" border="1">
                     <thead class="table-columns">
