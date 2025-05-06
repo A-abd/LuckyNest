@@ -334,6 +334,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['deposit_id'])) {
     }
 }
 
-header('Location: ../admin/deposits.php?feedback=' . urlencode($feedback) . '&status=' . $refund_status);
+header('Location: ../admin/deposits?feedback=' . urlencode($feedback) . '&status=' . $refund_status);
 exit();
 ?>
