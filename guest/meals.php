@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
         if ($addQuery->execute()) {
             $mealPlanUserLinkId = $conn->lastInsertId();
-            header("Location: payments_page?type=meal_plan&id=$mealPlanUserLinkId");
+            header("Location: dashboard");
             exit();
         } else {
             $feedback = 'Error booking meal plan.';
