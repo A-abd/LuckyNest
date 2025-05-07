@@ -183,16 +183,16 @@ function sendLatePaymentNotifications($conn, $days_late = 1)
  * @param int $days_before check in to send a reminder
  * @return array
  */
-function sendBookingPaymentReminders($conn, $days_before = 3) 
+function sendBookingPaymentReminders($conn, $days_before = 3)
 {
     $results = [];
-    
+
     $target_date = date('Y-m-d', strtotime("+{$days_before} days"));
-    
+
     if ($days_before == 0) {
         $target_date = date('Y-m-d');
     }
-    
+
     try {
         $stmt = $conn->prepare("
             SELECT b.booking_id, b.guest_id, b.total_price, b.check_in_date,
@@ -210,10 +210,10 @@ function sendBookingPaymentReminders($conn, $days_before = 3)
                 AND p.payment_type = 'deposit'
             )
         ");
-        
+
         $stmt->bindParam(':target_date', $target_date);
         $stmt->execute();
-        
+
         while ($booking = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $check_stmt = $conn->prepare("
                 SELECT COUNT(*) as reminder_count 
@@ -221,18 +221,21 @@ function sendBookingPaymentReminders($conn, $days_before = 3)
                 WHERE user_id = :user_id 
                 AND message LIKE :message_pattern
                 AND created_at >= :recent_date
+                AND message LIKE :booking_id_pattern
             ");
-            
+
             $message_pattern = "%booking deposit of £" . number_format($booking['deposit_amount'], 2) . " is due%";
+            $booking_id_pattern = "%Booking ID: " . $booking['booking_id'] . "%";
             $recent_date = date('Y-m-d H:i:s', strtotime('-1 day'));
-            
+
             $check_stmt->bindParam(':user_id', $booking['guest_id']);
             $check_stmt->bindParam(':message_pattern', $message_pattern);
             $check_stmt->bindParam(':recent_date', $recent_date);
+            $check_stmt->bindParam(':booking_id_pattern', $booking_id_pattern);
             $check_stmt->execute();
-            
+
             $reminder_check = $check_stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if ($reminder_check['reminder_count'] == 0) {
                 $result = sendBookingDepositReminder(
                     $conn,
@@ -242,7 +245,7 @@ function sendBookingPaymentReminders($conn, $days_before = 3)
                     $booking['booking_id'],
                     $days_before
                 );
-                
+
                 $results[] = [
                     'user' => $booking['forename'] . ' ' . $booking['surname'],
                     'type' => 'booking_deposit',
@@ -251,11 +254,11 @@ function sendBookingPaymentReminders($conn, $days_before = 3)
                     'due_date' => $booking['check_in_date'],
                     'result' => $result
                 ];
-                
+
                 error_log("Sent booking deposit reminder to user {$booking['guest_id']} for room {$booking['room_number']}");
             }
         }
-        
+
         return $results;
     } catch (Exception $e) {
         error_log("Error sending booking payment reminders: " . $e->getMessage());
@@ -268,12 +271,12 @@ function sendBookingPaymentReminders($conn, $days_before = 3)
  * @param int $days_late days after check-in to send reminder
  * @return array
  */
-function sendLateBookingPaymentReminders($conn, $days_late = 1) 
+function sendLateBookingPaymentReminders($conn, $days_late = 1)
 {
     $results = [];
-    
+
     $target_date = date('Y-m-d', strtotime("-{$days_late} days"));
-    
+
     try {
         $stmt = $conn->prepare("
             SELECT b.booking_id, b.guest_id, b.total_price, b.check_in_date,
@@ -291,10 +294,10 @@ function sendLateBookingPaymentReminders($conn, $days_late = 1)
                 AND p.payment_type = 'deposit'
             )
         ");
-        
+
         $stmt->bindParam(':target_date', $target_date);
         $stmt->execute();
-        
+
         while ($booking = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $check_stmt = $conn->prepare("
                 SELECT COUNT(*) as reminder_count 
@@ -303,17 +306,17 @@ function sendLateBookingPaymentReminders($conn, $days_late = 1)
                 AND message LIKE :message_pattern
                 AND created_at >= :recent_date
             ");
-            
+
             $message_pattern = "%OVERDUE: Your booking deposit of £" . number_format($booking['deposit_amount'], 2) . "%";
             $recent_date = date('Y-m-d H:i:s', strtotime('-1 day'));
-            
+
             $check_stmt->bindParam(':user_id', $booking['guest_id']);
             $check_stmt->bindParam(':message_pattern', $message_pattern);
             $check_stmt->bindParam(':recent_date', $recent_date);
             $check_stmt->execute();
-            
+
             $reminder_check = $check_stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if ($reminder_check['reminder_count'] == 0) {
                 $result = sendLateBookingDepositNotice(
                     $conn,
@@ -323,7 +326,7 @@ function sendLateBookingPaymentReminders($conn, $days_late = 1)
                     $booking['booking_id'],
                     $days_late
                 );
-                
+
                 $results[] = [
                     'user' => $booking['forename'] . ' ' . $booking['surname'],
                     'type' => 'late_booking_deposit',
@@ -333,11 +336,11 @@ function sendLateBookingPaymentReminders($conn, $days_late = 1)
                     'days_late' => $days_late,
                     'result' => $result
                 ];
-                
+
                 error_log("Sent late booking deposit notice to user {$booking['guest_id']} for room {$booking['room_number']} ({$days_late} days late)");
             }
         }
-        
+
         return $results;
     } catch (Exception $e) {
         error_log("Error sending late booking payment reminders: " . $e->getMessage());
@@ -355,7 +358,7 @@ function sendMealPlanReminders($conn, $days_before = 1)
     $results = [];
 
     $target_date = date('Y-m-d', strtotime("+{$days_before} days"));
-    
+
     if ($days_before == 0) {
         $target_date = date('Y-m-d');
     }
@@ -440,7 +443,7 @@ function sendLaundryReminders($conn, $hours_before = 2)
 
     $start_time = date('Y-m-d H:i:s', strtotime("+{$hours_before} hours"));
     $end_time = date('Y-m-d H:i:s', strtotime("+" . ($hours_before + 1) . " hours"));
-    
+
     $tomorrow = date('Y-m-d', strtotime("+1 day"));
     $is_day_before = ($hours_before == 24);
 
@@ -460,7 +463,7 @@ function sendLaundryReminders($conn, $hours_before = 2)
                 AND lsul.is_paid = 0
                 AND ls.date = :tomorrow_date
             ");
-            
+
             $stmt->bindParam(':tomorrow_date', $tomorrow);
             $stmt->execute();
         } else {
@@ -478,7 +481,7 @@ function sendLaundryReminders($conn, $hours_before = 2)
                 AND lsul.is_paid = 0
                 AND CONCAT(ls.date, ' ', ls.start_time) BETWEEN :start_time AND :end_time
             ");
-            
+
             $stmt->bindParam(':start_time', $start_time);
             $stmt->bindParam(':end_time', $end_time);
             $stmt->execute();
