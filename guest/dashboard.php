@@ -125,12 +125,7 @@ try {
     $laundrySlots = $laundryQuery->fetchAll();
 
     $depositsQuery = $conn->prepare("
-        SELECT d.deposit_id, d.booking_id, d.amount, d.status, b.check_in_date, 
-               b.check_out_date, r.room_number, rt.deposit_amount,
-               CASE
-                  WHEN d.deposit_id IS NULL THEN 'pending_payment'
-                  ELSE d.status
-               END AS display_status
+    SELECT d.deposit_id, d.booking_id, d.amount, d.status, b.check_in_date, b.check_out_date, r.room_number, rt.deposit_amount
         FROM bookings b
         JOIN rooms r ON b.room_id = r.room_id
         JOIN room_types rt ON r.room_type_id = rt.room_type_id
@@ -140,7 +135,7 @@ try {
         AND rt.deposit_amount > 0
         ORDER BY 
             CASE
-                WHEN d.status = 'pending' OR d.deposit_id IS NULL THEN 1
+                WHEN d.status = 'pending' OR d.status IS NULL THEN 1
                 WHEN d.status = 'paid' THEN 2
                 WHEN d.status = 'partially_refunded' THEN 3
                 WHEN d.status = 'fully_refunded' THEN 4
@@ -202,6 +197,73 @@ try {
     <link rel="stylesheet" href="../assets/styles.css">
     <script src="../assets/scripts.js"></script>
     <title>Guest Dashboard</title>
+    #<style>
+        /* Dashboard button standardization */
+        .content-container .button {
+            display: inline-block;
+            width: 120px;
+            height: 40px;
+            margin: 5px;
+            padding: 8px 12px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            background: #507878;
+            color: #fed7ca;
+            border: 2px solid #507878;
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .content-container .button:hover {
+            transform: translateY(-3px);
+            transition: transform 0.4s ease;
+        }
+
+        .content-container .button:active {
+            background-color: #648686;
+        }
+
+        .content-container .cancel-button {
+            background-color: #e74c3c;
+            border-color: #e74c3c;
+            color: white;
+        }
+
+        .content-container .cancel-button:hover {
+            transform: translateY(-3px);
+        }
+
+        .content-container .cancel-button:active {
+            background-color: #c0392b;
+        }
+
+        #roomRatingForm .button,
+        #mealRatingForm .button {
+            display: inline-block;
+            width: 120px;
+            height: 40px;
+            margin: 5px;
+            padding: 8px 12px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .actions-column form {
+            display: inline-block;
+        }
+
+        .actions-column .button {
+            margin: 2px;
+        }
+
+        form .button {
+            width: 120px !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -470,23 +532,25 @@ try {
                     </thead>
                     <tbody>
                         <?php foreach ($deposits as $deposit): ?>
+                            <?php
+                            $needsPayment = !isset($deposit['status']) || $deposit['status'] === null || $deposit['status'] === 'pending';
+                            $depositAmount = isset($deposit['deposit_amount']) ? $deposit['deposit_amount'] :
+                                (isset($deposit['amount']) ? $deposit['amount'] : 0);
+                            ?>
                             <tr>
                                 <td><?php echo $deposit['booking_id']; ?></td>
                                 <td><?php echo $deposit['room_number']; ?></td>
                                 <td><?php echo formatDate($deposit['check_in_date']); ?></td>
                                 <td><?php echo formatDate($deposit['check_out_date']); ?></td>
-                                <td>£<?php echo number_format($deposit['deposit_amount'] ?? $deposit['amount'], 2); ?></td>
+                                <td>£<?php echo number_format($depositAmount, 2); ?></td>
                                 <td class="status-column">
                                     <?php
-                                    $status = $deposit['display_status'];
+                                    $status = isset($deposit['status']) ? $deposit['status'] : 'pending';
                                     $statusText = '';
 
                                     switch ($status) {
-                                        case 'pending_payment':
-                                            $statusText = 'Payment Required';
-                                            break;
                                         case 'pending':
-                                            $statusText = 'Processing';
+                                            $statusText = 'Payment Required';
                                             break;
                                         case 'paid':
                                             $statusText = 'Paid';
@@ -501,19 +565,19 @@ try {
                                             $statusText = 'Withheld';
                                             break;
                                         default:
-                                            $statusText = ucfirst($status);
+                                            $statusText = 'Payment Required';
                                     }
                                     echo $statusText;
                                     ?>
                                 </td>
                                 <td class="actions-column">
-                                    <?php if ($status === 'pending_payment'): ?>
+                                    <?php if ($needsPayment): ?>
                                         <form method="post" action="../include/checkout.php" style="display: inline;">
                                             <input type="hidden" name="payment_type" value="deposit">
                                             <input type="hidden" name="booking_id" value="<?php echo $deposit['booking_id']; ?>">
                                             <input type="hidden" name="description"
                                                 value="Security deposit for booking #<?php echo $deposit['booking_id']; ?>">
-                                            <input type="hidden" name="amount" value="<?php echo $deposit['deposit_amount']; ?>">
+                                            <input type="hidden" name="amount" value="<?php echo $depositAmount; ?>">
                                             <input type="hidden" name="user_id" value="<?php echo $_SESSION['user_id']; ?>">
                                             <button type="submit" class="button">Pay Now</button>
                                         </form>
