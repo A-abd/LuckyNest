@@ -79,7 +79,6 @@ try {
                 assistance.</p>
 
             <div class="button-center">
-                <a href="payments_page" class="update-button">Return to Payments</a>
                 <a href="dashboard" class="update-button">Go to Dashboard</a>
             </div>
         </div>

@@ -25,8 +25,6 @@
             </li>
 
             <li class="menu-category">Payments</li>
-            <li class="menu-item"><a href="../guest/payments_page"><i class="fas fa-money-bill-wave"></i> Payments
-                    Page</a></li>
             <li class="menu-item"><a href="../guest/deposits"><i class="fas fa-piggy-bank"></i> Security Deposit</a>
             </li>
 
