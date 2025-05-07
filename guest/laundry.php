@@ -147,7 +147,6 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
                         <tr>
                             <th>Start Time</th>
                             <th>End Time</th>
-                            <th>Recurring</th>
                             <th>Price</th>
                             <th>Actions</th>
                         </tr>
@@ -161,7 +160,6 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
                             <tr>
                                 <td><?php echo htmlspecialchars($formattedStartTime); ?></td>
                                 <td><?php echo htmlspecialchars($endTime); ?></td>
-                                <td><?php echo $slot['recurring'] ? 'Yes' : 'No'; ?></td>
                                 <td>£<?php echo number_format($slot['price'], 2); ?></td>
                                 <td>
                                     <form method="POST" action="laundry?date=<?php echo $selectedDate; ?>"
